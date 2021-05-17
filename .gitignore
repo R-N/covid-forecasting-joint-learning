@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+Learning/Arcgis/country
+learning/arcgis/country
+notebooks/arcgis/country
+
+venv
+*.pyc
+staticfiles
+.env
+db.sqlite3
+getting-started/*
