@@ -1,10 +1,11 @@
 import setuptools
 
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='covid_forecasting_joint_learning',  
+    name='covid_forecasting_joint_learning',
     version='0.0.1',
     author="Muhammad Rizqi Nur",
     author_email="rizqinur-2010@gmail.com",
@@ -18,4 +19,13 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    install_requires=[
+        "requests",
+        "pandas",
+        "matplotlib",
+        "mpld3",
+        "seaborn",
+        "statsmodels==0.12",
+        "scikit-learn==0.24.1"
+    ]
 )
