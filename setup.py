@@ -20,6 +20,10 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        "numpy~=1.19.2",
+        "six~=1.15.0",
+        "folium==0.2.1",
+        "imgaug<0.2.7,>=0.2.5",
         "requests~=2.23.0",
         "pandas~=1.1.0; python_version >= '3.0'",
         "matplotlib",
