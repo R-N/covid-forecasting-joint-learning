@@ -9,9 +9,9 @@ TODO: population & common special dates
 
 class DataLoader:
     def __init__(self, covid=None, psbb=None):
-        if covid:
+        if covid is not None:
             self.load_covid(covid)
-        if psbb:
+        if psbb is not None:
             self.load_psbb(psbb)
 
     def load_covid(self, df):
