@@ -20,8 +20,8 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "requests",
-        "pandas",
+        "requests~=2.23.0",
+        "pandas~=1.1.0; python_version >= '3.0'",
         "matplotlib",
         "mpld3",
         "seaborn",
