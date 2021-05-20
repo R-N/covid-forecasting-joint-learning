@@ -1,13 +1,16 @@
+import math
 import pandas as pd
+import seaborn as sns
 from matplotlib import pyplot as plt
 # from statsmodels.tsa import stattools
-from statsmodels.tsa.stattools import adfuller as adf, acf, pacf
 from statsmodels.graphics import tsaplots
 from statsmodels.tsa.seasonal import seasonal_decompose
 from pandas.plotting import register_matplotlib_converters
 from statsmodels.stats.diagnostic import kstest_normal as ks_test
+# Functionalities only imported shamelessly
+from statsmodels.tsa.stattools import adfuller as adf, acf, pacf
+from scipy.stats import pearsonr, spearmanr, kendalltau
 
-import math
 
 # Constants
 SMALL_SIZE = 12
@@ -124,3 +127,38 @@ def diff(series, period=1, **kwargs):
     ret = series.diff(period=period, **kwargs)
     ret.dropna(inplace=True)
     return ret
+
+
+# Correlation
+def corr_pair(x, y, method="pearson", **kwargs):
+    if isinstance(x, pd.Series) and isinstance(y, pd.Series):
+        return x.corr(y, method=method)
+    elif method == "pearson":
+        return pearsonr(x, y)
+    elif method == "spearman":
+        return spearmanr(x, y)
+    elif method == "kendall":
+        return kendalltau(x, y)
+    else:
+        raise Exception("Invalid correlation method %s" % method)
+
+
+def corr_all(df, method="pearson", **kwargs):
+    assert isinstance(df, pd.DataFrame)
+    return df.corr(method=method)
+
+
+def corr_matrix(corr):
+    fig, ax = plt.subplots(1, 1)
+    cmap = sns.diverging_palette(250, 10, as_cmap=True)
+    sns.heatmap(cor, ax=ax, vmin=-1, vmax=1, annot=True, cmap=cmap, fmt='.3f')
+    return fig
+
+
+def scatter_matrix(df, lib="seaborn", **kwargs):
+    if lib == "pandas":
+        fig, ax = plt.subplots(1, 1)
+        plots = df.scatter_matrix(df, ax=ax, **kwargs)
+        return fig
+    elif lib == "seaborn":
+        return sns.pairplot(df, **kwargs)
