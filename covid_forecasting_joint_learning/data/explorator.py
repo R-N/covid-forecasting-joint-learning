@@ -1,10 +1,12 @@
 import pandas as pd
 from matplotlib import pyplot as plt
-from statsmodels.tsa import stattools
+# from statsmodels.tsa import stattools
+from statsmodels.tsa.stattools import adfuller as adf, acf, pacf
 from statsmodels.graphics import tsaplots
 from statsmodels.tsa.seasonal import seasonal_decompose
 from pandas.plotting import register_matplotlib_converters
-from statsmodels.stats.diagnostic import kstest_normal
+from statsmodels.stats.diagnostic import kstest_normal as ks_test
+
 import math
 
 # Constants
@@ -49,10 +51,6 @@ def init_matplotlib():
 
 
 # ADF test
-def adf(series, *args, **kwargs):
-    return stattools.dfuller(series, *args, **kwargs)
-
-
 def print_adf(adf, name=""):
     ret = []
     ret.add("Augmented Dickey-Fuller Test for " + name)
@@ -82,14 +80,6 @@ def plot_rolling_stats(series, mean, std, name="", window="?"):
 
 
 # ACF plots
-def acf(series, *args, **kwargs):
-    return stattools.acf(*args, **kwargs)
-
-
-def pacf(series, *args, **kwargs):
-    return stattools.pacf(*args, **kwargs)
-
-
 def plot_acf(series, *args, name="", **kwargs):
     return tsaplots.plot_acf(series, *args, title="ACF Plot for " + name, **kwargs)
 
@@ -118,16 +108,12 @@ def rmse(residual):
     return math.sqrt((residual * residual).sum())
 
 
-def ks_test(residual):
-    return kstest_normal(residual)
-
-
 def print_residual_stats(residual, name=""):
     ret = []
     ret.add("Residual stats for " + name)
     ret.add("Residual RMSE: ", rmse(residual))
-    ret.add("Residual KS Test Stat: %s" % kstest_normal(residual)[0])
-    ret.add("Residual KS Test P: %s" % kstest_normal(residual)[1])
+    ret.add("Residual KS Test Stat: %s" % ks_test(residual)[0])
+    ret.add("Residual KS Test P: %s" % ks_test(residual)[1])
     ret = '\n'.join(ret)
     return ret
 
