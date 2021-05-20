@@ -1,4 +1,4 @@
-import util as DataUtil
+from . import util as DataUtil
 
 
 class Kabko:
