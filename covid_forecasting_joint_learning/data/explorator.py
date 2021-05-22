@@ -19,9 +19,6 @@ BIGGER_SIZE = 16
 FIG_SIZE = (13, 6)
 LINE_WIDTH = 2
 
-# Init?
-register_matplotlib_converters()
-
 
 # IPython
 def init_ipython():
@@ -42,6 +39,7 @@ def init_ipython():
 
 # Matplotlib
 def init_matplotlib():
+    register_matplotlib_converters()
     plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
     plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
     plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
@@ -55,13 +53,13 @@ def init_matplotlib():
 
 # ADF test
 def print_adf(adf, name=""):
-    ret = []
-    ret.add("Augmented Dickey-Fuller Test for " + name)
-    ret.add('ADF Statistic: {:.10f}'.format(adf[0]))
-    ret.add('p-value: {:.10f}'.format(adf[1]))
-    ret.add('Critical Values:')
-    for key, value in adf[4].items():
-        ret.add('\t{}: {:.10f}'.format(key, value))
+    ret = [
+        "Augmented Dickey-Fuller Test for %s" % name,
+        "ADF Statistic: {:.10f}".format(adf[0]),
+        "p-value: {:.10f}".format(adf[1]),
+        "Critical Values:",
+        *['\t{}: {:.10f}'.format(key, value) for key, value in adf[4].items()]
+    ]
     '\n'.join(ret)
     return ret
 
@@ -112,11 +110,13 @@ def rmse(residual):
 
 
 def print_residual_stats(residual, name=""):
-    ret = []
-    ret.add("Residual stats for " + name)
-    ret.add("Residual RMSE: ", rmse(residual))
-    ret.add("Residual KS Test Stat: %s" % ks_test(residual)[0])
-    ret.add("Residual KS Test P: %s" % ks_test(residual)[1])
+    ks = ks_test(residual)
+    ret = [
+        "Residual stats for %s" % name,
+        "Residual RMSE: %s" % rmse(residual),
+        "Residual KS Test Stat: %s" % ks[0],
+        "Residual KS Test P: %s" % ks[1]
+    ]
     ret = '\n'.join(ret)
     return ret
 
@@ -151,7 +151,7 @@ def corr_all(df, method="pearson", **kwargs):
 def corr_matrix(corr):
     fig, ax = plt.subplots(1, 1)
     cmap = sns.diverging_palette(250, 10, as_cmap=True)
-    sns.heatmap(cor, ax=ax, vmin=-1, vmax=1, annot=True, cmap=cmap, fmt='.3f')
+    sns.heatmap(corr, ax=ax, vmin=-1, vmax=1, annot=True, cmap=cmap, fmt='.3f')
     return fig
 
 
