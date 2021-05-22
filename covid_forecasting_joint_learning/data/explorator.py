@@ -60,8 +60,7 @@ def print_adf(adf, name=""):
         "Critical Values:",
         *['\t{}: {:.10f}'.format(key, value) for key, value in adf[4].items()]
     ]
-    '\n'.join(ret)
-    return ret
+    return '\n'.join(ret)
 
 
 # Rolling stats
@@ -117,8 +116,7 @@ def print_residual_stats(residual, name=""):
         "Residual KS Test Stat: %s" % ks[0],
         "Residual KS Test P: %s" % ks[1]
     ]
-    ret = '\n'.join(ret)
-    return ret
+    return '\n'.join(ret)
 
 
 # Differencing
