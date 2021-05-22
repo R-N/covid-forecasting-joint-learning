@@ -75,17 +75,17 @@ def plot_rolling_stats(series, mean, std, name="", window="?"):
     ax.plot(mean, color='red', label='Rolling Mean')
     ax.plot(std, color='black', label='Rolling Std')
     ax.legend(loc='best')
-    ax.title("Rolling Mean & Rolling Standard Deviation for %s with window=%s" % (name, window))
+    ax.set_title("Rolling Mean & Rolling Standard Deviation for %s with window=%s" % (name, window))
     return fig
 
 
 # ACF plots
 def plot_acf(series, *args, name="", **kwargs):
-    return tsaplots.plot_acf(series, *args, title="ACF Plot for " + name, **kwargs)
+    return tsaplots.plot_acf(series, *args, title="ACF Plot for %s" % name, **kwargs)
 
 
 def plot_pacf(series, *args, name="", **kwargs):
-    return tsaplots.plot_pacf(series, *args, title="PACF Plot for " + name, **kwargs)
+    return tsaplots.plot_pacf(series, *args, title="PACF Plot for %s" % name, **kwargs)
 
 
 # Classical decomposition
@@ -98,7 +98,7 @@ def plot_classical_decompose(decomposed, name=""):
     decomposed.trend.plot(ax=ax1, ylabel="trend")
     decomposed.seasonal.plot(ax=ax2, ylabel="seasonality")
     decomposed.resid.plot(ax=ax3, ylabel="residual")
-    ax1.title("Decomposed %s" % name)
+    ax1.set_title("Decomposed %s" % name)
 
     return fig
 
@@ -153,9 +153,10 @@ def corr_matrix(corr):
     return fig
 
 
-def scatter_matrix(df, lib="seaborn", **kwargs):
+def scatter_matrix(df, lib="seaborn", name="", **kwargs):
     if lib == "pandas":
         fig, ax = plt.subplots(1, 1)
+        ax.set_title("Scatter matrix for %s" % name)
         plots = df.scatter_matrix(df, ax=ax, **kwargs)
         return fig
     elif lib == "seaborn":
