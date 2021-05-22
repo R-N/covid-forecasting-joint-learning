@@ -157,7 +157,7 @@ def scatter_matrix(df, lib="seaborn", name="", **kwargs):
     if lib == "pandas":
         fig, ax = plt.subplots(1, 1)
         ax.set_title("Scatter matrix for %s" % name)
-        plots = df.scatter_matrix(df, ax=ax, **kwargs)
+        plots = pd.plotting.scatter_matrix(df, ax=ax, **kwargs)
         return fig
     elif lib == "seaborn":
         return sns.pairplot(df, **kwargs)
