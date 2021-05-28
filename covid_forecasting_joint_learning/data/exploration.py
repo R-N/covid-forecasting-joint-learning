@@ -58,7 +58,7 @@ def print_adf(adf, name=""):
         "ADF Statistic: {:.10f}".format(adf[0]),
         "p-value: {:.10f}".format(adf[1]),
         "Critical Values:",
-        *['\t{}: {:.10f}'.format(key, value) for key, value in adf[4].items()]
+        *["\t{}: {:.10f}".format(key, value) for key, value in adf[4].items()]
     ]
     return '\n'.join(ret)
 
@@ -71,10 +71,10 @@ def rolling_stats(series, window, *args, **kwargs):
 
 def plot_rolling_stats(series, mean, std, name="", window="?"):
     fig, ax = plt.subplots(1, 1)
-    ax.plot(series, color='blue', label=name)
-    ax.plot(mean, color='red', label='Rolling Mean')
-    ax.plot(std, color='black', label='Rolling Std')
-    ax.legend(loc='best')
+    ax.plot(series, color="blue", label=name)
+    ax.plot(mean, color="red", label="Rolling Mean")
+    ax.plot(std, color="black", label="Rolling Std")
+    ax.legend(loc="best")
     ax.set_title("Rolling Mean & Rolling Standard Deviation for %s with window=%s" % (name, window))
     return fig
 
