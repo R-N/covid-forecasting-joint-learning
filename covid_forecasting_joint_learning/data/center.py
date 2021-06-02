@@ -27,7 +27,7 @@ class DataCenter:
             "dead": "d"
         },
         drop_cols=["infected_total"],
-        drop_first_col=True,
+        drop_first_col=False,
         labels=["i", "r", "d"],
         exclude_kabkos=[
             "AWAK BUAH KAPAL",
