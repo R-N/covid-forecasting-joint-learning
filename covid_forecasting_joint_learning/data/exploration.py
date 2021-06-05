@@ -1,4 +1,5 @@
 import math
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
@@ -128,7 +129,7 @@ def diff(series, period=1, **kwargs):
 
 
 # Correlation
-def corr_pair(x, y, method="pearson", **kwargs):
+def corr_pair(x, y, method="kendall", **kwargs):
     if isinstance(x, pd.Series) and isinstance(y, pd.Series):
         return x.corr(y, method=method)
     elif method == "pearson":
@@ -141,7 +142,13 @@ def corr_pair(x, y, method="pearson", **kwargs):
         raise Exception("Invalid correlation method %s" % method)
 
 
-def corr_all(df, method="pearson", **kwargs):
+def corr_multi(df, x_cols, y_cols, method="kendall", y_as_cols=True):
+    corr = np.array([[corr_pair(df[x_col], df[y_col], method=method) for y_col in y_cols] for x_col in x_cols])
+    corr = pd.DataFrame(corr)
+    return corr if y_as_cols else corr.T
+
+
+def corr_all(df, method="kendall", **kwargs):
     assert isinstance(df, pd.DataFrame)
     return df.corr(method=method)
 
@@ -161,3 +168,42 @@ def scatter_matrix(df, lib="seaborn", name="", **kwargs):
         return fig
     elif lib == "seaborn":
         return sns.pairplot(df, **kwargs)
+
+
+def plot_corr_lag_single(corr, ax):
+    n_lags = len(corr)-1
+    lags = np.linspace(0, n_lags, n_lags+1)
+    ax.vlines(lags, [0], corr)
+    ax.plot(lags, corr, marker="o", markersize=5, linestyle="None")
+
+
+# Correlation of a to shifted b
+# Note that shift moves the values forward, 
+# so the value at an index contains what should've been at previous index
+# so shift(1) means lagged 1
+# So I'll just name this corr_lag instead of corr_shift
+def corr_lag(x, y, lag_start=0, lag_end=-14, method="kendall", pvalue=False):
+    step = -1 if lag_start > lag_end else 1
+    lagged = [y.shift(i).dropna() for i in range(lag_start, lag_end + step, step)]
+    corr = [corr_pair(x[l.index], l, method=method) for l in lagged]
+    if not pvalue:
+        corr = [c[0] for c in corr]
+    return corr
+
+
+def corr_lag_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall", lag_as_col=True):
+    step = -1 if lag_start > lag_end else 1
+    x_lag = np.array(list(range(lag_start, lag_end + step, step)))
+    corr = np.array([[corr_lag(
+        df[x_col], df[y_col],
+        lag_start=lag_start, lag_end=lag_end,
+        method=method,
+        pvalue=False
+    ) for y_col in y_cols] for x_col in x_cols])
+    corr = [pd.DataFrame(
+        corr[x],
+        index=["%s_x_%s" % (x, y) for y in y_cols],
+        columns=x_lag
+    ) for x in range(0, len(x_cols))]
+    corr = pd.concat(*corr)
+    return corr if lag_as_col else corr.T
