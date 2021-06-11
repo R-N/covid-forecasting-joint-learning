@@ -111,7 +111,7 @@ class DataCenter:
         self,
         df,
         date_col="date",
-        label_orig="cumulative_total"
+        label_orig="Cumulative total"
     ):
         if label_orig:
             df = df[[date_col, label_orig]]
