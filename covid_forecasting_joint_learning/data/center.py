@@ -179,7 +179,7 @@ class DataCenter:
                 DataCol.END,
                 DataCol.VAL
             ]]
-            self.__dates_global = pd.concat(self.__dates_global, df)
+            self.__dates_global = pd.concat([self.__dates_global, df])
             self.__date_names_global = self.__dates_global[DataCol.NAME].unique()
         else:
             df = df[[
@@ -189,7 +189,7 @@ class DataCenter:
                 DataCol.END,
                 DataCol.VAL
             ]]
-            self.__dates_local = pd.concat(self.__dates_local, df)
+            self.__dates_local = pd.concat([self.__dates_local, df])
             self.__date_names_local= self.__dates_local[DataCol.NAME].unique()
         self.__date_names = np.unique(self.__date_names_global + self.__date_names_local)
         return df
@@ -236,10 +236,10 @@ class DataCenter:
         self,
         kabko
     ):
-        dates = pd.concat(
+        dates = pd.concat([
             self.dates_global.copy(),
             self.dates_local[self.dates_local[DataCol.KABKO] == kabko]
-        )
+        ])
         return dates
 
     def load_population(
