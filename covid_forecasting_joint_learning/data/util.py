@@ -29,3 +29,9 @@ def prepare_dates(
         val_col: DataCol.VAL
     }, inplace=True)
     return df
+
+def right_slice(
+    left,
+    right
+):
+    return left[right.first_valid_index():right.last_valid_index()]

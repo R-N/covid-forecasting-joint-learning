@@ -4,10 +4,11 @@ import pandas as pd
 from . import sird
 # Only imported shamelessly
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from ..data import cols as DataCol
 
 
 # Zero handling
-def trim_zero(df, labels=["i", "r", "d"]):
+def trim_zero(df, labels=DataCol.IRD):
     non_zero = (df[labels] != 0).any(1)
     non_zero = df[non_zero]
     df = df[non_zero.first_valid_index():non_zero.last_valid_index()].copy()
@@ -21,7 +22,16 @@ def zero_to_nan(series):
     return series
 
 
-def fill_zero(df, labels=["i", "r", "d"], method="linear"):
+def fill_zero(
+    df,
+    labels=[
+        *DataCol.IRD,
+        *DataCol.VAC_ALL,
+        DataCol.I_TOT_GLOBAL,
+        DataCol.TEST
+    ], 
+    method="linear"
+):
     df = df.copy()
     # TODO: change middle zeroes to NaN
     for l in labels:
@@ -30,7 +40,7 @@ def fill_zero(df, labels=["i", "r", "d"], method="linear"):
     return df
 
 
-def handle_zero(df, labels=["i", "r", "d"], interpolation_method="linear"):
+def handle_zero(df, labels=DataCol.IRD, interpolation_method="linear"):
     df = trim_zero(df, labels=labels)
     df = fill_zero(df, labels=labels, method=interpolation_method)
     return df
@@ -79,7 +89,7 @@ def generate_dataset(
     future_start=None, future_end=None,
     past_size=30, future_size=14,
     stride=1,
-    labels=["beta", "gamma", "delta"]
+    labels=DataCol.SIRD_VARS
 ):
     len_df = len(df)
     future_start = max(future_start or past_size, past_size)
@@ -102,7 +112,7 @@ def split_dataset(
     splits,
     past_size=30, future_size=14,
     stride=1,
-    labels=["beta", "gamma", "delta"]
+    labels=DataCol.SIRD_VARS
 ):
     train_end, val_start, val_end, test_start = splits
     train_set = generate_dataset(

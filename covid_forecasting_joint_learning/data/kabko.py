@@ -60,6 +60,10 @@ class KabkoData:
     def population(self):
         return self.__population
 
+    @property
+    def population_global(self):
+        return self.data_center.population_global
+
     def copy(self):
         return KabkoData(
             name=self.name,
@@ -80,15 +84,15 @@ class KabkoData:
 
     @property
     def vaccine(self):
-        return self.data_center.vaccine
+        return DataUtil.right_slice(self.data_center.vaccine, self.covid)
 
     @property
     def test(self):
-        return self.data_center.test
+        return DataUtil.right_slice(self.data_center.test, self.covid)
 
     @property
     def covid_global(self):
-        return self.data_center.covid_global
+        return DataUtil.right_slice(self.data_center.covid_global, self.covid)
 
     def add_dates(
         self, df,

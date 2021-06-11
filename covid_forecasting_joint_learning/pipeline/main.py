@@ -3,6 +3,7 @@ from . import preprocessing
 from . import sird
 from . import clustering
 from ..data.kabko import KabkoData
+from ..data import cols as DataCol
 
 
 def get_kabkos(data_center):
@@ -15,12 +16,21 @@ def __preprocessing_1(
     k
 ):
     k.raw = k.covid.copy()
-    k.raw = sird.calc_s(preprocessing.handle_zero(k.raw), k.population)
+    k.raw[DataCol.VAC_ALL] = k.vaccine[DataCol.VAC_ALL]
+    k.raw[DataCol.TEST] = k.test[DataCol.TEST]
+    k.raw[DataCol.I_TOT_GLOBAL] = k.covid_global[DataCol.I_TOT_GLOBAL]
+    k.raw = preprocessing.handle_zero(k.raw)
+    k.raw = sird.calc_s(k.raw, k.population)
+    k.raw = sird.calc_s_global(k.raw, k.population_global)
     k.raw.dropna(inplace=True)
     df_shifted = k.raw.shift()
-    delta = sird.calc_delta(k.raw.copy(), df_shifted)
-    delta.dropna(inplace=True)
-    k.data = sird.calc_vars(delta, df_shifted)
+    delta = k.raw.copy()
+    delta = sird.calc_delta(delta, df_shifted)
+    delta = sird.calc_delta_global(delta, df_shifted)
+    # delta.dropna(inplace=True)
+    k.data = delta
+    k.data = sird.calc_vars(k.data, k.population, df_shifted)
+    k.data = sird.calc_vars_global(k.data, df_shifted)
     k.data.dropna(inplace=True)
     return k
 

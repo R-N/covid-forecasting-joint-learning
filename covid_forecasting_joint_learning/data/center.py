@@ -10,16 +10,13 @@ TODO: population & common special dates
 
 
 class DataCenter:
-    def __init__(self, covid=None, psbb=None):
+    def __init__(self):
         self.__kabko = None
-        if covid is not None:
-            self.load_covid(covid)
-        if psbb is not None:
-            self.load_psbb(psbb)
         self.__dates_global = pd.DataFrame([], columns=DataCol.DATES_GLOBAL)
         self.__dates_local = pd.DataFrame([], columns=DataCol.DATES_LOCAL)
         self.__date_names_global = np.array([])
         self.__date_names_local = np.array([])
+        self.__population_global = None
 
     def load_covid_local(
         self,
@@ -73,9 +70,8 @@ class DataCenter:
         df,
         date_col="date",
         labels_orig=[
-            "total_vaccinations_per_hundred",
-            "people_vaccinated_per_hundred",
-            "people_fully_vaccinated_per_hundred"
+            "people_vaccinated",
+            "people_fully_vaccinated"
         ]
     ):
         if labels_orig:
@@ -85,7 +81,6 @@ class DataCenter:
         rename_cols = {
             date_col: DataCol.DATE,
             **dict(zip(labels_orig, [
-                DataCol.VAC_TOTAL,
                 DataCol.VAC_PEOPLE,
                 DataCol.VAC_FULL
             ]))
@@ -132,7 +127,7 @@ class DataCenter:
         df.loc[:, date_col] = pd.to_datetime(df[date_col])
         rename_cols = {
             date_col: DataCol.DATE,
-            label_orig: DataCol.I_TOT
+            label_orig: DataCol.I_TOT_GLOBAL
         }
         df.rename(columns=rename_cols, inplace=True)
         self.__covid_global = df
@@ -237,11 +232,17 @@ class DataCenter:
         }
         df.rename(columns=rename_cols, inplace=True)
         self.__population = df
+        self.__population_global = self.get_population_kabko("INDONESIA")
         return self.__population
 
     @property
     def population(self):
         return self.__population
+
+    @property
+    def population_global(self):
+        return self.__population_global
+    
     
     def get_population_kabko(
         self,
