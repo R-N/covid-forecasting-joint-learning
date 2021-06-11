@@ -100,9 +100,9 @@ class KabkoData:
     ):
         for k, v in dates.items():
             if isinstance(v, list):
-                date = dates[dates[DataCol.name].isin(v)]
+                date = dates[dates[DataCol.NAME].isin(v)]
             else:
-                date = dates[dates[DataCol.name] == v]
+                date = dates[dates[DataCol.NAME] == v]
             DataUtil.add_dates(df, date, k)
 
         return df
