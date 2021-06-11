@@ -193,7 +193,7 @@ class DataCenter:
             ]]
             self.__dates_local = pd.concat([self.__dates_local, df])
             self.__date_names_local= self.__dates_local[DataCol.NAME].unique()
-        self.__date_names = np.unique(self.__date_names_global + self.__date_names_local)
+        self.__date_names = np.unique(np.concatenate(self.__date_names_global, self.__date_names_local))
         return df
 
     @property
