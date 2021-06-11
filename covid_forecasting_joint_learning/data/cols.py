@@ -14,3 +14,10 @@ START = "start"
 END = "end"
 VAL = "value"
 TEST = "test"
+DATE_COLS = [
+    START,
+    END,
+    VAL
+]
+DATES_GLOBAL = [NAME, *DATE_COLS]
+DATES_LOCAL = [KABKO, *DATES_GLOBAL]

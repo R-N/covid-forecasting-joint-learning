@@ -16,19 +16,8 @@ class DataCenter:
             self.load_covid(covid)
         if psbb is not None:
             self.load_psbb(psbb)
-        self.__dates_global = pd.DataFrame([], columns=[
-            DataCol.NAME,
-            DataCol.START,
-            DataCol.END,
-            DataCol.VAL
-        ])
-        self.__dates_local = pd.DataFrame([], columns=[
-            DataCol.KABKO,
-            DataCol.NAME,
-            DataCol.START,
-            DataCol.END,
-            DataCol.VAL
-        ])
+        self.__dates_global = pd.DataFrame([], columns=DataCol.DATES_GLOBAL)
+        self.__dates_local = pd.DataFrame([], columns=DataCol.DATES_LOCAL)
         self.__date_names_global = np.array([])
         self.__date_names_local = np.array([])
 
@@ -175,22 +164,11 @@ class DataCenter:
         if name is not None and DataCol.NAME not in df.columns:
             df[DataCol.NAME] = pd.Series(np.array(len(df) * [name]), dtype=str)
         if DataCol.KABKO not in df.columns:
-            df = df[[
-                DataCol.NAME,
-                DataCol.START,
-                DataCol.END,
-                DataCol.VAL
-            ]]
+            df = df[DataCol.DATES_GLOBAL]
             self.__dates_global = pd.concat([self.__dates_global, df])
             self.__date_names_global = self.__dates_global[DataCol.NAME].unique()
         else:
-            df = df[[
-                DataCol.KABKO,
-                DataCol.NAME,
-                DataCol.START,
-                DataCol.END,
-                DataCol.VAL
-            ]]
+            df = df[DataCol.DATES_LOCAL]
             self.__dates_local = pd.concat([self.__dates_local, df])
             self.__date_names_local= self.__dates_local[DataCol.NAME].unique()
         self.__date_names = np.unique(np.concatenate([self.__date_names_global, self.__date_names_local]))
@@ -240,7 +218,7 @@ class DataCenter:
     ):
         dates = pd.concat([
             self.dates_global.copy(),
-            self.dates_local[self.dates_local[DataCol.KABKO] == kabko]
+            self.dates_local[self.dates_local[DataCol.KABKO] == kabko][DataCol.DATES_GLOBAL]
         ])
         return dates
 
