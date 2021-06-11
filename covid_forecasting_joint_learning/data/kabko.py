@@ -70,7 +70,7 @@ class KabkoData:
     def date_names(self):
         return self.dates[DataCol.NAME].unique()
 
-    def add_special_dates(
+    def add_dates(
         self, df,
         dates={
             "psbb": "psbb",
