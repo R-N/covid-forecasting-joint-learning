@@ -110,7 +110,7 @@ class DataCenter:
     def load_test(
         self,
         df,
-        date_col="date",
+        date_col="Date",
         label_orig="Cumulative total"
     ):
         if label_orig:
