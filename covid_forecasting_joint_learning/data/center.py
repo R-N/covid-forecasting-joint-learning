@@ -29,6 +29,8 @@ class DataCenter:
             DataCol.END,
             DataCol.VAL
         ])
+        self.__date_names_global = np.array([])
+        self.__date_names_local = np.array([])
 
     def load_covid_local(
         self,
