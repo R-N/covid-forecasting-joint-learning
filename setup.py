@@ -30,6 +30,7 @@ setuptools.setup(
         "mpld3",
         "seaborn",
         "statsmodels==0.12",
-        "scikit-learn==0.24.1"
+        "scikit-learn==0.24.1",
+        "tslearn"
     ]
 )
