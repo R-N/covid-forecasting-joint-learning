@@ -14,7 +14,7 @@ def get_kabkos(data_center):
 def __preprocessing_1(
     k
 ):
-    k.raw = k.add_special_dates(k.get_covid())
+    k.raw = k.get_covid()
     k.raw = sird.calc_s(preprocessing.handle_zero(k.raw), k.population)
     k.raw.drop_na(inplace=True)
     df_shifted = k.raw.shift()
