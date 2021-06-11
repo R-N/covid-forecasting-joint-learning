@@ -66,6 +66,10 @@ class KabkoData:
     def covid_global(self):
         return self.data_center.covid_global
 
+    @property
+    def date_names(self):
+        return self.dates[DataCol.NAME].unique()
+
     def add_special_dates(
         self, df,
         dates={
