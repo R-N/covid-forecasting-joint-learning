@@ -16,12 +16,12 @@ def __preprocessing_1(
 ):
     k.raw = k.covid.copy()
     k.raw = sird.calc_s(preprocessing.handle_zero(k.raw), k.population)
-    k.raw.drop_na(inplace=True)
+    k.raw.dropna(inplace=True)
     df_shifted = k.raw.shift()
     delta = sird.calc_delta(k.raw.copy(), df_shifted)
-    delta.drop_na(inplace=True)
+    delta.dropna(inplace=True)
     k.data = sird.calc_vars(delta, df_shifted)
-    k.data.drop_na(inplace=True)
+    k.data.dropna(inplace=True)
     return k
 
 
