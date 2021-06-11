@@ -171,7 +171,7 @@ class DataCenter:
             val_col=val_col
         )
         if name is not None and DataCol.NAME not in df.columns:
-            df[DataCol.NAME] = pd.Series(np.array(len(df) * [name]), dtype=np.float32)
+            df[DataCol.NAME] = pd.Series(np.array(len(df) * [name]), dtype=str)
         if DataCol.KABKO not in df.columns:
             df = df[[
                 DataCol.NAME,
