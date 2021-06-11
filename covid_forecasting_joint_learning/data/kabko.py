@@ -1,11 +1,15 @@
 from . import util as DataUtil
+from . import cols as DataCol
 
 
 class KabkoData:
     def __init__(
         self,
         name,
-        data_center=None,
+        data_center,
+        population=None,
+        covid=None,
+        dates=None,
         raw=None,
         data=None,
         parent=None,
@@ -18,6 +22,9 @@ class KabkoData:
     ):
         self.name = name
         self.data_center = data_center
+        self.covid = covid or self.data_center.get_covid_kabko(self.name)
+        self.dates = dates or self.data_center.get_dates_kabko(self.name)
+        self.population = population or self.data_center.get_population_kabko(self.name)
         self.raw = raw
         self.data = data
         self.parent = parent
@@ -33,6 +40,9 @@ class KabkoData:
         return KabkoData(
             name=self.name,
             data_center=self.data_center,
+            covid=self.covid,
+            dates=self.dates,
+            population=self.population,
             raw=self.raw,
             data=self.data,
             parent=self,
@@ -44,41 +54,31 @@ class KabkoData:
             datasets=self.datasets
         )
 
-
-    def get_covid(
-        self,
-        kabko_col="kabko",
-        date_col="date",
-        labels=["i", "r", "d"]
-    ):
-        covid = self.data_center.covid.loc[
-            self.data_center.covid[kabko_col] == self.name,
-            [date_col, *labels]
-        ].copy()
-        # del covid["kabko"]
-        covid.set_index(date_col, inplace=True)
-        return covid
+    @property
+    def vaccine(self):
+        return self.data_center.vaccine
 
     @property
-    def covid(self):
-        return self.get_covid()
-
-    def get_psbb(
-        self,
-        kabko_col="kabko",
-        start_col="start",
-        end_col="end",
-        val_col="value"
-    ):
-        return self.data_center.psbb.loc[
-            self.data_center.psbb[kabko_col] == self.name,
-            [start_col, end_col, val_col]
-        ]
+    def test(self):
+        return self.data_center.test
 
     @property
-    def psbb(self):
-        return self.get_psbb()
+    def covid_global(self):
+        return self.data_center.covid_global
 
-    def add_special_dates(self, df, psbb_col="psbb"):
-        DataUtil.add_special_dates(df, self.get_psbb(), psbb_col)
+    def add_special_dates(
+        self, df,
+        dates={
+            "psbb": "psbb",
+            "ppkm": "ppkm",
+            "ppkm_mikro": "ppkm_mikro"
+        }
+    ):
+        for k, v in dates.items():
+            if isinstance(v, list):
+                date = dates[dates[DataCol.name].isin(v)]
+            else:
+                date = dates[dates[DataCol.name] == v]
+            DataUtil.add_dates(df, date, k)
+
         return df
