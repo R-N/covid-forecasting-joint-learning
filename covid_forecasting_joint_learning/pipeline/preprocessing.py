@@ -9,7 +9,8 @@ from ..data import cols as DataCol
 
 # Zero handling
 def trim_zero(df, labels=DataCol.IRD):
-    non_zero = (df[labels] != 0).any(1)
+    non_zero = df[labels] if labels is not None else df
+    non_zero = (non_zero != 0).any(1)
     non_zero = df[non_zero]
     df = df[non_zero.first_valid_index():non_zero.last_valid_index()].copy()
     return df
@@ -36,8 +37,9 @@ def fill_zero(
     # TODO: change middle zeroes to NaN
     for l in labels:
         df.loc[:, l] = zero_to_nan(df[l])
-    df[labels].interpolate(method=method, limit_direction='forward', axis=0, inplace=True)
-    df[labels].fillna(0, inplace=True)
+    df = df[labels] if labels is not None else df
+    df.interpolate(method=method, limit_direction='forward', axis=0, inplace=True)
+    df.fillna(0, inplace=True)
     return df
 
 
@@ -52,8 +54,8 @@ def handle_zero(
     ],
     interpolation_method="linear"
 ):
-    df = trim_zero(df, labels=trim_labels)
     df = fill_zero(df, labels=fill_labels, method=interpolation_method)
+    df = trim_zero(df, labels=trim_labels)
     return df
 
 
