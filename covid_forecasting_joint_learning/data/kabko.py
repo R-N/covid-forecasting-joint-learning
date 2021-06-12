@@ -22,8 +22,8 @@ class KabkoData:
     ):
         self.__name = name
         self.__data_center = data_center
-        self.__covid = covid or self.data_center.get_covid_kabko(self.name)
-        self.__dates = dates or self.data_center.get_dates_kabko(self.name)
+        self.__covid = covid if covid is not None else self.data_center.get_covid_kabko(self.name)
+        self.__dates = dates if covid is not None else self.data_center.get_dates_kabko(self.name)
         self.__date_names = self.dates[DataCol.NAME].unique()
         self.__population = population or self.data_center.get_population_kabko(self.name)
         self.raw = raw
