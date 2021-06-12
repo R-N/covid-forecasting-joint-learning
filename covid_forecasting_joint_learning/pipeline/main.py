@@ -29,6 +29,15 @@ def preprocessing_0(
     data_center.raw_global = data_center.covid_global.copy()
     data_center.raw_global[DataCol.VAC_ALL] = data_center.vaccine[DataCol.VAC_ALL]
     data_center.raw_global[DataCol.TEST] = data_center.test[DataCol.TEST]
+    data_center.raw_global = preprocessing.handle_zero(
+        data_center.raw_global,
+        trim_labels=[DataCol.I_TOT_GLOBAL],
+        fill_labels=[
+            *DataCol.VAC_ALL,
+            DataCol.TEST,
+            DataCol.I_TOT_GLOBAL
+        ]
+    )
     data_center.raw_global = sird.calc_s_global(data_center.raw_global, data_center.population_global)
     data_center.raw_global.dropna(inplace=True)
     df_shifted = data_center.raw_global.shift()
