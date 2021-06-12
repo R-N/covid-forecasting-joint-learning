@@ -64,7 +64,6 @@ def __preprocessing_1(
         DataCol.I_TOT_GLOBAL,
         DataCol.TEST
     ],
-    filter_labels=None,
     interpolation_method="linear"
 ):
     k.raw = k.covid.copy()
@@ -84,8 +83,6 @@ def __preprocessing_1(
     k.data = delta
     k.data = sird.calc_vars(k.data, k.population, df_shifted)
     k.data.dropna(inplace=True)
-    if filter_labels:
-        k.data = k.data[filter_labels]
     return k
 
 
@@ -93,6 +90,15 @@ def preprocessing_1(
     kabkos
 ):
     return [__preprocessing_1(k) for k in kabkos]
+
+
+def filter_cols(
+    kabkos,
+    cols
+):
+    for kabko in kabkos:
+        kabko.data = kabko.data[cols]
+    return kabkos
 
 
 def __preprocessing_2(
@@ -175,7 +181,7 @@ def preprocessing_3(
 
 def clustering_1(
     group,
-    cols=["beta", "gamma", "delta"],
+    cols=DataCol.SIRD_VARS,
     n_clusters_min=2,
     n_clusters_max=10,
     n_init=3,
