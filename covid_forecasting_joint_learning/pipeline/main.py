@@ -171,7 +171,7 @@ def preprocessing_3(
     )
     for kabko in kabkos:
         kabko.scaler = scaler
-        kabko.data.loc[:, cols] = scaler.transform(kabko.data.loc[cols])
+        kabko.data.loc[:, cols] = scaler.transform(kabko.data.loc[:, cols])
     return kabkos
 
 
