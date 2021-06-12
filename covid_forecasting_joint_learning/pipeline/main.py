@@ -6,51 +6,8 @@ from ..data.kabko import KabkoData
 from ..data import cols as DataCol
 
 
-def get_kabkos(data_center):
-    kabkos = data_center.kabko
-    kabkos = [KabkoData(k, data_center) for k in kabkos]
-    return kabkos
-
-
-def __preprocessing_1(
-    k,
-    trim_labels=DataCol.IRD,
-    fill_labels=[
-        *DataCol.IRD,
-        *DataCol.VAC_ALL,
-        DataCol.I_TOT_GLOBAL,
-        DataCol.TEST
-    ],
-    interpolation_method="linear"
-):
-    k.raw = k.covid.copy()
-    k.raw[DataCol.VAC_ALL] = k.vaccine[DataCol.VAC_ALL]
-    k.raw[DataCol.TEST] = k.test[DataCol.TEST]
-    k.raw[DataCol.I_TOT_GLOBAL] = k.covid_global[DataCol.I_TOT_GLOBAL]
-    k.raw = preprocessing.handle_zero(
-        k.raw,
-        trim_labels=trim_labels,
-        fill_labels=fill_labels,
-        interpolation_method=interpolation_method
-    )
-    k.raw = sird.calc_s(k.raw, k.population)
-    k.raw = sird.calc_s_global(k.raw, k.population_global)
-    k.raw.dropna(inplace=True)
-    df_shifted = k.raw.shift()
-    delta = k.raw.copy()
-    delta = sird.calc_delta(delta, df_shifted)
-    delta = sird.calc_delta_global(delta, df_shifted)
-    # delta.dropna(inplace=True)
-    k.data = delta
-    k.data = sird.calc_vars(k.data, k.population, df_shifted)
-    k.data = sird.calc_vars_global(k.data, df_shifted)
-    k.data.dropna(inplace=True)
-    return k
-
-
-def preprocessing_1(
-    data_center,
-    kabkos
+def preprocessing_0(
+    data_center
 ):
     data_center.set_global_ts(
         vaccine=preprocessing.handle_zero(
@@ -69,6 +26,60 @@ def preprocessing_1(
             fill_labels=[DataCol.I_TOT_GLOBAL]
         )
     )
+    data_center.raw_global = data_center.covid_global.copy()
+    data_center.raw_global[DataCol.VAC_ALL] = data_center.vaccine[DataCol.VAC_ALL]
+    data_center.raw_global[DataCol.TEST] = data_center.test[DataCol.TEST]
+    data_center.raw_global = sird.calc_s_global(data_center.raw_global, data_center.population_global)
+    data_center.raw_global.dropna(inplace=True)
+    df_shifted = data_center.raw_global.shift()
+    delta = data_center.raw_global.copy()
+    delta = sird.calc_delta_global(delta, df_shifted)
+    data_center.data_global = delta
+    data_center.data_global = sird.calc_vars_global(data_center.data_global, df_shifted)
+    data_center.data_global.dropna(inplace=True)
+    return data_center
+
+
+def get_kabkos(data_center):
+    kabkos = data_center.kabko
+    kabkos = [KabkoData(k, data_center) for k in kabkos]
+    return kabkos
+
+
+def __preprocessing_1(
+    k,
+    trim_labels=DataCol.IRD,
+    fill_labels=[
+        *DataCol.IRD,
+        *DataCol.VAC_ALL,
+        DataCol.I_TOT_GLOBAL,
+        DataCol.TEST
+    ],
+    interpolation_method="linear"
+):
+    k.raw = k.covid.copy()
+    k.raw[k.data_global.columns] = k.data_global
+    k.raw = preprocessing.handle_zero(
+        k.raw,
+        trim_labels=trim_labels,
+        fill_labels=fill_labels,
+        interpolation_method=interpolation_method
+    )
+    k.raw = sird.calc_s(k.raw, k.population)
+    k.raw.dropna(inplace=True)
+    df_shifted = k.raw.shift()
+    delta = k.raw.copy()
+    delta = sird.calc_delta(delta, df_shifted)
+    # delta.dropna(inplace=True)
+    k.data = delta
+    k.data = sird.calc_vars(k.data, k.population, df_shifted)
+    k.data.dropna(inplace=True)
+    return k
+
+
+def preprocessing_1(
+    kabkos
+):
     return [__preprocessing_1(k) for k in kabkos]
 
 

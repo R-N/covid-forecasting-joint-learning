@@ -94,6 +94,10 @@ class KabkoData:
     def covid_global(self):
         return DataUtil.right_slice(self.data_center.covid_global, self.covid)
 
+    @property
+    def data_global(self):
+        return DataUtil.right_slice(self.data_center.data_global, self.covid)
+    
     def add_dates(
         self, df,
         dates={
