@@ -37,7 +37,7 @@ def single_cluster_count(
     labels
 ):
     # counts = [g[1] for g in Counter(labels).items()]
-    counts = [len(g[1]) for g in itertools.groupby(labels)]
+    counts = [len(list(g[1])) for g in itertools.groupby(labels)]
     return len([count for count in counts if count < 2])
 
 
