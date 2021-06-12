@@ -140,10 +140,10 @@ def preprocessing_2(
 
 def __preprocessing_3(
     kabkos,
-    cols=["beta", "gamma", "delta"],
+    cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler
 ):
-    data = [kabko.data[:kabko.split_indices[2], cols] for kabko in kabkos]
+    data = [kabko.data[:kabko.split_indices[2]][cols] for kabko in kabkos]
     full_data = pd.concat(data)
     scaler = Scaler()
     scaler.fit(full_data)
@@ -152,7 +152,7 @@ def __preprocessing_3(
 
 def preprocessing_3(
     kabkos,
-    cols=["beta", "gamma", "delta"],
+    cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler
 ):
     scaler = __preprocessing_3(
@@ -162,7 +162,7 @@ def preprocessing_3(
     )
     for kabko in kabkos:
         kabko.scaler = scaler
-        kabko.datasets.loc[:, cols] = scaler.transform(kabko.data[cols])
+        kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
     return kabkos
 
 
@@ -177,7 +177,7 @@ def clustering_1(
 ):
     for k in group.members:
         # k.data_clustering = k.scaler.transform(k.data_train_val[cols])
-        k.data_clustering = k.datasets[:k.split_indices[2], cols]
+        k.data_clustering = k.data[:k.split_indices[2], cols]
     dataset = [k.data_clustering for k in group.members]
     dataset = clustering.to_time_series_dataset(dataset)
     n_cluster, model, labels, silhouette = clustering.cluster_best(
@@ -188,7 +188,7 @@ def clustering_1(
         max_iter=max_iter,
         metric=metric
     )
-    clusters = [clustering.Cluster(i, [], []) for i in range(n_cluster)]
+    clusters = [clustering.Cluster(i, []) for i in range(n_cluster)]
     for k in group.members:
         k.cluster = model.predict(clustering.to_time_series_dataset([k.data_clustering]))[0]
         clusters[k.cluster].sources.append(k)
@@ -196,16 +196,19 @@ def clustering_1(
     for c in clusters:
         target = min(c.sources, key=lambda x: len(x.data))
         c.sources.remove(target)
-        c.targets.append(target)
+        c.target = target
     group.clusters = clusters
     return clusters
 
-
 def preprocessing_4(
-    kabkos,
-    cols=["beta", "gamma", "delta"],
+    cluster,
+    cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler
 ):
+    kabkos = [*cluster.sources, cluster.targets]
+    for kabko in kabkos:
+        kabko.data = kabko.parent.data[:cluster.target.data.last_valid_index()]
+        kabko.split_indices = cluster.target.split_indices
     scaler = __preprocessing_3(
         kabkos,
         cols=cols,
@@ -213,8 +216,8 @@ def preprocessing_4(
     )
     for kabko in kabkos:
         kabko.scaler_2 = scaler
-        kabko.datasets.loc[:, cols] = scaler.transform(kabko.data[cols])
-        kabko.datasets = preprocessing.split_dataset(
+        kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
+        kabko.data = preprocessing.split_dataset(
             kabko.data,
             kabko.split_indices
         )

@@ -7,11 +7,11 @@ class Cluster:
         self,
         cluster_id,
         sources=None,
-        targets=None
+        target=None
     ):
         self.cluster_id = cluster_id
         self.sources = sources
-        self.targets = targets
+        self.target = target
 
 
 def cluster(
