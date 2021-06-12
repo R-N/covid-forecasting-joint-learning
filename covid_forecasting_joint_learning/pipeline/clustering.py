@@ -52,5 +52,5 @@ def cluster_best(
         metric=metric
     )) for n, model, labels in trial_labels]
     # n_cluster_best, model_best, labels_best, silhouette_best
-    best_result = max(trial_results, key=lambda x: x[2])
+    best_result = max(trial_results, key=lambda x: x[3])
     return best_result
