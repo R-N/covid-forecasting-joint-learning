@@ -36,7 +36,7 @@ def single_cluster_count(
     labels
 ):
     counts = [g[1] for g in Counter(labels).items()]
-    return len([counts if count < 2])
+    return len([count for count in counts if count < 2])
 
 
 def cluster_best(
