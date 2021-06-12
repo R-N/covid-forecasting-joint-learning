@@ -105,10 +105,9 @@ def __preprocessing_2(
         test_portion=test_portion,
         past_size=past_size
     )
-    kabko = kabko.copy(
-        data=df,
-        split_indices=split_indices
-    )
+    kabko = kabko.copy()
+    kabko.data = df
+    kabko.split_indices = split_indices
     return kabko
 
 
