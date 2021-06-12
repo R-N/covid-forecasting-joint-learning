@@ -36,7 +36,6 @@ def cluster(
 def single_cluster_count(
     labels
 ):
-    labels = [x for x in labels]
     counts = [g[1] for g in Counter(labels).items()]
     # counts = [len(list(g[1])) for g in itertools.groupby(labels)]
     return len([count for count in counts if count < 2])
@@ -62,6 +61,17 @@ def cluster_best(
         labels,
         metric=metric
     )) for n, model, labels in trial_labels]
+    # yeah so I forgot that there can be a cluster with single member
+    # there can be 2 approach to handle this
+    # a. Still pick k with highest silhouette despite having clusters with 
+    # single members and just exclude those clusters. The downside is that
+    # this can result in one massive cluster.
+    # b. Pick k which will produce least single clusters then select one
+    # with highest silhouette. The downside is that it might be a bad k
+    # since the silhouette is now a secondary measure. This is done below.
+    # Or maybe use combination of both, with some formula or rule, idk
+    # Maybe slice the upper quartile/median of the silhouette first then pick
+    # one with least single cluster count?
+    best_result = min(trial_results, key=lambda x: (single_cluster_count(x[2]), 1-x[3]))
     # n_cluster_best, model_best, labels_best, silhouette_best
-    best_result = min(trial_results, key=lambda x: (single_cluster_count(trial_results[2]), 1-x[3]))
     return best_result
