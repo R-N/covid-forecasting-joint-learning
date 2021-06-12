@@ -253,6 +253,17 @@ class DataCenter:
     ):
         return self.population[self.population[DataCol.KABKO] == kabko][DataCol.N].values[0]
 
+
+    def set_global_ts(
+        self,
+        vaccine,
+        test,
+        covid_global
+    ):
+        self.__vaccine = vaccine
+        self.__test = test
+        self.__covid_global = covid_global
+
     # Full of defaults
     # For custom, DIY
     def load_excel(

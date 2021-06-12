@@ -52,20 +52,22 @@ def preprocessing_1(
     data_center,
     kabkos
 ):
-    data_center.__vaccine = preprocessing.handle_zero(
-        data_center.__vaccine,
-        trim_labels=DataCol.VAC_ALL,
-        fill_labels=DataCol.VAC_ALL
-    )
-    data_center.__test = preprocessing.handle_zero(
-        data_center.__test,
-        trim_labels=[DataCol.TEST],
-        fill_labels=[DataCol.TEST]
-    )
-    data_center.__covid_global = preprocessing.handle_zero(
-        data_center.__test,
-        trim_labels=[DataCol.I_TOT_GLOBAL],
-        fill_labels=[DataCol.I_TOT_GLOBAL]
+    data_center.set_global_ts(
+        vaccine=preprocessing.handle_zero(
+            data_center.vaccine,
+            trim_labels=DataCol.VAC_ALL,
+            fill_labels=DataCol.VAC_ALL
+        ),
+        test=preprocessing.handle_zero(
+            data_center.test,
+            trim_labels=[DataCol.TEST],
+            fill_labels=[DataCol.TEST]
+        ),
+        covid_global=preprocessing.handle_zero(
+            data_center.covid_global,
+            trim_labels=[DataCol.I_TOT_GLOBAL],
+            fill_labels=[DataCol.I_TOT_GLOBAL]
+        )
     )
     return [__preprocessing_1(k) for k in kabkos]
 
