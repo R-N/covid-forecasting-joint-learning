@@ -12,6 +12,7 @@ def calc_s_global(df, n_global):
     df[DataCol.N_GLOBAL] = pd.Series(n_global, index=df.index)
     df[DataCol.S_GLOBAL_PEOPLE] = df[DataCol.N_GLOBAL] - (df[DataCol.I_TOT_GLOBAL] + df[DataCol.VAC_PEOPLE])
     df[DataCol.S_GLOBAL_FULL] = df[DataCol.N_GLOBAL] - (df[DataCol.I_TOT_GLOBAL] + df[DataCol.VAC_FULL])
+    df[DataCol.POS_RATE] = df[DataCol.I_TOT_GLOBAL] / df[DataCol.TEST]
     return df
 
 
@@ -30,6 +31,7 @@ def calc_delta_global(df, df_shifted=None):
     df[DataCol.DELTA_TEST] = df[DataCol.TEST] - df_shifted[DataCol.TEST]
     df[DataCol.DELTA_VAC_PEOPLE] = df[DataCol.VAC_PEOPLE] - df_shifted[DataCol.VAC_PEOPLE]
     df[DataCol.DELTA_VAC_FULL] = df[DataCol.VAC_FULL] - df_shifted[DataCol.VAC_FULL]
+    df[DataCol.DELTA_I_TOT_GLOBAL] = df[DataCol.I_TOT_GLOBAL] - df_shifted[DataCol.I_TOT_GLOBAL]
     return df
 
 
@@ -49,6 +51,7 @@ def calc_vars_global(df, df_shifted=None):
 
     df[DataCol.VAC_PEOPLE_S] = df[DataCol.DELTA_VAC_PEOPLE] / df_shifted[DataCol.S_GLOBAL_PEOPLE]
     df[DataCol.VAC_FULL_S] = df[DataCol.DELTA_VAC_FULL] / df_shifted[DataCol.S_GLOBAL_FULL]
+    df[DataCol.DAILY_POS_RATE] = df[DataCol.DELTA_I_TOT_GLOBAL] / df[DataCol.DELTA_TEST]
 
     return df
 
