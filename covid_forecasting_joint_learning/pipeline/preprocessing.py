@@ -79,8 +79,8 @@ def calc_split(
     train_len = n - (val_len + test_len)
     val_start, test_start = train_len+past_size, train_len+val_len+past_size
     # Note that slicing with date index includes the second part as opposed to integer index
-    val_start, test_start = df.index[val_start], df.index[test_start]
     train_end, val_end = df.index[val_start-1], df.index[test_start-1]
+    val_start, test_start = df.index[val_start], df.index[test_start]
     return train_end, val_start, val_end, test_start
 
 
