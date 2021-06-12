@@ -171,6 +171,8 @@ def preprocessing_3(
     )
     for kabko in kabkos:
         kabko.scaler = scaler
+        # This produces warnings for whatever reason idk
+        # I've used loc everywhere
         kabko.data.loc[:, cols] = scaler.transform(kabko.data.loc[:, cols])
     return kabkos
 
@@ -186,7 +188,7 @@ def clustering_1(
 ):
     for k in group.members:
         # k.data_clustering = k.scaler.transform(k.data_train_val[cols])
-        k.data_clustering = k.data[:k.split_indices[2], cols]
+        k.data_clustering = k.data.loc[:k.split_indices[2], cols]
     dataset = [k.data_clustering for k in group.members]
     dataset = clustering.to_time_series_dataset(dataset)
     n_cluster, model, labels, silhouette = clustering.cluster_best(
