@@ -64,6 +64,7 @@ def __preprocessing_1(
         DataCol.I_TOT_GLOBAL,
         DataCol.TEST
     ],
+    filter_labels=None,
     interpolation_method="linear"
 ):
     k.raw = k.covid.copy()
@@ -83,6 +84,8 @@ def __preprocessing_1(
     k.data = delta
     k.data = sird.calc_vars(k.data, k.population, df_shifted)
     k.data.dropna(inplace=True)
+    if filter_labels:
+        k.data = k.data[filter_labels]
     return k
 
 
@@ -143,7 +146,9 @@ def __preprocessing_3(
     cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler
 ):
+    print("C")
     data = [kabko.data[:kabko.split_indices[2]][cols] for kabko in kabkos]
+    print("D")
     full_data = pd.concat(data)
     scaler = Scaler()
     scaler.fit(full_data)
@@ -162,7 +167,9 @@ def preprocessing_3(
     )
     for kabko in kabkos:
         kabko.scaler = scaler
+        print("A")
         kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
+        print("B")
     return kabkos
 
 
