@@ -13,13 +13,26 @@ def get_kabkos(data_center):
 
 
 def __preprocessing_1(
-    k
+    k,
+    trim_labels=DataCol.IRD,
+    fill_labels=[
+        *DataCol.IRD,
+        *DataCol.VAC_ALL,
+        DataCol.I_TOT_GLOBAL,
+        DataCol.TEST
+    ],
+    interpolation_method="linear"
 ):
     k.raw = k.covid.copy()
     k.raw[DataCol.VAC_ALL] = k.vaccine[DataCol.VAC_ALL]
     k.raw[DataCol.TEST] = k.test[DataCol.TEST]
     k.raw[DataCol.I_TOT_GLOBAL] = k.covid_global[DataCol.I_TOT_GLOBAL]
-    k.raw = preprocessing.handle_zero(k.raw)
+    k.raw = preprocessing.handle_zero(
+        k.raw,
+        trim_labels=trim_labels,
+        fill_labels=fill_labels,
+        interpolation_method=interpolation_method
+    )
     k.raw = sird.calc_s(k.raw, k.population)
     k.raw = sird.calc_s_global(k.raw, k.population_global)
     k.raw.dropna(inplace=True)

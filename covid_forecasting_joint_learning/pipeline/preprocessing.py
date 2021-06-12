@@ -18,7 +18,7 @@ def trim_zero(df, labels=DataCol.IRD):
 def zero_to_nan(series):
     non_zero = series != 0
     series = series.copy()
-    series[non_zero.first_valid_index():non_zero.last_valid_index()].loc[series==0] = np.NaN
+    series[non_zero.first_valid_index():non_zero.last_valid_index()].loc[series == 0] = np.NaN
     return series
 
 
@@ -36,13 +36,24 @@ def fill_zero(
     # TODO: change middle zeroes to NaN
     for l in labels:
         df.loc[:, l] = zero_to_nan(df[l])
-    df.loc[:, labels] = df[labels].interpolate(method=method, limit_direction='forward', axis=0)
+    df[labels].interpolate(method=method, limit_direction='forward', axis=0, inplace=True)
+    df[labels].fillna(0, inplace=True)
     return df
 
 
-def handle_zero(df, labels=DataCol.IRD, interpolation_method="linear"):
-    df = trim_zero(df, labels=labels)
-    df = fill_zero(df, labels=labels, method=interpolation_method)
+def handle_zero(
+    df,
+    trim_labels=DataCol.IRD,
+    fill_labels=[
+        *DataCol.IRD,
+        *DataCol.VAC_ALL,
+        DataCol.I_TOT_GLOBAL,
+        DataCol.TEST
+    ],
+    interpolation_method="linear"
+):
+    df = trim_zero(df, labels=trim_labels)
+    df = fill_zero(df, labels=fill_labels, method=interpolation_method)
     return df
 
 
