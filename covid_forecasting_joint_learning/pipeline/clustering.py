@@ -1,5 +1,6 @@
 from tslearn.utils import to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans, silhouette_score
+from collections import Counter
 
 
 class Cluster:
@@ -31,6 +32,13 @@ def cluster(
     return model, labels
 
 
+def single_cluster_count(
+    labels
+):
+    counts = [g[1] for g in Counter(labels).items()]
+    return len([counts if count < 2])
+
+
 def cluster_best(
     dataset,
     n_clusters_min=2,
@@ -52,5 +60,5 @@ def cluster_best(
         metric=metric
     )) for n, model, labels in trial_labels]
     # n_cluster_best, model_best, labels_best, silhouette_best
-    best_result = max(trial_results, key=lambda x: x[3])
+    best_result = min(trial_results, key=lambda x: (single_cluster_count(trial_results[2]), 1-x[3]))
     return best_result
