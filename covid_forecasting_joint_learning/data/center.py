@@ -86,6 +86,7 @@ class DataCenter:
             ]))
         }
         df.rename(columns=rename_cols, inplace=True)
+        df.set_index(DataCol.DATE, inplace=True)
         self.__vaccine = df
         return self.__vaccine
 
@@ -108,6 +109,7 @@ class DataCenter:
             label_orig: DataCol.TEST
         }
         df.rename(columns=rename_cols, inplace=True)
+        df.set_index(DataCol.DATE, inplace=True)
         self.__test = df
         return self.__test
 
@@ -130,6 +132,7 @@ class DataCenter:
             label_orig: DataCol.I_TOT_GLOBAL
         }
         df.rename(columns=rename_cols, inplace=True)
+        df.set_index(DataCol.DATE, inplace=True)
         self.__covid_global = df
         return self.__covid_global
 
