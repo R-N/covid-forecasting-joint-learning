@@ -152,9 +152,7 @@ def __preprocessing_3(
     cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler
 ):
-    print("C")
     data = [kabko.data[:kabko.split_indices[2]][cols] for kabko in kabkos]
-    print("D")
     full_data = pd.concat(data)
     scaler = Scaler()
     scaler.fit(full_data)
@@ -173,9 +171,7 @@ def preprocessing_3(
     )
     for kabko in kabkos:
         kabko.scaler = scaler
-        print("A")
-        kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
-        print("B")
+        # kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
     return kabkos
 
 
