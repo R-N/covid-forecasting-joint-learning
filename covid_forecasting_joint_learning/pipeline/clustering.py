@@ -95,7 +95,7 @@ def cluster_best(
 
     # I decided to first filter the clusters to have at least 2 non-single clusters
     # That way the clustering works
-    trial_results_1 = [r for r in trial_results_0 if r.n_clusters_non_single >= good_clustering_non_single]
+    trial_results_1 = [r for r in trial_results if r.n_clusters_non_single >= good_clustering_non_single]
     # I must first check that it exists before using it
     good_clustering = len(trial_results_1) > 0
     if good_clustering:
@@ -106,7 +106,7 @@ def cluster_best(
     silhouettes = [r.silhouette for r in trial_results]
     min_silhouette = np.percentile(silhouettes, min_silhouette_percentile)
     trial_results = [r for r in trial_results if r.silhouette >= min_silhouette]
-    
+
     # It should also not be that far off the best silhouette
     best_silhouette = max(silhouettes)
     trial_results = [r for r in trial_results if best_silhouette-r.silhouette <= max_silhouette_diff]
