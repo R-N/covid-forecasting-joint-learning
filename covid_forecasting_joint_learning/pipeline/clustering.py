@@ -52,7 +52,6 @@ class ClusteringResult:
         self.n_clusters_single = len([count for count in counts if count < 2])
         self.n_clusters_non_single = self.n_clusters - self.n_clusters_single
         self.single_clusters = [g[0] for g in counter if g[1] < 2]
-        print(self.n_clusters_non_single, self.n_clusters_single, self.single_clusters)
 
 
 def cluster_best(
