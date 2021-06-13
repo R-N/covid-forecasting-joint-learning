@@ -275,8 +275,24 @@ def preprocessing_4(
     Scaler=preprocessing.MinMaxScaler
 ):
     kabkos = [*cluster.sources, cluster.target]
+    target_first_split_index = cluster.target.split_indices[0]
+    target_last_index = cluster.target.data.last_valid_index()
     for kabko in kabkos:
-        kabko.data = kabko.parent.data[:cluster.target.data.last_valid_index()]
+        kabko.data = kabko.parent.data[:target_last_index]
+        try:
+            assert kabko.data.last_valid_index() == target_last_index
+        except Exception:
+            raise Exception("Inequal kabko end %s!=%s" % (
+                kabko.data.last_valid_index(),
+                target_last_index
+            ))
+        try:
+            assert kabko.data.first_valid_index() <= target_first_split_index
+        except Exception:
+            raise Exception("Late kabko start %s>%s" % (
+                kabko.data.first_valid_index(),
+                target_first_split_index
+            ))
         kabko.split_indices = cluster.target.split_indices
     scaler = __preprocessing_3(
         kabkos,
