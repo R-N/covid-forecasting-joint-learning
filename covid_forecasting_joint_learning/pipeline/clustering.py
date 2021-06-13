@@ -8,11 +8,11 @@ import numpy as np
 class Cluster:
     def __init__(
         self,
-        cluster_id,
+        id,
         sources=None,
         target=None
     ):
-        self.cluster_id = cluster_id
+        self.id = id
         self.sources = sources
         self.target = target
 
