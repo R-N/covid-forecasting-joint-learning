@@ -17,6 +17,10 @@ class Cluster:
         self.sources = sources
         self.target = target
 
+    @property
+    def members(self):
+        return [*self.sources, self.target]
+
 
 def cluster(
     dataset,
@@ -187,4 +191,4 @@ def one_sided_clustering_similarity(a, b):
 
 
 def pairwise_clustering_similarity(a, b):
-  return 0.5 * (one_sided_clustering_similarity(a, b) + one_sided_clustering_similarity(b, a))
+    return 0.5 * (one_sided_clustering_similarity(a, b) + one_sided_clustering_similarity(b, a))
