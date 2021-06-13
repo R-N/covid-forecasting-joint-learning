@@ -111,14 +111,16 @@ def cluster_best(
     best_silhouette = max(silhouettes)
     trial_results_3 = [r for r in trial_results_3 if best_silhouette-r.silhouette <= max_silhouette_diff]
 
-    if good_clustering:
-        # Then I'll pick the one with most non-single clusters, 
-        # and the one with best silhouette if there are more than one
-        best_result = max(trial_results_3, key=lambda r: (r.n_clusters_non_single, r.silhouette))
-    else:
-        # But if it's useless clustering, then I will pick one with least single clusters
-        # So that I won't remove too much
-        best_result = min(trial_results_3, key=lambda r: (r.n_clusters_single, -r.silhouette))
+    # if good_clustering:
+    #     # Then I'll pick the one with most non-single clusters, 
+    #     # and the one with best silhouette if there are more than one
+    #     best_result = max(trial_results_3, key=lambda r: (r.n_clusters_non_single, r.silhouette))
+    # else:
+    #     # But if it's useless clustering, then I will pick one with least single clusters
+    #     # So that I won't remove too much
+    # Nevermind. I shouldn't have maximized cluster number. 
+    # There's no good reason for that
+    best_result = min(trial_results_3, key=lambda r: (r.n_clusters_single, -r.silhouette))
     return best_result
 
 
