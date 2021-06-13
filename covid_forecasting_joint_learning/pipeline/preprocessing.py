@@ -117,7 +117,7 @@ def generate_dataset(
     past_start_1, past_end_1 = future_start - past_size, future_start
     future_start_1, future_end_1 = future_start, future_start + future_size
     past = [df.iloc[past_start_1+i:past_end_1+i].to_numpy() for i in ids]
-    future = [df.iloc[future_start_1+i:future_end_1+i, labels].to_numpy() for i in ids]
+    future = [df.iloc[future_start_1+i:future_end_1+i][labels].to_numpy() for i in ids]
 
     return list(zip(past, future))
 
