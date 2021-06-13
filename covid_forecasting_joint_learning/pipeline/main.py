@@ -286,7 +286,7 @@ def preprocessing_4(
     for kabko in kabkos:
         kabko.scaler_2 = scaler
         kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
-        kabko.data = preprocessing.split_dataset(
+        kabko.datasets = preprocessing.split_dataset(
             kabko.data,
             kabko.split_indices
         )

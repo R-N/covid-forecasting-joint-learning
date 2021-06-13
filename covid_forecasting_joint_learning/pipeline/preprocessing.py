@@ -129,6 +129,7 @@ def split_dataset(
     stride=1,
     labels=DataCol.SIRD_VARS
 ):
+    splits = [df.index.get_loc(s) for s in splits]
     train_end, val_start, val_end, test_start = splits
     train_set = generate_dataset(
         df[:train_end],
