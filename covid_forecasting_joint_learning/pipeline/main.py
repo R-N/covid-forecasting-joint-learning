@@ -185,6 +185,7 @@ def clustering_1(
     n_init=3,
     max_iter=50,
     metric="dtw",
+    random_state=None,
     good_clustering_non_single=2,
     min_silhouette_percentile=0.75,
     max_silhouette_diff=0.25
@@ -205,6 +206,7 @@ def clustering_1(
             n_init=n_init,
             max_iter=max_iter,
             metric=metric,
+            random_state=random_state,
             good_clustering_non_single=good_clustering_non_single,
             min_silhouette_percentile=min_silhouette_percentile,
             max_silhouette_diff=max_silhouette_diff
