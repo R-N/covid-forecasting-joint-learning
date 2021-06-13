@@ -237,6 +237,7 @@ def clustering_1(
         c.target = target
         # Remove outliers if they're not target
         c.sources = [k for k in c.sources if k not in outliers]
+    group.clustering_info = best_clustering.get_info()
     group.clusters = clusters
     return clusters
 

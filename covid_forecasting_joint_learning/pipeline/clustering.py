@@ -52,6 +52,39 @@ class ClusteringResult:
         self.n_clusters_single = len([count for count in counts if count < 2])
         self.n_clusters_non_single = self.n_clusters - self.n_clusters_single
         self.single_clusters = [g[0] for g in counter if g[1] < 2]
+        self.good_clustering = None
+        self.good_clustering_2 = None
+
+    def get_info(self):
+        return ClusteringInfo(
+            self.n_clusters,
+            self.silhouette,
+            self.n_clusters_single,
+            self.n_clusters_non_single,
+            self.single_clusters,
+            self.good_clustering,
+            self.good_clustering_2
+        )
+
+
+class ClusteringInfo:
+    def __init__(
+        self,
+        n_clusters,
+        silhouette,
+        n_clusters_single,
+        n_clusters_non_single,
+        single_clusters,
+        good_clustering,
+        good_clustering_2
+    ):
+        self.n_clusters = n_clusters
+        self.silhouette = silhouette
+        self.n_clusters_single = n_clusters_single
+        self.n_clusters_non_single = n_clusters_non_single
+        self.single_clusters = single_clusters
+        self.good_clustering = good_clustering
+        self.good_clustering_2 = good_clustering_2
 
 
 def cluster_best(
@@ -126,6 +159,8 @@ def cluster_best(
     # Nevermind. I shouldn't have maximized cluster number. 
     # There's no good reason for that
     best_result = min(trial_results, key=lambda r: (r.n_clusters_single, -r.silhouette))
+    best_result.good_clustering = good_clustering
+    best_result.good_clustering_2 = good_clustering_2
     return best_result
 
 

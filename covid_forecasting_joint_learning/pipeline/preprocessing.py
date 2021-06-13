@@ -61,10 +61,11 @@ def handle_zero(
 
 # Month splitting
 class Group:
-    def __init__(self, id, members, clusters=None):
+    def __init__(self, id, members, clusters=None, clustering_info=None):
         self.id = id
         self.members = members
         self.clusters = clusters
+        self.clustering_info = clustering_info
 
 # Note that slicing with date index includes the second part as opposed to integer index
 def split_groups(
