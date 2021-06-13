@@ -30,8 +30,15 @@ def prepare_dates(
     }, inplace=True)
     return df
 
+
 def right_slice(
     left,
     right
 ):
     return left[right.first_valid_index():right.last_valid_index()]
+
+
+def set_tuple(a):
+    if isinstance(a, list):
+        return tuple(set([set_tuple(x) for x in a]))
+    return a

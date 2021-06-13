@@ -67,6 +67,7 @@ class Group:
         self.clusters = clusters
         self.clustering_info = clustering_info
 
+
 # Note that slicing with date index includes the second part as opposed to integer index
 def split_groups(
     kabko_dfs,
