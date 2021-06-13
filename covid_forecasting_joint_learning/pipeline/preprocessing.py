@@ -132,15 +132,15 @@ def split_dataset(
     splits = [df.index.get_loc(s) for s in splits]
     train_end, val_start, val_end, test_start = splits
     train_set = generate_dataset(
-        df[:train_end],
-        future_start=None, future_end=train_end,
+        df[:val_start],
+        future_start=None, future_end=val_start,
         past_size=past_size, future_size=future_size,
         stride=stride,
         labels=labels
     )
     val_set = generate_dataset(
-        df[:val_end],
-        future_start=val_start, future_end=val_end,
+        df[:test_start],
+        future_start=val_start, future_end=test_start,
         past_size=past_size, future_size=future_size,
         stride=stride,
         labels=labels
