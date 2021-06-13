@@ -99,6 +99,22 @@ def calc_split(
     return train_end, val_start, val_end, test_start
 
 
+def check_split_indices(kabko):
+    for i in len(kabko.split_indices):
+        try:
+            assert kabko.split_indices[i] in kabko.data.index
+        except Exception:
+            raise Exception(
+                "Split indices %s=%s doesn't exist for %s.%s.%s" % (
+                    i,
+                    kabko.split_indices[i],
+                    kabko.group.id,
+                    kabko.cluster.id,
+                    kabko.name
+                )
+            )
+
+
 def generate_dataset(
     df,
     future_start=None, future_end=None,
@@ -124,13 +140,11 @@ def generate_dataset(
 
 def split_dataset(
     df,
-    splits,
+    val_start=None, test_start=None,
     past_size=30, future_size=14,
     stride=1,
     labels=DataCol.SIRD_VARS
 ):
-    splits = [df.index.get_loc(s) for s in splits]
-    train_end, val_start, val_end, test_start = splits
     train_set = generate_dataset(
         df[:val_start],
         future_start=None, future_end=val_start,

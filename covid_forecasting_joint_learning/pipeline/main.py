@@ -145,6 +145,7 @@ def preprocessing_2(
         ) for kabko, df in g.members]
         for k in g.members:
             k.group = g
+            preprocessing.check_split_indices(k)
     return groups
 
 
@@ -275,25 +276,17 @@ def preprocessing_4(
     Scaler=preprocessing.MinMaxScaler
 ):
     kabkos = [*cluster.sources, cluster.target]
-    target_first_split_index = cluster.target.split_indices[0]
+    target_split_indices = cluster.target.split_indices
+    target_first_split_index = target_split_indices[0]
     target_last_index = cluster.target.data.last_valid_index()
     for kabko in kabkos:
         kabko.data = kabko.parent.data[:target_last_index]
-        try:
-            assert kabko.data.last_valid_index() == target_last_index
-        except Exception:
-            raise Exception("Inequal kabko end %s!=%s" % (
-                kabko.data.last_valid_index(),
-                target_last_index
-            ))
-        try:
-            assert kabko.data.first_valid_index() <= target_first_split_index
-        except Exception:
-            raise Exception("Late kabko start %s>%s" % (
-                kabko.data.first_valid_index(),
-                target_first_split_index
-            ))
-        kabko.split_indices = cluster.target.split_indices
+        clustering.check_cluster_data_indices(
+            kabko,
+            target_last_index,
+            target_first_split_index
+        )
+        kabko.split_indices = target_split_indices
     scaler = __preprocessing_3(
         kabkos,
         cols=cols,
@@ -302,9 +295,21 @@ def preprocessing_4(
     for kabko in kabkos:
         kabko.scaler_2 = scaler
         kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
+
+        clustering.check_cluster_data_indices(
+            kabko,
+            target_last_index,
+            target_first_split_index
+        )
+
+        split_indices = kabko.split_indices[1], kabko.split_indices[3]
+        split_indices = [kabko.data.index.get_loc(s) for s in split_indices]
+        val_start, test_start = split_indices
+
         kabko.datasets = preprocessing.split_dataset(
             kabko.data,
-            kabko.split_indices
+            val_start=val_start,
+            test_start=test_start
         )
     return cluster
 

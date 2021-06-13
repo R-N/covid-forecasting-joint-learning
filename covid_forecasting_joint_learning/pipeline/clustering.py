@@ -192,3 +192,30 @@ def one_sided_clustering_similarity(a, b):
 
 def pairwise_clustering_similarity(a, b):
     return 0.5 * (one_sided_clustering_similarity(a, b) + one_sided_clustering_similarity(b, a))
+
+
+def check_cluster_data_indices(
+    kabko,
+    target_last_index,
+    target_first_split_index
+):
+    try:
+        assert kabko.data.last_valid_index() == target_last_index
+    except Exception:
+        raise Exception("Inequal %s.%s.%s data end %s != %s" % (
+            kabko.group.id,
+            kabko.cluster.id,
+            kabko.name,
+            kabko.data.last_valid_index(),
+            target_last_index
+        ))
+    try:
+        assert kabko.data.first_valid_index() <= target_first_split_index
+    except Exception:
+        raise Exception("Late %s.%s.%s data start %s > %s" % (
+            kabko.group.id,
+            kabko.cluster.id,
+            kabko.name,
+            kabko.data.first_valid_index(),
+            target_first_split_index
+        ))
