@@ -212,9 +212,10 @@ def clustering_1(
         outliers += [k for k in clustering_members if clustering.predict(best_clustering.model, k.data_clustering) in best_clustering.single_clusters]
         if best_clustering.n_clusters_non_single >= good_clustering_non_single:
             break
+        print("Removing %s outliers from %s" % (len(outliers), len(clustering_members)))
         clustering_members = [k for k in clustering_members if k not in outliers]
 
-    if len(clustering_members) == 0:
+    if len(clustering_members) == 0 or clustering.n_clusters_non_single == 0:
         # I want to see first if this will ever happen
         raise Exception("Group can't be clustered well")
         clusters = [clustering.Cluster(0, [])]
