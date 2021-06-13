@@ -210,7 +210,7 @@ def clustering_1(
             max_silhouette_diff=max_silhouette_diff
         )
         outliers += [k for k in clustering_members if clustering.predict(best_clustering.model, k.data_clustering) in best_clustering.single_clusters]
-        if best_clustering.n_clusters_non_zero >= good_clustering_non_single:
+        if best_clustering.n_clusters_non_single >= good_clustering_non_single:
             break
         clustering_members = [k for k in clustering_members if k not in outliers]
 
