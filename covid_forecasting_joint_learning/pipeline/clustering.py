@@ -54,16 +54,18 @@ class ClusteringResult:
         self.single_clusters = [g[0] for g in counter if g[1] < 2]
         self.good_clustering = None
         self.good_clustering_2 = None
+        self.best_silhouette = None
 
     def get_info(self):
         return ClusteringInfo(
-            self.n_clusters,
-            self.silhouette,
-            self.n_clusters_single,
-            self.n_clusters_non_single,
-            self.single_clusters,
-            self.good_clustering,
-            self.good_clustering_2
+            n_clusters=self.n_clusters,
+            silhouette=self.silhouette,
+            n_clusters_single=self.n_clusters_single,
+            n_clusters_non_single=self.n_clusters_non_single,
+            single_clusters=self.single_clusters,
+            good_clustering=self.good_clustering,
+            good_clustering_2=self.good_clustering_2,
+            best_silhouette=self.best_silhouette
         )
 
 
@@ -76,7 +78,8 @@ class ClusteringInfo:
         n_clusters_non_single,
         single_clusters,
         good_clustering,
-        good_clustering_2
+        good_clustering_2,
+        best_silhouette=None
     ):
         self.n_clusters = n_clusters
         self.silhouette = silhouette
@@ -85,6 +88,7 @@ class ClusteringInfo:
         self.single_clusters = single_clusters
         self.good_clustering = good_clustering
         self.good_clustering_2 = good_clustering_2
+        self.best_silhouette = best_silhouette
 
 
 def cluster_best(
@@ -161,6 +165,7 @@ def cluster_best(
     best_result = min(trial_results, key=lambda r: (r.n_clusters_single, -r.silhouette))
     best_result.good_clustering = good_clustering
     best_result.good_clustering_2 = good_clustering_2
+    best_result.best_silhouette = best_silhouette
     return best_result
 
 
