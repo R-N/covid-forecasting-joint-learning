@@ -229,7 +229,7 @@ def clustering_1(
             clusters[k.cluster].sources.append(k)
             k.cluster = clusters[k.cluster]
         # Remove single clusters as outliers
-        clusters = [c for c in clusters if len(c.sources) < 2]
+        clusters = [c for c in clusters if len(c.sources) > 1]
 
     for c in clusters:
         target = min(c.sources, key=lambda x: len(x.data))
@@ -237,7 +237,7 @@ def clustering_1(
         c.target = target
         # Remove outliers if they're not target
         c.sources = [k for k in c.sources if k not in outliers]
-
+    print("Clustering done with k=%s=%s" % (best_clustering.n_clusters, len(clusters)))
     group.clusters = clusters
     return clusters
 
