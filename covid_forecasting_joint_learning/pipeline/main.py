@@ -301,6 +301,7 @@ def preprocessing_4(
             target_last_index,
             target_first_split_index
         )
+        preprocessing.check_split_indices(kabko)
 
         split_indices = kabko.split_indices[1], kabko.split_indices[3]
         split_indices = [kabko.data.index.get_loc(s) for s in split_indices]

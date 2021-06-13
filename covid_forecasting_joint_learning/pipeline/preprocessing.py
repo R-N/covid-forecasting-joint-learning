@@ -100,7 +100,7 @@ def calc_split(
 
 
 def check_split_indices(kabko):
-    for i in len(kabko.split_indices):
+    for i in range(len(kabko.split_indices)):
         try:
             assert kabko.split_indices[i] in kabko.data.index
         except Exception:
