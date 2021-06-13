@@ -71,7 +71,7 @@ class Group:
 # Note that slicing with date index includes the second part as opposed to integer index
 def split_groups(
     kabko_dfs,
-    limit_length=[60, 180, 366],
+    limit_length=[90, 180, 366],
     limit_date=["2021-01-21"]
 ):
     groups = [

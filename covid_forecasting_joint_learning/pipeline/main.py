@@ -123,7 +123,7 @@ def __preprocessing_2(
 
 def preprocessing_2(
     kabkos,
-    limit_length=[60, 180, 366],
+    limit_length=[90, 180, 366],
     limit_date=["2021-01-21"],
     val_portion=0.25,
     test_portion=0.25,
