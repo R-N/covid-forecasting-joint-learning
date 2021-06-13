@@ -274,7 +274,7 @@ def preprocessing_4(
     cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler
 ):
-    kabkos = [*cluster.sources, cluster.targets]
+    kabkos = [*cluster.sources, cluster.target]
     for kabko in kabkos:
         kabko.data = kabko.parent.data[:cluster.target.data.last_valid_index()]
         kabko.split_indices = cluster.target.split_indices
@@ -290,5 +290,5 @@ def preprocessing_4(
             kabko.data,
             kabko.split_indices
         )
-    return kabkos
+    return cluster
 
