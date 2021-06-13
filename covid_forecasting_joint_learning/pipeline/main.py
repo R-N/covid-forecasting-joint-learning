@@ -184,30 +184,59 @@ def clustering_1(
     n_clusters_max=10,
     n_init=3,
     max_iter=50,
-    metric="dtw"
+    metric="dtw",
+    good_clustering_non_single=2,
+    min_silhouette_percentile=0.75,
+    max_silhouette_diff=0.25
 ):
     for k in group.members:
         # k.data_clustering = k.scaler.transform(k.data_train_val[cols])
         k.data_clustering = k.data.loc[:k.split_indices[2], cols]
-    dataset = [k.data_clustering for k in group.members]
-    dataset = clustering.to_time_series_dataset(dataset)
-    n_cluster, model, labels, silhouette = clustering.cluster_best(
-        dataset,
-        n_clusters_min=n_clusters_min,
-        n_clusters_max=n_clusters_max,
-        n_init=n_init,
-        max_iter=max_iter,
-        metric=metric
-    )
-    clusters = [clustering.Cluster(i, []) for i in range(n_cluster)]
-    for k in group.members:
-        k.cluster = model.predict(clustering.to_time_series_dataset([k.data_clustering]))[0]
-        clusters[k.cluster].sources.append(k)
-        k.cluster = clusters[k.cluster]
+
+    clustering_members = list(group.members)
+    outliers = []
+    while len(clustering_members) > 0:
+        dataset = [k.data_clustering for k in clustering_members]
+        dataset = clustering.to_time_series_dataset(dataset)
+        best_clustering = clustering.cluster_best(
+            dataset,
+            n_clusters_min=n_clusters_min,
+            n_clusters_max=n_clusters_max,
+            n_init=n_init,
+            max_iter=max_iter,
+            metric=metric,
+            good_clustering_non_single=good_clustering_non_single,
+            min_silhouette_percentile=min_silhouette_percentile,
+            max_silhouette_diff=max_silhouette_diff
+        )
+        outliers += [k for k in clustering_members if clustering.predict(best_clustering.model, k.data_clustering) in best_clustering.single_clusters]
+        if best_clustering.n_clusters_non_zero >= good_clustering_non_single:
+            break
+        clustering_members = [k for k in clustering_members if k not in outliers]
+
+    if len(clustering_members) == 0:
+        # I want to see first if this will ever happen
+        raise Exception("Group can't be clustered well")
+        clusters = [clustering.Cluster(0, [])]
+        for k in group.members:
+            clusters[0].sources.append(k)
+            k.cluster = clusters[0]
+    else:
+        clusters = [clustering.Cluster(i, []) for i in range(best_clustering.n_clusters)]
+        for k in group.members:
+            k.cluster = clustering.predict(best_clustering.model, k.data_clustering)
+            clusters[k.cluster].sources.append(k)
+            k.cluster = clusters[k.cluster]
+        # Remove single clusters as outliers
+        clusters = [c for c in clusters if len(c.sources) < 2]
+
     for c in clusters:
         target = min(c.sources, key=lambda x: len(x.data))
         c.sources.remove(target)
         c.target = target
+        # Remove outliers if they're not target
+        c.sources = [k for k in c.sources if k not in outliers]
+
     group.clusters = clusters
     return clusters
 
