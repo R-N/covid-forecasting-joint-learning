@@ -245,46 +245,28 @@ def clustering_1(
     return clusters
 
 
-def clustering_mismatch(
+def clustering_consistency(
     groups,
-    cols=DataCol.SIRD_VARS,
-    n_clusters_min=2,
-    n_clusters_max=10,
-    n_init=3,
-    max_iter=50,
-    metric="dtw",
-    random_state=None,
-    good_clustering_non_single=2,
-    min_silhouette_percentile=0.75,
-    max_silhouette_diff=0.25,
-    n_samples=3
+    n_samples=3,
+    **kwargs
 ):
     clustering_results = []
     for i in range(n_samples):
         clusters = [clustering_1(
             group,
-            n_clusters_min=n_clusters_min,
-            n_clusters_max=n_clusters_max,
-            n_init=n_init,
-            max_iter=max_iter,
-            metric=metric,
-            random_state=random_state,
-            good_clustering_non_single=good_clustering_non_single,
-            min_silhouette_percentile=min_silhouette_percentile,
-            max_silhouette_diff=max_silhouette_diff
+            **kwargs
         ) for group in groups]
-        clusters = [{k.name: k.cluster.id for k in group.members} for group in groups]
+        clusters = [[{k.name for k in [*cluster.sources, cluster.target]} for cluster in group.clusters] for group in groups]
         clustering_results.append(clusters)
     comb = list(combinations(list(range(n_samples)), 2))
-    total_mismatch = 0
+    total_similarity = 0
     for a, b in comb:
         a, b = clustering_results[a], clustering_results[b]
-        mismatch = [[k for k in a[i].keys() if a[i][k] != b[i][k]] for i in range(len(a))]
-        mismatch = [len(group) for group in mismatch]
-        mismatch = sum(mismatch)
-        total_mismatch += mismatch
-    avg_mismatch = total_mismatch / len(comb)
-    return total_mismatch
+        similarities = [clustering.pairwise_clustering_similarity(a[i], b[i]) for i in range(len(groups))]
+        similarity = sum(similarities) / len(groups)
+        total_similarity += similarity
+    consistency = total_similarity / len(comb)
+    return consistency
 
 
 def preprocessing_4(

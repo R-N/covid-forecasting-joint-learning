@@ -3,6 +3,7 @@ from tslearn.clustering import TimeSeriesKMeans, silhouette_score
 # import itertools
 from collections import Counter
 import numpy as np
+from . import util as PipelineUtil
 
 
 class Cluster:
@@ -176,3 +177,14 @@ def cluster_best(
 def predict(model, data):
     return model.predict(to_time_series_dataset([data]))[0]
 
+
+def one_sided_clustering_similarity(a, b):
+    similars = [PipelineUtil.find_similar_set(ca, b) for ca in a]
+    weighted_similarities = [len(s[0])*s[1] for s in similars]
+    n = sum([len(ca) for ca in a])
+    avg_similarity = sum(weighted_similarities) / n
+    return avg_similarity
+
+
+def pairwise_clustering_similarity(a, b):
+  return 0.5 * (one_sided_clustering_similarity(a, b) + one_sided_clustering_similarity(b, a))
