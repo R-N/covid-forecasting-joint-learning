@@ -256,7 +256,7 @@ def clustering_consistency(
             group,
             **kwargs
         ) for group in groups]
-        clusters = [[{k.name for k in [*cluster.sources, cluster.target]} for cluster in group.clusters] for group in groups]
+        clusters = [[{k.name for k in cluster.members} for cluster in group.clusters] for group in groups]
         clustering_results.append(clusters)
     comb = list(combinations(list(range(n_samples)), 2))
     total_similarity = 0
@@ -274,7 +274,7 @@ def preprocessing_4(
     cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler
 ):
-    kabkos = [*cluster.sources, cluster.target]
+    kabkos = cluster.members
     target_split_indices = cluster.target.split_indices
     target_first_split_index = target_split_indices[0]
     target_last_index = cluster.target.data.last_valid_index()
