@@ -145,7 +145,6 @@ def preprocessing_2(
         ) for kabko, df in g.members]
         for k in g.members:
             k.group = g
-            preprocessing.check_split_indices(k)
     return groups
 
 
@@ -281,11 +280,6 @@ def preprocessing_4(
     target_last_index = cluster.target.data.last_valid_index()
     for kabko in kabkos:
         kabko.data = kabko.parent.data[:target_last_index]
-        clustering.check_cluster_data_indices(
-            kabko,
-            target_last_index,
-            target_first_split_index
-        )
         kabko.split_indices = target_split_indices
     scaler = __preprocessing_3(
         kabkos,
@@ -295,14 +289,13 @@ def preprocessing_4(
     for kabko in kabkos:
         kabko.scaler_2 = scaler
         kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
+    return cluster
 
-        clustering.check_cluster_data_indices(
-            kabko,
-            target_last_index,
-            target_first_split_index
-        )
-        preprocessing.check_split_indices(kabko)
 
+def preprocessing_5(
+    kabkos
+):
+    for kabko in kabkos:
         split_indices = kabko.split_indices[1], kabko.split_indices[3]
         split_indices = [kabko.data.index.get_loc(s) for s in split_indices]
         val_start, test_start = split_indices
@@ -312,5 +305,3 @@ def preprocessing_4(
             val_start=val_start,
             test_start=test_start
         )
-    return cluster
-
