@@ -151,9 +151,13 @@ def preprocessing_2(
 def __preprocessing_3(
     kabkos,
     cols=DataCol.SIRD_VARS,
-    Scaler=preprocessing.MinMaxScaler
+    Scaler=preprocessing.MinMaxScaler,
+    limit_split=True
 ):
-    data = [kabko.data.loc[:kabko.split_indices[2], cols] for kabko in kabkos]
+    if limit_split:
+        data = [kabko.data.loc[:kabko.split_indices[2], cols] for kabko in kabkos]
+    else:
+        data = [kabko.data.loc[:, cols] for kabko in kabkos]
     full_data = pd.concat(data)
     scaler = Scaler()
     scaler.fit(full_data)
