@@ -211,7 +211,7 @@ def corr_lag_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall
     ) for y_col in y_cols] for x_col in x_cols])
     corr = [pd.DataFrame(
         corr[x],
-        index=["%s_x_%s" % (x, y) for y in y_cols],
+        index=["%s_x_%s" % (x_cols[x], y) for y in y_cols],
         columns=x_lag
     ) for x in range(0, len(x_cols))]
     corr = pd.concat(corr)
