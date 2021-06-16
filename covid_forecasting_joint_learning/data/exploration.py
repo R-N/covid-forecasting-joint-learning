@@ -52,6 +52,28 @@ def init_matplotlib():
     plt.rc('lines', linewidth=LINE_WIDTH)
 
 
+# Normal plotting
+# This doesn't yet support multiple fills
+# It just gets mixed
+def plot_fill(df, lines=[], fills=[], title="", figsize=None):
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    df_fills = df[fills].copy()
+    non_zero = (df_fills != 0).any(1)
+    df_fills.loc[non_zero] = df[lines].max().max()
+    zero = (df_fills == 0).any(1)
+    min_val = df[lines].min().min()
+    df_fills.loc[zero] = min_val
+    x_zero = pd.Series(min_val, index=df.index)
+    for fill in fills:
+        ax.fill_between(df.index, df_fills[fill], x_zero, label=fill, alpha=0.15)
+        # ax.fill(df_fills[fill], label=fill, alpha=0.15)
+    for line in lines:
+        ax.plot(df[line], label=line)
+    ax.set_title(title)
+    ax.legend(loc="best")
+    return fig
+
+
 # ADF test
 def print_adf(adf, name=""):
     ret = [
