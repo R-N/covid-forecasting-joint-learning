@@ -95,7 +95,7 @@ def classical_decompose(series, period, *args, model="additive", **kwargs):
 
 
 def plot_classical_decompose(decomposed, name=""):
-    fig, (ax1,ax2,ax3) = plt.subplots(3, 1)
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
     decomposed.trend.plot(ax=ax1, ylabel="trend")
     decomposed.seasonal.plot(ax=ax2, ylabel="seasonality")
     decomposed.resid.plot(ax=ax3, ylabel="residual")

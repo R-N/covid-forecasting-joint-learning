@@ -40,7 +40,9 @@ def preprocessing_0(
         ]
     )
     data_center.raw_global = sird.calc_s_global(data_center.raw_global, data_center.population_global)
+    prev = len(data_center.raw_global)
     data_center.raw_global.dropna(inplace=True)
+    print("C", prev, len(data_center.raw_global))
     df_shifted = data_center.raw_global.shift()
     delta = data_center.raw_global.copy()
     delta = sird.calc_delta_global(delta, df_shifted)
@@ -76,13 +78,16 @@ def __preprocessing_1(
         interpolation_method=interpolation_method
     )
     k.raw = sird.calc_s(k.raw, k.population)
+    prev = len(k.raw)
     k.raw.dropna(inplace=True)
+    print("A", prev, len(k.raw))
     df_shifted = k.raw.shift()
     delta = k.raw.copy()
     delta = sird.calc_delta(delta, df_shifted)
     # delta.dropna(inplace=True)
     k.data = delta
     k.data = sird.calc_vars(k.data, k.population, df_shifted)
+    prev = len(k.data)
     k.data.dropna(inplace=True)
     return k
 
