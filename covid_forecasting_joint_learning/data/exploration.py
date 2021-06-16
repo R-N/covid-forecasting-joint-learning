@@ -214,5 +214,5 @@ def corr_lag_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall
         index=["%s_x_%s" % (x, y) for y in y_cols],
         columns=x_lag
     ) for x in range(0, len(x_cols))]
-    corr = pd.concat(*corr)
+    corr = pd.concat(corr)
     return corr if lag_as_col else corr.T
