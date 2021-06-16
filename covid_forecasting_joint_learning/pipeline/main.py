@@ -167,12 +167,14 @@ def __preprocessing_3(
 def preprocessing_3(
     kabkos,
     cols=DataCol.SIRD_VARS,
-    Scaler=preprocessing.MinMaxScaler
+    Scaler=preprocessing.MinMaxScaler,
+    limit_split=True
 ):
     scaler = __preprocessing_3(
         kabkos,
         cols=cols,
-        Scaler=Scaler
+        Scaler=Scaler,
+        limit_split=limit_split
     )
     for kabko in kabkos:
         kabko.scaler = scaler
