@@ -37,10 +37,11 @@ def fill_zero(
     # TODO: change middle zeroes to NaN
     for l in labels:
         df.loc[:, l] = zero_to_nan(df[l])
+    df_full = df
     df = df[labels] if labels is not None else df
     df.interpolate(method=method, limit_direction='forward', axis=0, inplace=True)
     df.fillna(0, inplace=True)
-    return df
+    return df_full
 
 
 def handle_zero(
