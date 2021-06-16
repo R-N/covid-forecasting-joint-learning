@@ -153,8 +153,8 @@ def corr_all(df, method="kendall", **kwargs):
     return df.corr(method=method)
 
 
-def corr_matrix(corr):
-    fig, ax = plt.subplots(1, 1)
+def corr_matrix(corr, figsize=None):
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
     cmap = sns.diverging_palette(250, 10, as_cmap=True)
     sns.heatmap(corr, ax=ax, vmin=-1, vmax=1, annot=True, cmap=cmap, fmt='.3f')
     return fig
