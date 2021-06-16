@@ -182,12 +182,21 @@ def plot_corr_lag_single(corr, ax):
 # so the value at an index contains what should've been at previous index
 # so shift(1) means lagged 1
 # So I'll just name this corr_lag instead of corr_shift
-def corr_lag(x, y, lag_start=0, lag_end=-14, method="kendall", pvalue=False):
+def corr_lag(
+    x, y,
+    lag_start=0, lag_end=-14,
+    method="kendall"
+    # pvalue=False
+):
     step = -1 if lag_start > lag_end else 1
     lagged = [y.shift(i).dropna() for i in range(lag_start, lag_end + step, step)]
-    corr = [corr_pair(x[l.index], l, method=method) for l in lagged]
-    if not pvalue:
-        corr = [c[0] for c in corr]
+    corr = [corr_pair(
+        x[l.index],
+        l,
+        method=method
+    ) for l in lagged]
+    # if not pvalue:
+    #     corr = [c[0] for c in corr]
     return corr
 
 
@@ -197,8 +206,8 @@ def corr_lag_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall
     corr = np.array([[corr_lag(
         df[x_col], df[y_col],
         lag_start=lag_start, lag_end=lag_end,
-        method=method,
-        pvalue=False
+        method=method
+        # pvalue=False
     ) for y_col in y_cols] for x_col in x_cols])
     corr = [pd.DataFrame(
         corr[x],
