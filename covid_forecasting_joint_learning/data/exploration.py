@@ -144,7 +144,7 @@ def corr_pair(x, y, method="kendall", **kwargs):
 
 def corr_multi(df, x_cols, y_cols, method="kendall", y_as_cols=True):
     corr = np.array([[corr_pair(df[x_col], df[y_col], method=method) for y_col in y_cols] for x_col in x_cols])
-    corr = pd.DataFrame(corr)
+    corr = pd.DataFrame(corr, columns=y_cols, index=x_cols)
     return corr if y_as_cols else corr.T
 
 
