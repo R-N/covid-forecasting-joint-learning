@@ -1,5 +1,6 @@
 from tslearn.utils import to_time_series_dataset
 from tslearn.clustering import TimeSeriesKMeans, silhouette_score
+from tslearn.metrics import dtw
 # import itertools
 from collections import Counter
 import numpy as np
@@ -20,6 +21,14 @@ class Cluster:
     @property
     def members(self):
         return [*self.sources, self.target]
+
+    @property
+    def source_longest(self):
+        return max(self.sources, key=lambda x: len(x))
+
+    @property
+    def source_closest(self):
+        return min(self.sources, key=lambda x: dtw(self.target, x))
 
 
 def cluster(
