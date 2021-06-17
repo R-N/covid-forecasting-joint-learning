@@ -11,6 +11,8 @@ from statsmodels.stats.diagnostic import kstest_normal as ks_test
 # Functionalities only imported shamelessly
 from statsmodels.tsa.stattools import adfuller as adf, acf, pacf
 from scipy.stats import pearsonr, spearmanr, kendalltau
+from matplotlib import rcParams
+import itertools
 
 
 # Constants
@@ -55,6 +57,9 @@ def init_matplotlib():
 # Normal plotting
 # This doesn't yet support multiple fills
 # It just gets mixed
+clist = rcParams['axes.prop_cycle']
+cgen = itertools.cycle(clist)
+
 def plot_fill(df, lines=[], fills=[], title="", figsize=None):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     df_fills = df[fills].copy()
@@ -63,9 +68,17 @@ def plot_fill(df, lines=[], fills=[], title="", figsize=None):
     zero = (df_fills == 0).any(1)
     min_val = df[lines].min().min()
     df_fills.loc[zero] = min_val
-    x_zero = pd.Series(min_val, index=df.index)
+    # x_zero = pd.Series(min_val, index=df.index)
     for fill in fills:
-        ax.fill_between(df.index, df_fills[fill], x_zero, label=fill, alpha=0.15)
+        ax.fill_between(
+            df.index,
+            min_val,
+            df_fills[fill],
+            where=df_fills[fill] > min_val,
+            label=fill,
+            facecolor=next(cgen)['color'],
+            alpha=0.15
+          )
         # ax.fill(df_fills[fill], label=fill, alpha=0.15)
     for line in lines:
         ax.plot(df[line], label=line)
