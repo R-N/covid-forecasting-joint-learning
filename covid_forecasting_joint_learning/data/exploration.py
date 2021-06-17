@@ -78,7 +78,7 @@ def plot_fill(df, lines=[], fills=[], title="", figsize=None):
             label=fill,
             facecolor=next(cgen)['color'],
             alpha=0.15
-          )
+        )
         # ax.fill(df_fills[fill], label=fill, alpha=0.15)
     for line in lines:
         ax.plot(df[line], label=line)
