@@ -3,7 +3,7 @@ from torch import nn
 from .component.residual import ResidualFC
 from .component.representation import RepresentationBlock
 from .component.head import PastHead, LILSTMCell
-from .component.combine import CombineRepresentation
+from .component.combine import CombineRepresentation, CombineHead
 from . import util as ModelUtil
 
 
@@ -284,24 +284,23 @@ class SingleModel(nn.Module):
             )
         self.shared_head_future_cell = shared_head_future_cell
 
-        self.post_future_model = PostFutureModel(
+
+        use_shared_head = False
+        if shared_state_size\
+            or shared_head_future_cell is not None\
+            or self.past_model.use_shared_head:
+            assert shared_state_size\
+                and shared_head_future_cell is not None\
+                and self.past_model.use_shared_head
+            use_shared_head = True
+        self.use_shared_head = use_shared_head
+
+        self.post_future_model = CombineHead(
             private_state_size,
             shared_state_size,
             output_size,
             **post_future_model
         )
-
-        use_shared_head = False
-        if shared_state_size\
-            or shared_head_future_cell is not None\
-            or self.past_model.use_shared_head\
-            or self.post_future_model.use_shared_head:
-            assert shared_state_size\
-                and shared_head_future_cell is not None\
-                and self.past_model.use_shared_head\
-                and self.post_future_model.use_shared_head
-            use_shared_head = True
-        self.use_shared_head = use_shared_head
 
         self.future_length = future_length
         self.teacher_forcing = teacher_forcing
