@@ -18,7 +18,9 @@ class KabkoData:
         group=None,
         cluster=None,
         scaler_2=None,
-        datasets=None
+        datasets=None,
+        dataloaders=None,
+        model=None
     ):
         self.__name = name
         self.__data_center = data_center
@@ -35,6 +37,8 @@ class KabkoData:
         self.cluster = cluster
         self.scaler_2 = scaler_2
         self.datasets = datasets
+        self.dataloaders = dataloaders
+        self.model = model
 
     @property
     def name(self):
@@ -79,7 +83,9 @@ class KabkoData:
             group=self.group,
             cluster=self.cluster,
             scaler_2=self.scaler_2,
-            datasets=self.datasets
+            datasets=self.datasets,
+            dataloaders=self.dataloaders,
+            model=self.model
         )
 
     @property

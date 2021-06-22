@@ -5,6 +5,8 @@ from . import sird
 from . import clustering
 from ..data.kabko import KabkoData
 from ..data import cols as DataCol
+import torch
+from torch.utils.data import DataLoader, Dataset
 
 
 def preprocessing_0(
@@ -283,7 +285,7 @@ def preprocessing_4(
 ):
     kabkos = cluster.members
     target_split_indices = cluster.target.split_indices
-    target_first_split_index = target_split_indices[0]
+    # target_first_split_index = target_split_indices[0]
     target_last_index = cluster.target.data.last_valid_index()
     for kabko in kabkos:
         kabko.data = kabko.parent.data[:target_last_index]
@@ -300,7 +302,9 @@ def preprocessing_4(
 
 
 def preprocessing_5(
-    kabkos
+    kabkos,
+    label_cols=DataCol.SIRD_VARS,
+    exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
     for kabko in kabkos:
         split_indices = kabko.split_indices[1], kabko.split_indices[3]
@@ -310,5 +314,28 @@ def preprocessing_5(
         kabko.datasets = preprocessing.split_dataset(
             kabko.data,
             val_start=val_start,
-            test_start=test_start
+            test_start=test_start,
+            label_cols=label_cols,
+            exo_cols=exo_cols
         )
+
+def preprocessing_6(
+    kabkos,
+    batch_size=5
+):
+    for kabko in kabkos:
+        def collate_fn(samples):
+            keys = list(samples[0].keys())
+            samples_1 = {key: torch.stack(
+                [samples[i] for i in len(samples)]
+            ) for key in keys}
+            samples_1["kabko"] = kabko
+            return samples_1
+
+        kabko.dataloaders = [DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            collate_fn=collate_fn,
+            num_workers=0
+        ) for dataset in kabko.datasets]

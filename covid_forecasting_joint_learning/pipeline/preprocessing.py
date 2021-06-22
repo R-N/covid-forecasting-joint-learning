@@ -122,7 +122,8 @@ def generate_dataset(
     future_start=None, future_end=None,
     past_size=30, future_size=14,
     stride=1,
-    labels=DataCol.SIRD_VARS
+    label_cols=DataCol.SIRD_VARS,
+    exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
     len_df = len(df)
     future_start = max(future_start or past_size, past_size)
@@ -134,10 +135,24 @@ def generate_dataset(
 
     past_start_1, past_end_1 = future_start - past_size, future_start
     future_start_1, future_end_1 = future_start, future_start + future_size
-    past = [df.iloc[past_start_1+i:past_end_1+i].to_numpy() for i in ids]
-    future = [df.iloc[future_start_1+i:future_end_1+i][labels].to_numpy() for i in ids]
+    past = [df.iloc[past_start_1+i:past_end_1+i] for i in ids]
+    future = [df.iloc[future_start_1+i:future_end_1+i] for i in ids]
 
-    return list(zip(past, future))
+    past_seed = [x[label_cols].to_numpy() for x in past]
+    past_exo = [x[exo_cols].to_numpy() for x in past]
+    future_exo = [x[exo_cols].to_numpy() for x in future]
+    past = [x.to_numpy() for x in past]
+    future = [x[label_cols].to_numpy() for x in future]
+
+    ret = [{
+        "past": past[i],
+        "past_seed": past_seed[i],
+        "past_exo": past_exo[i],
+        "future": future[i],
+        "future_exo": future_exo[i]
+    } for i in range(count)]
+
+    return ret
 
 
 def split_dataset(
@@ -145,28 +160,32 @@ def split_dataset(
     val_start=None, test_start=None,
     past_size=30, future_size=14,
     stride=1,
-    labels=DataCol.SIRD_VARS
+    label_cols=DataCol.SIRD_VARS,
+    exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
     train_set = generate_dataset(
         df[:val_start],
         future_start=None, future_end=val_start,
         past_size=past_size, future_size=future_size,
         stride=stride,
-        labels=labels
+        label_cols=label_cols,
+        exo_cols=exo_cols
     )
     val_set = generate_dataset(
         df[:test_start],
         future_start=val_start, future_end=test_start,
         past_size=past_size, future_size=future_size,
         stride=stride,
-        labels=labels
+        label_cols=label_cols,
+        exo_cols=exo_cols
     )
     test_set = generate_dataset(
         df,
         future_start=test_start, future_end=None,
         past_size=past_size, future_size=future_size,
         stride=stride,
-        labels=labels
+        label_cols=label_cols,
+        exo_cols=exo_cols
     )
     return train_set, val_set, test_set
 
