@@ -28,7 +28,7 @@ def train(
     loss_fn=nn.MSELoss(),
     source_weight=1.0,
     device="cpu",
-    key=lambda k: k.dataloaders.target
+    key=lambda k: k.dataloaders[0]
 ):
     members = [*sources, target]
     shortest = min(members, key=lambda k: len(key(k).dataset))
@@ -87,7 +87,7 @@ def test(
     loss_fn=nn.MSELoss(),
     source_weight=1.0,
     device="cpu",
-    key=lambda k: k.dataloaders.target
+    key=lambda k: k.dataloaders[1]
 ):
     members = [*sources, target]
     shortest = min(members, key=lambda k: len(key(k).dataset))

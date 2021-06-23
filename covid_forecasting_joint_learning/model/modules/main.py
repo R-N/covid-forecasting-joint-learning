@@ -231,12 +231,12 @@ class SingleModel(nn.Module):
         private_state_size,
         shared_state_size,
         output_size,
+        future_length=14,
         past_model={},
         representation_future_model={},
         private_head_future_cell={},
         shared_head_future_cell=None,
         post_future_model={},
-        future_length=14,
         teacher_forcing=False,
         use_exo=True
     ):
