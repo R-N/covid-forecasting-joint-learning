@@ -122,9 +122,12 @@ def generate_dataset(
     future_start=None, future_end=None,
     past_size=30, future_size=14,
     stride=1,
+    full_cols=None,
     label_cols=DataCol.SIRD_VARS,
     exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
+    if full_cols is not None:
+        df = df[full_cols]
     len_df = len(df)
     future_start = max(future_start or past_size, past_size)
     future_end = min(future_end or len_df, len_df)
@@ -141,7 +144,7 @@ def generate_dataset(
     past_seed = [x[label_cols].to_numpy() for x in past]
     past_exo = [x[exo_cols].to_numpy() for x in past]
     future_exo = [x[exo_cols].to_numpy() for x in future]
-    past = [x.to_numpy() for x in past]
+    past = [x[~exo_cols].to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
     ret = [{
@@ -160,6 +163,7 @@ def split_dataset(
     val_start=None, test_start=None,
     past_size=30, future_size=14,
     stride=1,
+    full_cols=None,
     label_cols=DataCol.SIRD_VARS,
     exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
@@ -168,6 +172,7 @@ def split_dataset(
         future_start=None, future_end=val_start,
         past_size=past_size, future_size=future_size,
         stride=stride,
+        full_cols=full_cols,
         label_cols=label_cols,
         exo_cols=exo_cols
     )
@@ -176,6 +181,7 @@ def split_dataset(
         future_start=val_start, future_end=test_start,
         past_size=past_size, future_size=future_size,
         stride=stride,
+        full_cols=full_cols,
         label_cols=label_cols,
         exo_cols=exo_cols
     )
@@ -184,6 +190,7 @@ def split_dataset(
         future_start=test_start, future_end=None,
         past_size=past_size, future_size=future_size,
         stride=stride,
+        full_cols=full_cols,
         label_cols=label_cols,
         exo_cols=exo_cols
     )

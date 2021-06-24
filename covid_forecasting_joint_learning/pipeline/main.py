@@ -303,6 +303,9 @@ def preprocessing_4(
 
 def preprocessing_5(
     kabkos,
+    past_size=30, future_size=14,
+    stride=1,
+    full_cols=None,
     label_cols=DataCol.SIRD_VARS,
     exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
@@ -313,10 +316,10 @@ def preprocessing_5(
 
         kabko.datasets = preprocessing.split_dataset(
             kabko.data,
-            val_start=val_start,
-            test_start=test_start,
-            label_cols=label_cols,
-            exo_cols=exo_cols
+            past_size=past_size, future_size=past_size,
+            val_start=val_start, test_start=test_start,
+            stride=1,
+            full_cols=full_cols, label_cols=label_cols, exo_cols=exo_cols
         )
 
 def preprocessing_6(

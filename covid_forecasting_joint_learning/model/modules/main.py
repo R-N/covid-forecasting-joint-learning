@@ -324,6 +324,8 @@ class SingleModel(nn.Module):
 
     def forward(self, input):
         x_past = input["past"]
+        if self.use_exo:
+            x_past = torch.cat(x_past, input["past_exo"])
         hx_private, hx_shared = self.past_model(x_past)
 
         x_future = None

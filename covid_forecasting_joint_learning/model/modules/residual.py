@@ -4,19 +4,19 @@ from torch import nn
 
 class ResidualBlock(nn.Module):
     DEFAULT_KWARGS = {
-        "highway": True,
+        "highway": False,
         "activation": None
     }
     def __init__(
         self,
         main_block,
         size,
-        highway=True,
+        highway=False,
         activation=None
     ):
         super(ResidualBlock, self).__init__()
         self.w = nn.Parameter(torch.ones(
-            size,
+            1,  # size,
             dtype=torch.float32,
             requires_grad=True
         ))
@@ -44,7 +44,7 @@ class ResidualBlock(nn.Module):
 def try_residual(
     block,
     input_size, output_size,
-    highway=True,
+    highway=False,
     activation=None
 ):
     if input_size == output_size:
@@ -61,7 +61,7 @@ class ResidualStack(nn.Module):
     DEFAULT_KWARGS = {
         "hidden_size": None,
         "depth": 1,
-        "highway": True,
+        "highway": False,
         "activation": None
     }
 
@@ -72,7 +72,7 @@ class ResidualStack(nn.Module):
         output_size,
         hidden_size=None,
         depth=1,
-        highway=True,
+        highway=False,
         activation=None
     ):
         super(ResidualStack, self).__init__()
@@ -120,19 +120,19 @@ class ResidualFC(nn.Module):
     DEFAULT_KWARGS = {
         "hidden_size": None,
         "depth": 1,
-        "highway": True,
+        "highway": False,
         "residual_activation": None
     }
 
     def __init__(
         self,
-        fc_activation,
         input_size,
         output_size,
         hidden_size=None,
         depth=1,
-        highway=True,
-        residual_activation=None
+        highway=False,
+        residual_activation=None,
+        fc_activation=None
     ):
         super(ResidualFC, self).__init__()
         fc_activation = fc_activation or nn.Identity
