@@ -274,7 +274,7 @@ def clustering_consistency(
             **kwargs
         ) for group in groups]
         silhouettes_i = [group.clustering_info.silhouette for group in groups]
-        silhouettes_i = sum(silhouettes_i) / n_groups
+        silhouette_i = sum(silhouettes_i) / n_groups
         silhouettes.append(silhouette_i)
         clusters = [[{k.name for k in cluster.members} for cluster in group.clusters] for group in groups]
         clustering_results.append(clusters)
