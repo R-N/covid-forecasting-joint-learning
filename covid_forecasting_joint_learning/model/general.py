@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from .modules.main import SingleModel
 from .train import train, test
-from .pipeline.main import preprocessing_5, preprocessing_6
+from ..pipeline.main import preprocessing_5, preprocessing_6
 
 
 class SourcePick:
