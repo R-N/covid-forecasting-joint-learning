@@ -167,6 +167,9 @@ def split_dataset(
     label_cols=DataCol.SIRD_VARS,
     exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
+    if full_cols is not None:
+        full_cols = list(set(full_cols + exo_cols))
+        
     train_set = generate_dataset(
         df[:val_start],
         future_start=None, future_end=val_start,
