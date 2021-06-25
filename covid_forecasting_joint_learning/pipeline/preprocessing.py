@@ -144,7 +144,7 @@ def generate_dataset(
     past_seed = [x[label_cols].to_numpy() for x in past]
     past_exo = [x[exo_cols].to_numpy() for x in past]
     future_exo = [x[exo_cols].to_numpy() for x in future]
-    past = [x[~exo_cols].to_numpy() for x in past]
+    past = [x[x.columns.difference(exo_cols)].to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
     ret = [{
@@ -169,7 +169,7 @@ def split_dataset(
 ):
     if full_cols is not None:
         full_cols = list(set(full_cols + exo_cols))
-        
+
     train_set = generate_dataset(
         df[:val_start],
         future_start=None, future_end=val_start,

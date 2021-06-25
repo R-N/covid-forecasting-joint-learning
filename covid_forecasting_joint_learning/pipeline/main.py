@@ -316,7 +316,7 @@ def preprocessing_5(
 
         kabko.datasets = preprocessing.split_dataset(
             kabko.data,
-            past_size=past_size, future_size=past_size,
+            past_size=past_size, future_size=future_size,
             val_start=val_start, test_start=test_start,
             stride=1,
             full_cols=full_cols, label_cols=label_cols, exo_cols=exo_cols
