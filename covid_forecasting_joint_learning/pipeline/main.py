@@ -266,11 +266,16 @@ def clustering_consistency(
     **kwargs
 ):
     clustering_results = []
+    silhouettes = []
+    n_groups = len(groups)
     for i in range(n_samples):
         clusters = [clustering_1(
             group,
             **kwargs
         ) for group in groups]
+        silhouettes_i = [group.clustering_info.silhouette for group in groups]
+        silhouettes_i = sum(silhouettes_i) / n_groups
+        silhouettes.append(silhouette_i)
         clusters = [[{k.name for k in cluster.members} for cluster in group.clusters] for group in groups]
         clustering_results.append(clusters)
     comb = list(combinations(list(range(n_samples)), 2))
@@ -281,7 +286,8 @@ def clustering_consistency(
         similarity = sum(similarities) / len(groups)
         total_similarity += similarity
     consistency = total_similarity / len(comb)
-    return consistency
+    silhouette = sum(silhouettes) / n_samples
+    return consistency, silhouette
 
 
 def preprocessing_4(
