@@ -192,7 +192,7 @@ def clustering_1(
     cols=DataCol.SIRD_VARS,
     n_clusters_min=2,
     n_clusters_max=10,
-    n_init=3,
+    n_init=1,
     max_iter=50,
     metric="dtw",
     random_state=257,
