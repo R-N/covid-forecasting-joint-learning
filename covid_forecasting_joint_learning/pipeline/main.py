@@ -244,11 +244,13 @@ def clustering_1(
         clusters = [c for c in clusters if len(c.sources) > 1]
 
     for c in clusters:
-        target = min(c.sources, key=lambda x: len(x.data))
+        target = max(c.sources, key=lambda x: (-len(x.data), x.data.last_valid_index(), x.data.first_valid_index()))
         c.sources.remove(target)
         c.target = target
         # Remove outliers if they're not target
         c.sources = [k for k in c.sources if k not in outliers]
+        for s in c.sources:
+          assert c.target.data.last_valid_index() >= s.data.last_valid_index()
     group.clustering_info = best_clustering.get_info()
     group.clusters = clusters
     return clusters
@@ -290,6 +292,7 @@ def preprocessing_4(
     for kabko in kabkos:
         kabko.data = kabko.parent.data[:target_last_index]
         kabko.split_indices = target_split_indices
+        assert target_last_index >= kabko.data.last_valid_index()
     scaler = __preprocessing_3(
         kabkos,
         cols=cols,
