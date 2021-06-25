@@ -222,7 +222,6 @@ class ObjectiveModel:
         use_exo_cols,
         batch_size,
         additional_past_length,
-        source_weight,
         use_last_past,
         source_pick=SourcePick.ALL,
         private_mode=SharedMode.PRIVATE,
