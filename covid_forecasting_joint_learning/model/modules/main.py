@@ -4,7 +4,7 @@ from .residual import ResidualFC
 from .representation import RepresentationBlock
 from .head import PastHead, LILSTMCell
 from .combine import CombineRepresentation, CombineHead
-from . import util as ModelUtil
+from .. import util as ModelUtil
 
 
 class RepresentationModel(nn.Module):
