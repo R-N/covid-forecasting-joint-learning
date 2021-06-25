@@ -198,7 +198,8 @@ def clustering_1(
     random_state=None,
     good_clustering_non_single=2,
     min_silhouette_percentile=0.75,
-    max_silhouette_diff=0.25
+    max_silhouette_diff=0.25,
+    **kwargs
 ):
     for k in group.members:
         # k.data_clustering = k.scaler.transform(k.data_train_val[cols])
@@ -219,7 +220,8 @@ def clustering_1(
             random_state=random_state,
             good_clustering_non_single=good_clustering_non_single,
             min_silhouette_percentile=min_silhouette_percentile,
-            max_silhouette_diff=max_silhouette_diff
+            max_silhouette_diff=max_silhouette_diff,
+            **kwargs
         )
         outliers += [k for k in clustering_members if clustering.predict(best_clustering.model, k.data_clustering) in best_clustering.single_clusters]
         if best_clustering.n_clusters_non_single >= good_clustering_non_single:
@@ -290,9 +292,9 @@ def preprocessing_4(
     # target_first_split_index = target_split_indices[0]
     target_last_index = cluster.target.data.last_valid_index()
     for kabko in kabkos:
+        assert target_last_index >= kabko.data.last_valid_index()
         kabko.data = kabko.parent.data[:target_last_index]
         kabko.split_indices = target_split_indices
-        assert target_last_index >= kabko.data.last_valid_index()
     scaler = __preprocessing_3(
         kabkos,
         cols=cols,

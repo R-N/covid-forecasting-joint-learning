@@ -37,14 +37,16 @@ def cluster(
     n_init=3,
     max_iter=50,
     metric="dtw",
-    random_state=None
+    random_state=None,
+    **kwargs
 ):
     model = TimeSeriesKMeans(
         n_clusters=n_clusters,
         n_init=n_init,
         max_iter=max_iter,
         metric=metric,
-        random_state=random_state
+        random_state=random_state,
+        **kwargs
     )
     labels = model.fit_predict(dataset)
     return model, labels
@@ -117,7 +119,8 @@ def cluster_best(
     random_state=None,
     good_clustering_non_single=2,
     min_silhouette_percentile=0.75,
-    max_silhouette_diff=0.25
+    max_silhouette_diff=0.25,
+    **kwargs
 ):
     trial_labels = [(n, *cluster(
         dataset,
@@ -125,7 +128,8 @@ def cluster_best(
         n_init=n_init,
         max_iter=max_iter,
         metric=metric,
-        random_state=random_state
+        random_state=random_state,
+        **kwargs
     )) for n in range(n_clusters_min, n_clusters_max+1)]
 
     trial_results = [ClusteringResult(n, model, labels, silhouette_score(
