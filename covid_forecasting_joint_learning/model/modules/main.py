@@ -1,9 +1,9 @@
 import torch
 from torch import nn
-from .component.residual import ResidualFC
-from .component.representation import RepresentationBlock
-from .component.head import PastHead, LILSTMCell
-from .component.combine import CombineRepresentation, CombineHead
+from .residual import ResidualFC
+from .representation import RepresentationBlock
+from .head import PastHead, LILSTMCell
+from .combine import CombineRepresentation, CombineHead
 from . import util as ModelUtil
 
 
