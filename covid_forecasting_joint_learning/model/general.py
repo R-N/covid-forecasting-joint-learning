@@ -255,16 +255,18 @@ class ObjectiveModel:
         )
 
         sample = cluster.target.data.datasets[0][0]
-        input_size_past = sample["past"].shape[1]
+        input_size_past = sample["past"].size(1)
+        input_size_future = sample["future"].size(1)
         if use_exo_cols:
-            input_size_past += sample["past_exo"].shape[1]
+            input_size_past += sample["past_exo"].size(1)
+            input_size_future += sample["future_exo"].size(1)
 
         self.model = ClusterModel(
             cluster,
             sizes={
-                "input_size_past": ,
+                "input_size_past": input_size_past,
                 "hidden_size_past": hidden_size_past,
-                "input_size_future": None,
+                "input_size_future": input_size_future,
                 "hidden_size_future": hidden_size_future,
                 "private_state_size": private_state_size,
                 "shared_state_size": shared_state_size,
