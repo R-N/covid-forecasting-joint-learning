@@ -36,6 +36,7 @@ def cluster(
     n_clusters,
     n_init=3,
     max_iter=50,
+    max_iter_barycenter=100,
     metric="dtw",
     random_state=None,
     **kwargs
@@ -44,6 +45,7 @@ def cluster(
         n_clusters=n_clusters,
         n_init=n_init,
         max_iter=max_iter,
+        max_iter_barycenter=max_iter_barycenter,
         metric=metric,
         random_state=random_state,
         **kwargs
@@ -115,6 +117,7 @@ def cluster_best(
     n_clusters_max=10,
     n_init=3,
     max_iter=50,
+    max_iter_barycenter=100,
     metric="dtw",
     random_state=None,
     good_clustering_non_single=2,
@@ -127,6 +130,7 @@ def cluster_best(
         n,
         n_init=n_init,
         max_iter=max_iter,
+        max_iter_barycenter=max_iter_barycenter,
         metric=metric,
         random_state=random_state,
         **kwargs
