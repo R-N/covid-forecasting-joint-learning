@@ -217,9 +217,8 @@ class ObjectiveModel:
         conv_activation,
         fc_activation,
         residual_activation,
-        full_cols,
-        exo_cols,
-        use_exo_cols,
+        past_cols,
+        future_exo_cols,
         batch_size,
         additional_past_length,
         use_last_past,
@@ -245,8 +244,8 @@ class ObjectiveModel:
         preprocessing_5(
             members,
             past_size=past_length,
-            full_cols=full_cols,
-            exo_cols=exo_cols
+            past_cols=past_cols,
+            future_exo_cols=future_exo_cols
         )
         preprocessing_6(
             members,
