@@ -29,8 +29,7 @@ class CombineHead(nn.Module):
         private_size,
         shared_size=0,
         output_size=3,
-        w0_mean=0.1,
-        w0_std=0.01,
+        combiner_kwargs={},
         precombine_kwargs={},
         reducer_kwargs={}
     ):
@@ -50,7 +49,7 @@ class CombineHead(nn.Module):
                 output_size=shared_size,
                 **precombine_kwargs
             )
-            self.combiner = CombineRepresentation(private_size, w0_mean, w0_std)
+            self.combiner = CombineRepresentation(private_size, **combiner_kwargs)
         else:
             self.precombine = None
             self.combiner = None

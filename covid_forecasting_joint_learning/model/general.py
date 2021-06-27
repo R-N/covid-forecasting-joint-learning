@@ -299,7 +299,7 @@ class ObjectiveModel:
                             "residual_kwargs":{
                                 "activation": residual_activation
                             }
-                        },
+                        } if (representation_past_shared_depth and representation_past_pre_shared_depth) else None,
                         "shared_representation": {
                             "depth": representation_past_shared_depth,
                             "data_length": past_length,
@@ -312,18 +312,18 @@ class ObjectiveModel:
                             "residual_kwargs":{
                                 "activation": residual_activation
                             }
-                        },
+                        } if representation_past_shared_depth else None,
                         "combine_representation": {
                             "w0_mean": combine_representation_past_w0_mean,
                             "w0_std": combine_representation_past_w0_std,
-                        }
+                        } if representation_past_shared_depth else None
                     } ,
                     "private_head_past": {
                         "use_last_past": use_last_past
                     },
                     "shared_head_past": {
                         "use_last_past": use_last_past
-                    }
+                    } if representation_past_shared_depth else None
                 },
                 "representation_future_model": {
                     "private_representation": {
@@ -351,7 +351,7 @@ class ObjectiveModel:
                         "residual_kwargs":{
                             "activation": residual_activation
                         }
-                    },
+                    } if (representation_future_shared_depth and representation_future_pre_shared_depth) else None,
                     "shared_representation": {
                         "depth": representation_future_shared_depth,
                         "data_length": future_length,
@@ -364,22 +364,24 @@ class ObjectiveModel:
                         "residual_kwargs":{
                             "activation": residual_activation
                         }
-                    },
+                    } if representation_future_shared_depth else None,
                     "combine_representation": {
                         "w0_mean": combine_representation_future_w0_mean,
                         "w0_std": combine_representation_future_w0_std,
-                    }
+                    } if representation_future_shared_depth else None
                 },
                 "private_head_future_cell": {},
-                "shared_head_future_cell": {},
+                "shared_head_future_cell": {} if representation_future_shared_depth else None,
                 "post_future_model": {
-                    "w0_mean": combine_head_w0_mean,
-                    "w0_std": combine_head_w0_std,
+                    "combiner_kwargs": {
+                        "w0_mean": combine_head_w0_mean,
+                        "w0_std": combine_head_w0_std
+                    } if representation_future_shared_depth else None,
                     "precombine_kwargs": {
                         "depth": precombine_head_depth,
                         "fc_activation": fc_activation,
                         "residual_activation": residual_activation
-                    },
+                    } if representation_future_shared_depth else None,
                     "reducer_kwargs": {
                         "depth": combine_head_depth,
                         "fc_activation": fc_activation,
