@@ -168,7 +168,7 @@ def split_dataset(
     exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
     if full_cols is not None:
-        full_cols = list(set(full_cols + exo_cols))
+        full_cols = list(set(full_cols + exo_cols + label_cols))
 
     train_set = generate_dataset(
         df[:val_start],
