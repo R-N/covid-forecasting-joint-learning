@@ -324,8 +324,8 @@ class SingleModel(nn.Module):
 
     def forward(self, input):
         x_past = input["past"]
-        if self.use_exo:
-            x_past = torch.cat(x_past, input["past_exo"])
+        # if self.use_exo:
+        #     x_past = torch.cat(x_past, input["past_exo"])
         hx_private, hx_shared = self.past_model(x_past)
 
         x_future = None
@@ -354,7 +354,8 @@ class SingleModel(nn.Module):
             past_seed_full, x_private, x_shared = self.prepare_seed(
                 past_seed_full,
                 o,
-                o_exo)
+                o_exo
+            )
 
             hx_private, cx_private = self.private_head_future_cell(
                 x_private,

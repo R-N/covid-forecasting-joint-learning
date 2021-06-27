@@ -144,7 +144,7 @@ def generate_dataset(
     past_seed = [x[label_cols].to_numpy() for x in past]
     past_exo = [x[exo_cols].to_numpy() for x in past]
     future_exo = [x[exo_cols].to_numpy() for x in future]
-    past = [x[x.columns.difference(exo_cols)].to_numpy() for x in past]
+    past = [x.to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
     ret = [{
