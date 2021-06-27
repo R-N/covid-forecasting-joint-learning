@@ -17,8 +17,8 @@ def find_similar_set(a, sets):
     return max(similarities, key=lambda x: x[1])
 
 
-def full_combinations(src):
+def full_combinations(src, include_empty=True):
     src = list(src)
     n_src = len(src)
-    combs = [list(combinations(src, x)) for x in range(0, n_src+1)]
+    combs = [list(combinations(src, x)) for x in range(0 if include_empty else 1, n_src+1)]
     return list(chain.from_iterable(combs))
