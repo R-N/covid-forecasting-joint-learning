@@ -126,8 +126,8 @@ def generate_dataset(
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
-    if past_cols is not None:
-        df = df[past_cols]
+    # if past_cols is not None:
+    #     df = df[past_cols]
     len_df = len(df)
     future_start = max(future_start or past_size, past_size)
     future_end = min(future_end or len_df, len_df)
@@ -144,7 +144,7 @@ def generate_dataset(
     past_seed = [x[label_cols].to_numpy() for x in past]
     past_exo = [x[future_exo_cols].to_numpy() for x in past]
     future_exo = [x[future_exo_cols].to_numpy() for x in future]
-    past = [x.to_numpy() for x in past]
+    past = [x[past_cols].to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
     ret = [{
@@ -167,8 +167,8 @@ def split_dataset(
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"]
 ):
-    if past_cols is not None:
-        past_cols = list(set(past_cols + future_exo_cols + label_cols))
+    # if past_cols is not None:
+    #     past_cols = list(set(past_cols + future_exo_cols + label_cols))
 
     train_set = generate_dataset(
         df[:val_start],
