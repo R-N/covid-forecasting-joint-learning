@@ -8,10 +8,10 @@ def learnable_normal(size, mean, std):
     return t
 
 
-def learnable_xavier(*size):
-    t = torch.zeros(*size, dtype=torch.float32, requires_grad=True)
+def learnable_xavier(size):
+    t = torch.zeros(1, *size, dtype=torch.float32, requires_grad=True)
     nn.init.xavier_normal_(t)
-    return t
+    return t[0].detach()
 
 
 def repeat_batch(t, batch_size):
