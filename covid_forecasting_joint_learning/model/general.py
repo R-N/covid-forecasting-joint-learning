@@ -228,17 +228,13 @@ class ObjectiveModel:
         optimizer_fn=torch.optim.Adam,
         optimizer_lr=1e-5,
         loss_fn=nn.MSELoss(),
-        source_weight=1.0,
-        cuda=True
+        source_weight=1.0
     ):
         self.cluster = cluster
 
         past_length = 30 + additional_past_length
         future_length = 14
 
-        self.device = "cpu"
-        if device == "cuda" and torch.cuda.is_available():
-            self.device = device
 
         members = cluster.members
         preprocessing_5(
