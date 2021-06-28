@@ -15,8 +15,8 @@ class LILSTMCell(nn.Module):
 
         self.cell = nn.LSTMCell(input_size, state_size)
 
-        self.hx_0 = nn.Parameter(ModelUtil.learnable_xavier(state_size))
-        self.cx_0 = nn.Parameter(ModelUtil.learnable_xavier(state_size))
+        self.hx_0 = nn.Parameter(ModelUtil.learnable_xavier((state_size,)))
+        self.cx_0 = nn.Parameter(ModelUtil.learnable_xavier((state_size,)))
 
     def forward(self, x, hx=None):
         batch_size = x.size(0)
