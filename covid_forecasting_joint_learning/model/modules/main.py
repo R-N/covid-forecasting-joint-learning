@@ -17,6 +17,8 @@ class RepresentationModel(nn.Module):
         shared_representation=None,
         combine_representation={},
     ):
+        super(RepresentationModel, self).__init__()
+        
         self.use_shared_representation = False
         if shared_representation is not None\
             or combine_representation is not None\
@@ -89,6 +91,8 @@ class PastModel(nn.Module):
         private_head_past={},
         shared_head_past=None
     ):
+        super(PastModel, self).__init__()
+        
         use_representation = False
         if hidden_size_past\
             or representation_past_model is not None:
@@ -166,6 +170,8 @@ class PostFutureModel(nn.Module):
         shared_head_future=None,
         combine_head={}
     ):
+        super(PostFutureModel, self).__init__()
+        
         use_shared_head = False
         if shared_state_size\
             or shared_head_future is not None\
@@ -240,6 +246,8 @@ class SingleModel(nn.Module):
         teacher_forcing=False,
         use_exo=True
     ):
+        super(SingleModel, self).__init__()
+        
         use_representation_future = False
         if hidden_size_future\
             or representation_future_model is not None:

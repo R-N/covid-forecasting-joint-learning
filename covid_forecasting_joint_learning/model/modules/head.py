@@ -11,7 +11,7 @@ class LILSTMCell(nn.Module):
         input_size,
         state_size
     ):
-        super(FutureHead, self).__init__()
+        super(LILSTMCell, self).__init__()
 
         self.cell = nn.LSTMCell(input_size, state_size)
 
