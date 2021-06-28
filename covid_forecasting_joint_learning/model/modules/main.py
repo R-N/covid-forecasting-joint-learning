@@ -87,61 +87,61 @@ class PastModel(nn.Module):
         hidden_size_past,
         private_state_size,
         shared_state_size,
-        representation_past_model={},
-        private_head_past={},
-        shared_head_past=None
+        representation_model={},
+        private_head={},
+        shared_head=None
     ):
         super(PastModel, self).__init__()
         
         use_representation = False
         if hidden_size_past\
-            or representation_past_model is not None:
+            or representation_model is not None:
             assert hidden_size_past\
-                and representation_past_model is not None
+                and representation_model is not None
             use_representation = True
         self.use_representation = use_representation
 
         use_shared_head = False
         if shared_state_size\
-            or shared_head_past is not None:
+            or shared_head is not None:
             assert shared_state_size\
-                and shared_head_past is not None
+                and shared_head is not None
             use_shared_head = True
         self.use_shared_head = use_shared_head
 
 
         self.use_shared_representation = False
-        self.representation_past_model = None
+        self.representation_model = None
         if use_representation:
-            self.representation_past_model = RepresentationModel(
+            self.representation_model = RepresentationModel(
                 input_size_past,
                 hidden_size_past,
-                **representation_past_model
+                **representation_model
             )
             self.use_shared_representation = self.representation_model.use_shared_representation
 
-        if isinstance(private_head_past, dict):
-            private_head_past = PastHead(
+        if isinstance(private_head, dict):
+            private_head = PastHead(
                 input_size_past if not use_representation else (hidden_size_past * (2 if self.use_shared_representation is not None else 1)),
                 private_state_size,
-                **private_head_past
+                **private_head
             )
-        self.private_head_past = private_head_past
+        self.private_head = private_head
 
-        if isinstance(shared_head_past, dict):
-            shared_head_past = PastHead(
+        if isinstance(shared_head, dict):
+            shared_head = PastHead(
                 input_size_past if not use_representation else hidden_size_past,
                 shared_state_size,
-                **shared_head_past
+                **shared_head
             )
-        self.shared_head_past = shared_head_past
+        self.shared_head = shared_head
 
     def forward(self, x):
         if self.use_representation:
             x_private, x_shared = self.representation_model(x)
         else:
             x_private, x_shared = x, x
-        hx_private = self.private_head_past(x_private)
+        hx_private = self.private_head(x_private)
         if self.use_shared_head:
             hx_shared = self.shared_head_past(x_shared)
         else:
@@ -150,14 +150,14 @@ class PastModel(nn.Module):
 
     def freeze_shared(self, freeze=True):
         if self.use_representation:
-            self.representation_past_model.freeze_shared(freeze)
+            self.representation_model.freeze_shared(freeze)
         if self.use_shared_head:
             self.shared_head_past.requires_grad_(not freeze)
 
     def freeze_private(self, freeze=True):
         if self.use_representation:
-            self.representation_past_model.freeze_private(freeze)
-        self.private_head_past.requires_grad_(not freeze)
+            self.representation_model.freeze_private(freeze)
+        self.private_head.requires_grad_(not freeze)
 
 
 class PostFutureModel(nn.Module):

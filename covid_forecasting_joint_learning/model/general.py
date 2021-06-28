@@ -28,14 +28,14 @@ class ClusterModel:
         sizes,
         model_kwargs={
             "past_model": {
-                "representation_past_model": {
+                "representation_model": {
                     "private_representation": {},
                     "pre_shared_representation": {},
                     "shared_representation": {},
                     "combine_representation": {}
                 },
-                "private_head_past": {},
-                "shared_head_past": {}
+                "private_head": {},
+                "shared_head": {}
             },
             "representation_future_model": {
                 "private_representation": {},
@@ -73,13 +73,13 @@ class ClusterModel:
 
         if self.shared_mode == SharedMode.SHARED:
             try:
-                model_kwargs["past_model"]["representation_past_model"]["shared_representation"] =\
-                    self.shared_model.past_model.representation_past_model.shared_representation
+                model_kwargs["past_model"]["representation_model"]["shared_representation"] =\
+                    self.shared_model.past_model.representation_model.shared_representation
             except KeyError:
                 pass
             try:
-                model_kwargs["past_model"]["shared_head_past"] =\
-                    self.shared_model.past_model.shared_head_past
+                model_kwargs["past_model"]["shared_head"] =\
+                    self.shared_model.past_model.shared_head
             except KeyError:
                 pass
             try:
@@ -95,24 +95,24 @@ class ClusterModel:
 
         if self.private_mode == SharedMode.SHARED:
             try:
-                model_kwargs["past_model"]["representation_past_model"]["private_representation"] =\
-                    self.shared_model.past_model.representation_past_model.private_representation
+                model_kwargs["past_model"]["representation_model"]["private_representation"] =\
+                    self.shared_model.past_model.representation_model.private_representation
             except KeyError:
                 pass
             try:
-                model_kwargs["past_model"]["representation_past_model"]["pre_shared_representation"] =\
-                    self.shared_model.past_model.representation_past_model.pre_shared_representation
+                model_kwargs["past_model"]["representation_model"]["pre_shared_representation"] =\
+                    self.shared_model.past_model.representation_model.pre_shared_representation
             except KeyError:
                 pass
             try:
-                model_kwargs["past_model"]["representation_past_model"]["combine_representation"] =\
-                    self.shared_model.past_model.representation_past_model.combine_representation
+                model_kwargs["past_model"]["representation_model"]["combine_representation"] =\
+                    self.shared_model.past_model.representation_model.combine_representation
             except KeyError:
                 pass
 
             try:
-                model_kwargs["past_model"]["private_head_past"] =\
-                    self.shared_model.past_model.private_head_past
+                model_kwargs["past_model"]["private_head"] =\
+                    self.shared_model.past_model.private_head
             except KeyError:
                 pass
 
@@ -270,7 +270,7 @@ class ObjectiveModel:
             },
             model_kwargs={
                 "past_model": {
-                    "representation_past_model": {
+                    "representation_model": {
                         "private_representation": {
                             "depth": representation_past_private_depth,
                             "data_length": past_length,
@@ -315,10 +315,10 @@ class ObjectiveModel:
                             "w0_std": combine_representation_past_w0_std,
                         } if representation_past_shared_depth else None
                     } ,
-                    "private_head_past": {
+                    "private_head": {
                         "use_last_past": use_last_past
                     },
-                    "shared_head_past": {
+                    "shared_head": {
                         "use_last_past": use_last_past
                     } if representation_past_shared_depth else None
                 },
