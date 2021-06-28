@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 
-def learnable_normal(*size, mean, std):
+def learnable_normal(size, mean, std):
     t = torch.zeros(*size, dtype=torch.float32, requires_grad=True)
     nn.init.normal_(t, mean, std)
     return t

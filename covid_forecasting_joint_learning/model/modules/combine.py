@@ -13,7 +13,11 @@ class CombineRepresentation(nn.Module):
     ):
         super(CombineRepresentation, self).__init__()
 
-        self.w0 = nn.Parameter(ModelUtil.learnable_normal(private_size, w0_mean, w0_std))
+        self.w0 = nn.Parameter(ModelUtil.learnable_normal(
+            (private_size,),
+            mean=w0_mean,
+            std=w0_std
+        ))
         self.w0.data = self.w0.data.clamp_(0, 1.0)
 
     def forward(self, x):
