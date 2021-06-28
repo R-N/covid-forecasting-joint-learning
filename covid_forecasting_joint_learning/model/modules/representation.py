@@ -1,3 +1,4 @@
+import math
 import torch
 from torch import nn
 from .residual import ResidualStack
@@ -63,8 +64,8 @@ class RepresentationBlock(nn.Module):
 
         kernel_size, dilation, stride = [conv_kwargs[x] for x in ("kernel_size", "dilation", "stride")]
 
-        dilated_kernel_size = kernel_size + (kernel_size-1) * dilation
-        output_length = (data_length - (dilated_kernel_size - 1)) // stride
+        dilated_kernel_size = kernel_size + (kernel_size-1) * (dilation - 1)
+        output_length = math.ceil((data_length - (dilated_kernel_size - 1)) / stride)
         assert output_length >= dilated_kernel_size
         padding = data_length - output_length
         conv_kwargs["padding"] = padding
