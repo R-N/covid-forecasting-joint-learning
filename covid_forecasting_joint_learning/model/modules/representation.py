@@ -34,9 +34,10 @@ class RepresentationSingle(nn.Module):
                 output_size,
                 kernel_size=kernel_size,
                 stride=stride,
-                dilation=dilation,
-                padding=(padding, 0)  # For left padding
+                dilation=dilation
+                # padding=(padding, 0)  # For left padding
             ),
+            nn.ConstantPad1d((padding, 0), 0)
             activation()
         )
     
