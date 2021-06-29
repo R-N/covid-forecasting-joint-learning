@@ -28,7 +28,7 @@ class CombineRepresentation(nn.Module):
             return x_private
         dim = self.dim
         dim = dim if dim >= 0 else x_private.dim() + dim
-        ret = torch.cat([x_private, x_shared], dim)
+        ret = torch.cat([x_private, x_shared], dim=dim)
         return ret
 
 

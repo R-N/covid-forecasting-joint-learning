@@ -336,7 +336,7 @@ class SingleModel(nn.Module):
         if o is not None:
             o = o.detach()
             if o_exo is not None:
-                o = torch.cat(o, o_exo, dim=o.dim()-1)
+                o = torch.cat([o, o_exo], dim=o.dim()-1)
             past_seed_full = torch.cat([*past_seed_full, o])
         seed_length = seed_length or self.seed_length
         past_seed_full = past_seed_full[:seed_length]
