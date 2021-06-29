@@ -143,7 +143,7 @@ class PastModel(nn.Module):
             x_private, x_shared = x, x
         hx_private = self.private_head(x_private)
         if self.use_shared_head:
-            hx_shared = self.shared_head_past(x_shared)
+            hx_shared = self.shared_head(x_shared)
         else:
             hx_shared = None
         return hx_private, hx_shared
@@ -152,7 +152,7 @@ class PastModel(nn.Module):
         if self.use_representation:
             self.representation_model.freeze_shared(freeze)
         if self.use_shared_head:
-            self.shared_head_past.requires_grad_(not freeze)
+            self.shared_head.requires_grad_(not freeze)
 
     def freeze_private(self, freeze=True):
         if self.use_representation:
