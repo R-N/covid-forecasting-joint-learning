@@ -28,6 +28,10 @@ class RepresentationSingle(nn.Module):
 
         activation = activation or nn.Identity
 
+        self.input_size = input_size
+        self.output_size = output_size
+        self.kernel_size = kernel_size
+
         self.main = nn.Sequential(
             nn.Conv1d(
                 input_size,
@@ -42,7 +46,11 @@ class RepresentationSingle(nn.Module):
         )
     
     def forward(self, x):
-        return self.main(x)
+        try:
+            return self.main(x)
+        except RuntimeError as ex:
+            print(self.input_size, self.output_size, self.kernel_size)
+            raise
 
 
 def conv_kwargs_default(conv_kwargs):
