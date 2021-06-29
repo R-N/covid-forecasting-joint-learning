@@ -357,27 +357,27 @@ class ObjectiveModel:
         }
 
         try:
-            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["private_representation"]["conv_kwargs"], data_length)
+            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["private_representation"]["conv_kwargs"], past_length)
         except KeyError:
             pass
         try:
-            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["pre_shared_representation"]["conv_kwargs"], data_length)
+            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["pre_shared_representation"]["conv_kwargs"], past_length)
         except KeyError:
             pass
         try:
-            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["shared_representation"]["conv_kwargs"], data_length)
+            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["shared_representation"]["conv_kwargs"], past_length)
         except KeyError:
             pass
         try:
-            check_conv_kwargs(model_kwargs["representation_future_model"]["private_representation"]["conv_kwargs"], data_length)
+            check_conv_kwargs(model_kwargs["representation_future_model"]["private_representation"]["conv_kwargs"], future_length)
         except KeyError:
             pass
         try:
-            check_conv_kwargs(model_kwargs["representation_future_model"]["pre_shared_representation"]["conv_kwargs"], data_length)
+            check_conv_kwargs(model_kwargs["representation_future_model"]["pre_shared_representation"]["conv_kwargs"], future_length)
         except KeyError:
             pass
         try:
-            check_conv_kwargs(model_kwargs["representation_future_model"]["shared_representation"]["conv_kwargs"], data_length)
+            check_conv_kwargs(model_kwargs["representation_future_model"]["shared_representation"]["conv_kwargs"], future_length)
         except KeyError:
             pass
 
