@@ -405,6 +405,12 @@ class ObjectiveModel:
             input_size_future += sample["future_exo"].shape[-1]
         model_kwargs["use_exo"] = use_exo_cols
 
+        print(json.dumps(
+            model_kwargs,
+            sort_keys=True,
+            indent=4,
+            default=str
+        ))
 
         self.model = ClusterModel(
             cluster,
