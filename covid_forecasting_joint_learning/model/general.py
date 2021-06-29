@@ -370,16 +370,16 @@ class ObjectiveModel:
                 "private_head_future_cell": {},
                 "shared_head_future_cell": {} if representation_future_shared_depth else None,
                 "post_future_model": {
-                    "combiner_kwargs": {
+                    "combiner": {
                         "w0_mean": combine_head_w0_mean,
                         "w0_std": combine_head_w0_std
                     } if representation_future_shared_depth else None,
-                    "precombine_kwargs": {
+                    "precombine": {
                         "depth": precombine_head_depth,
                         "fc_activation": fc_activation,
                         "residual_activation": residual_activation
                     } if representation_future_shared_depth else None,
-                    "reducer_kwargs": {
+                    "reducer": {
                         "depth": combine_head_depth,
                         "fc_activation": fc_activation,
                         "residual_activation": residual_activation

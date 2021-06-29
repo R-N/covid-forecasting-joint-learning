@@ -18,14 +18,14 @@ class RepresentationModel(nn.Module):
         combine_representation={},
     ):
         super(RepresentationModel, self).__init__()
-        
+
         self.use_shared_representation = False
         if shared_representation is not None\
             or combine_representation is not None\
             or pre_shared_representation is not None:
             assert shared_representation is not None\
-                and combine_representation is not None\
-                and pre_shared_representation is not None
+                and combine_representation is not None  # \
+                # and pre_shared_representation is not None
             self.use_shared_representation = True
 
 
@@ -64,7 +64,7 @@ class RepresentationModel(nn.Module):
         x_private = self.private_representation(x)
         x_shared = None
         if self.use_shared_representation:
-            x_shared = self.pre_shared_representation(x)
+            x_shared = x if self.pre_shared_representation is None else self.pre_shared_representation(x)
             x_shared = self.shared_representation(x_shared)
             x_private = self.combine_representation(x_private, x_shared)
         return x_private, x_shared

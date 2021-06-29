@@ -33,40 +33,43 @@ class CombineHead(nn.Module):
         private_size,
         shared_size=0,
         output_size=3,
-        combiner_kwargs={},
-        precombine_kwargs={},
-        reducer_kwargs={}
+        combiner={},
+        precombine={},
+        reducer={}
     ):
         super(CombineHead, self).__init__()
 
         use_shared_head = False;
-        if precombine_kwargs is not None\
+        if precombine is not None\
             or shared_size:
-            assert precombine_kwargs is not None\
+            assert precombine is not None\
                 and shared_size
             use_shared_head = True
         self.use_shared_head = use_shared_head
 
-        if self.use_shared_head:
-            self.precombine = ResidualFC(
+        if isinstance(precombine, dict):
+            precombine = ResidualFC(
                 input_size=shared_size,
                 output_size=shared_size,
-                **precombine_kwargs
+                **precombine
             )
-            self.combiner = CombineRepresentation(private_size, **combiner_kwargs)
-        else:
-            self.precombine = None
-            self.combiner = None
+        self.precombine = precombine
 
-        self.reducer = ResidualFC(
-            input_size=private_size+shared_size,
-            output_size=output_size,
-            **reducer_kwargs
-        )
+        if isinstance(combiner, dict):
+            combiner = CombineRepresentation(private_size, **combiner)
+        self.combiner = combiner
+
+        if isinstance(reducer, dict):
+            reducer = ResidualFC(
+                input_size=private_size+shared_size,
+                output_size=output_size,
+                **reducer
+            )
+        self.reducer = reducer
 
     def forward(self, x_private, x_shared=None):
         if self.use_shared_head:
-            x_shared = self.precombine(x_shared)
+            x_shared = x_shared if self.precombine is None else self.precombine(x_shared)
             x = self.combiner((x_private, x_shared))
         else:
             x = x_private
