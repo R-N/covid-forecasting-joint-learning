@@ -59,8 +59,9 @@ def conv_kwargs_default(conv_kwargs):
 
 
 def conv_output_length(kernel_size, dilation, stride, data_length):
-    dilated_kernel_size = kernel_size + (kernel_size-1) * (dilation - 1)
-    output_length = math.ceil((data_length - (dilated_kernel_size - 1)) / stride)
+    # dilated_kernel_size = kernel_size + (kernel_size-1) * (dilation - 1)
+    # output_length = math.ceil((data_length - (dilated_kernel_size - 1)) / stride)
+    output_length = (data_length - dilation * (kernel_size - 1) - 1) // stride + 1
     try:
         assert output_length >= dilated_kernel_size
     except AssertionError:
