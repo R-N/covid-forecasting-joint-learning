@@ -8,7 +8,7 @@ def __train(samples, loss_fn, optimizer):
     loss = 0
     
     for sample in samples:
-        pred = sample["kabko"].model(sample, train=True)
+        pred = sample["kabko"].model(sample)
         loss_s = loss_fn(sample["future"], pred)
         loss += sample["kabko"].weight * loss_s
 
@@ -112,7 +112,7 @@ def test(
             loss = 0
             
             for sample in samples:
-                pred = sample["kabko"].model(sample, train=True)
+                pred = sample["kabko"].model(sample)
                 loss_s = loss_fn(sample["future"], pred)
                 loss += sample["kabko"].weight * loss_s
 
