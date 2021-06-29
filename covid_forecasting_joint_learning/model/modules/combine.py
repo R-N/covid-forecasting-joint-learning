@@ -75,7 +75,7 @@ class CombineHead(nn.Module):
     def forward(self, x_private, x_shared=None):
         if self.use_shared_head:
             x_shared = x_shared if self.precombine is None else self.precombine(x_shared)
-            x = self.combiner((x_private, x_shared))
+            x = self.combiner(x_private, x_shared)
         else:
             x = x_private
         x = self.reducer(x)
