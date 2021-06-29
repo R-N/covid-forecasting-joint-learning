@@ -260,6 +260,9 @@ def clustering_1(
     return clusters
 
 
+DEFAULT_GROUPS_N_CLUSTERS = (4, 2, 2, 3)
+
+
 def clustering_consistency(
     groups,
     n_samples=3,
