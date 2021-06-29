@@ -4,6 +4,7 @@ from .modules.representation import check_conv_kwargs
 from .modules.main import SingleModel
 from .train import train, test
 from ..pipeline.main import preprocessing_5, preprocessing_6
+import json
 
 
 class SourcePick:
@@ -405,6 +406,23 @@ class ObjectiveModel:
             input_size_future += sample["future_exo"].shape[-1]
         model_kwargs["use_exo"] = use_exo_cols
 
+        sizes = {
+            "input_size_past": input_size_past,
+            "hidden_size_past": hidden_size_past,
+            "input_size_future": input_size_future,
+            "hidden_size_future": hidden_size_future,
+            "private_state_size": private_state_size,
+            "shared_state_size": shared_state_size,
+            "output_size": 3,
+        }
+
+        print(json.dumps(
+            sizes,
+            sort_keys=True,
+            indent=4,
+            default=str
+        ))
+
         print(json.dumps(
             model_kwargs,
             sort_keys=True,
@@ -414,15 +432,7 @@ class ObjectiveModel:
 
         self.model = ClusterModel(
             cluster,
-            sizes={
-                "input_size_past": input_size_past,
-                "hidden_size_past": hidden_size_past,
-                "input_size_future": input_size_future,
-                "hidden_size_future": hidden_size_future,
-                "private_state_size": private_state_size,
-                "shared_state_size": shared_state_size,
-                "output_size": 3,
-            },
+            sizes=sizes,
             model_kwargs=model_kwargs,
             source_pick=source_pick,
             private_mode=private_mode,
