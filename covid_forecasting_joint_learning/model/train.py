@@ -106,7 +106,7 @@ def test(
     avg_target_loss = 0
 
     with torch.no_grad():
-        joint_dataloader_enum = zip([enumerate(key(k)) for k in members])
+        joint_dataloader_enum = zip(*[key(k) for k in members])
 
         for batch_id, samples in enumerate(joint_dataloader_enum):
             loss = 0
