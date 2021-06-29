@@ -26,6 +26,8 @@ class LILSTMCell(nn.Module):
         hx = ModelUtil.repeat_batch(self.hx_0, batch_size) if hx is None else hx
         cx = ModelUtil.repeat_batch(self.cx_0, batch_size) if cx is None else cx
 
+        print(x.size(), hx.size(), cx.size())
+        
         hx, cx = self.cell(x, (hx, cx))
 
         return hx, cx
