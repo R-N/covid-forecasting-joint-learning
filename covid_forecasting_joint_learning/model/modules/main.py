@@ -293,7 +293,7 @@ class SingleModel(nn.Module):
 
         if isinstance(private_head_future_cell, dict):
             private_head_future_cell = LILSTMCell(
-                input_size_future if not use_representation_future else (hidden_size_past * (2 if use_shared_representation_future is not None else 1)),
+                input_size_future if not use_representation_future else (hidden_size_future * (2 if use_shared_representation_future is not None else 1)),
                 private_state_size,
                 **private_head_future_cell
             )
