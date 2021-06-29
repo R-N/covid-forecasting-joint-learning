@@ -168,7 +168,7 @@ class ClusterModel:
         )
 
     def val(self):
-        return train(
+        return test(
             self.sources,
             self.target,
             key=lambda k: k.dataloaders[1],
@@ -176,7 +176,7 @@ class ClusterModel:
         )
 
     def test(self):
-        return train(
+        return test(
             self.sources,
             self.target,
             key=lambda k: k.dataloaders[2],
