@@ -341,6 +341,7 @@ class SingleModel(nn.Module):
         seed_length = seed_length or self.seed_length
         past_seed_full = past_seed_full[:seed_length]
         if self.use_representation_future:
+            print("past_seed_full", past_seed_full.size())
             past_seed_full = ModelUtil.sequential_to_linear_tensor(past_seed_full)
             x_private, x_shared = self.representation_future_model(past_seed_full)
             past_seed_full = ModelUtil.linear_to_sequential_tensor(past_seed_full)
