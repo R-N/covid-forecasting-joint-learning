@@ -150,6 +150,7 @@ class ClusterModel:
         self.models = nn.ModuleList([k.model for k in self.members])
         self.optimizer_fn = optimizer_fn
         self.optimizer_kwargs = optimizer_kwargs
+        self.train_kwargs = train_kwargs
 
     @property
     def members(self):
