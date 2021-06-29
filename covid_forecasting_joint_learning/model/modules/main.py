@@ -47,7 +47,7 @@ class RepresentationModel(nn.Module):
 
         if isinstance(shared_representation, dict):
             shared_representation = RepresentationBlock(
-                hidden_size,
+                hidden_size if pre_shared_representation is not None else input_size,
                 hidden_size,
                 **shared_representation
             )
