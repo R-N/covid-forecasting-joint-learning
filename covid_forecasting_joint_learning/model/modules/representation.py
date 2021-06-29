@@ -66,7 +66,10 @@ class RepresentationBlock(nn.Module):
 
         dilated_kernel_size = kernel_size + (kernel_size-1) * (dilation - 1)
         output_length = math.ceil((data_length - (dilated_kernel_size - 1)) / stride)
-        assert output_length >= dilated_kernel_size
+        try:
+            assert output_length >= dilated_kernel_size
+        except AssertionError:
+            raise Exception("output_length can't be smaller than dilated_kernel_size: (%s, %s, %s, %s, %s, %s)" % (kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length))
         padding = data_length - output_length
         conv_kwargs["padding"] = padding
 
