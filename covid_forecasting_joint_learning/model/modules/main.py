@@ -341,7 +341,7 @@ class SingleModel(nn.Module):
         seed_length = seed_length or self.seed_length
         past_seed_full = past_seed_full[:seed_length]
         if self.use_representation_future:
-            print("prepare_seed", "past_seed_full", past_seed_full.size())
+            # print("prepare_seed", "past_seed_full", past_seed_full.size())
             past_seed_full = ModelUtil.sequential_to_linear_tensor(past_seed_full)
             x_private, x_shared = self.representation_future_model(past_seed_full)
             past_seed_full = ModelUtil.linear_to_sequential_tensor(past_seed_full)
@@ -380,17 +380,19 @@ class SingleModel(nn.Module):
         outputs = []
         cx_private, cx_shared, o, o_exo = None, None, None, None
         for i in range(self.future_length):
-            print("for", "past_seed_full", past_seed_full.size())
+            # print("for", "past_seed_full", past_seed_full.size())
             past_seed_full, x_private, x_shared = self.prepare_seed(
                 past_seed_full,
                 o,
                 o_exo
             )
 
+            """
             if cx_private is not None:
                 print(x_private.size(), hx_private.size(), cx_private.size())
             else:
                 print(x_private.size(), hx_private.size())
+            """
 
             hx_private, cx_private = self.private_head_future_cell(
                 x_private,
