@@ -192,13 +192,15 @@ def cluster_best(
         # There's no good reason for that
         best_result = min(trial_results, key=lambda r: (r.n_clusters_single, -r.silhouette))
         best_result.best_silhouette = best_silhouette
+        best_result.good_clustering = good_clustering
+        best_result.good_clustering_2 = good_clustering_2
     else:
         # Provided for single n_clusters
         best_result = trial_results[0]
         best_result.best_silhouette = best_result.silhouette
+        best_result.good_clustering = best_result.n_clusters_non_single >= good_clustering_non_single
+        best_result.good_clustering_2 = best_result.n_clusters_non_single >= best_result.n_clusters_single
 
-    best_result.good_clustering = good_clustering
-    best_result.good_clustering_2 = good_clustering_2
     return best_result
 
 
