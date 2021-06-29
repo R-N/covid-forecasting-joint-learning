@@ -385,6 +385,11 @@ class SingleModel(nn.Module):
                 o_exo
             )
 
+            if cx_private is not None:
+                print(x_private.size(), hx_private.size(), cx_private.size())
+            else:
+                print(x_private.size(), hx_private.size())
+
             hx_private, cx_private = self.private_head_future_cell(
                 x_private,
                 (hx_private, cx_private)
