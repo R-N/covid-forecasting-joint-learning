@@ -348,7 +348,7 @@ def preprocessing_6(
             keys = list(samples[0].keys())
             samples_1 = {key: torch.stack(
                 [torch.from_numpy(samples[i][key]) for i in range(len(samples))]
-            ) for key in keys}
+            ).float().detach() for key in keys}
             if cuda:
                 samples_1 = {key: samples_1[key].cuda() for key in keys}
             samples_1["kabko"] = kabko
