@@ -37,7 +37,7 @@ class RepresentationSingle(nn.Module):
                 dilation=dilation
                 # padding=(padding, 0)  # For left padding
             ),
-            nn.ConstantPad1d((padding, 0), 0)
+            nn.ConstantPad1d((padding, 0), 0),
             activation()
         )
     
