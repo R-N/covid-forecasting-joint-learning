@@ -76,7 +76,8 @@ class RepresentationModel(nn.Module):
     def freeze_private(self, freeze=True):
         self.private_representation.requires_grad_(not freeze)
         if self.use_shared_representation:
-            self.pre_shared_representation.requires_grad_(not freeze)
+            if self.pre_shared_representation is not None:
+                self.pre_shared_representation.requires_grad_(not freeze)
             self.combine_representation.requires_grad_(not freeze)
 
 
