@@ -115,6 +115,8 @@ class ResidualStack(nn.Module):
                 block_d
             )
 
+    def forward(self, x):
+        return self.main(x)
 
 class ResidualFC(nn.Module):
     DEFAULT_KWARGS = {
