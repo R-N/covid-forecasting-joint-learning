@@ -343,7 +343,7 @@ def preprocessing_6(
         def collate_fn(samples):
             keys = list(samples[0].keys())
             samples_1 = {key: torch.stack(
-                [samples[i] for i in len(samples)]
+                [samples[i] for i in range(len(samples))]
             ) for key in keys}
             samples_1["kabko"] = kabko
             return samples_1
