@@ -337,7 +337,7 @@ class SingleModel(nn.Module):
             o = o.detach()
             if o_exo is not None:
                 o = torch.cat([o, o_exo], dim=o.dim()-1)
-            past_seed_full = torch.cat([past_seed_full, torch.tensor([o])], dim=0)
+            past_seed_full = torch.cat([past_seed_full, torch.stack([o])], dim=0)
         seed_length = seed_length or self.seed_length
         past_seed_full = past_seed_full[:seed_length]
         if self.use_representation_future:
