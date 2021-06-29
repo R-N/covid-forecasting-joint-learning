@@ -398,5 +398,5 @@ class SingleModel(nn.Module):
         self.past_model.freeze_private(freeze)
         if self.use_representation_future:
             self.representation_future_model.freeze_private(freeze)
-        self.private_head_Future_cell.requires_grad_(not freeze)
+        self.private_head_future_cell.requires_grad_(not freeze)
         self.post_future_model.freeze_shared(freeze)
