@@ -59,7 +59,7 @@ def conv_output_length(kernel_size, dilation, stride, data_length):
     return output_length
 
 
-def check_conv_kwargs(conv_kwargs):
+def check_conv_kwargs(conv_kwargs, data_length):
     conv_kwargs = conv_kwargs_default(conv_kwargs)
     kernel_size, dilation, stride = [conv_kwargs[x] for x in ("kernel_size", "dilation", "stride")]
     output_length = conv_output_length(kernel_size, dilation, stride, data_length)
@@ -83,7 +83,7 @@ class RepresentationBlock(nn.Module):
     ):
         super(RepresentationBlock, self).__init__()
 
-        output_length = check_conv_kwargs(conv_kwargs)
+        output_length = check_conv_kwargs(conv_kwargs, data_length)
         padding = data_length - output_length
         conv_kwargs["padding"] = padding
 
