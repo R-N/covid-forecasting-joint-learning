@@ -142,56 +142,63 @@ def cluster_best(
         metric=metric
     )) for n, model, labels in trial_labels]
 
-    # yeah so I forgot that there can be a cluster with single member
-    # there can be 2 approach to handle this
-    # a. Still pick k with highest silhouette despite having clusters with 
-    # single members and just exclude those clusters. The downside is that
-    # this can result in one massive cluster and clustering only removes
-    # outliers.
-    # b. Pick k which will produce least single clusters then select one
-    # with highest silhouette. The downside is that it might be a bad k
-    # since the silhouette is now a secondary measure. 
-    # Or maybe use combination of both, with some formula or rule, idk
-    # Maybe slice the upper quartile/median of the silhouette first then pick
-    # one with least single cluster count?
+    if len(trial_results) > 1:
 
-    # I decided to first filter the clusters to have at least 2 non-single clusters
-    # That way the clustering works
-    trial_results_1 = [r for r in trial_results if r.n_clusters_non_single >= good_clustering_non_single]
-    # I must first check that it exists before using it
-    good_clustering = len(trial_results_1) > 0
-    if good_clustering:
-        trial_results = trial_results_1
-    # Else I'll just return best one to remove outliers
+        # yeah so I forgot that there can be a cluster with single member
+        # there can be 2 approach to handle this
+        # a. Still pick k with highest silhouette despite having clusters with 
+        # single members and just exclude those clusters. The downside is that
+        # this can result in one massive cluster and clustering only removes
+        # outliers.
+        # b. Pick k which will produce least single clusters then select one
+        # with highest silhouette. The downside is that it might be a bad k
+        # since the silhouette is now a secondary measure. 
+        # Or maybe use combination of both, with some formula or rule, idk
+        # Maybe slice the upper quartile/median of the silhouette first then pick
+        # one with least single cluster count?
 
-    # Then I will filter it to just the upper quartile of silhouette
-    silhouettes = [r.silhouette for r in trial_results]
-    min_silhouette = np.percentile(silhouettes, min_silhouette_percentile)
-    trial_results = [r for r in trial_results if r.silhouette >= min_silhouette]
+        # I decided to first filter the clusters to have at least 2 non-single clusters
+        # That way the clustering works
+        trial_results_1 = [r for r in trial_results if r.n_clusters_non_single >= good_clustering_non_single]
+        # I must first check that it exists before using it
+        good_clustering = len(trial_results_1) > 0
+        if good_clustering:
+            trial_results = trial_results_1
+        # Else I'll just return best one to remove outliers
 
-    # It should also not be that far off the best silhouette
-    best_silhouette = max(silhouettes)
-    trial_results = [r for r in trial_results if best_silhouette-r.silhouette <= max_silhouette_diff]
+        # Then I will filter it to just the upper quartile of silhouette
+        silhouettes = [r.silhouette for r in trial_results]
+        min_silhouette = np.percentile(silhouettes, min_silhouette_percentile)
+        trial_results = [r for r in trial_results if r.silhouette >= min_silhouette]
 
-    # Try to not have single clusters more than non-single
-    trial_results_2 = [r for r in trial_results if r.n_clusters_non_single >= r.n_clusters_single]
-    good_clustering_2 = len(trial_results_2) > 0
-    if good_clustering:
-        trial_results = trial_results_2
+        # It should also not be that far off the best silhouette
+        best_silhouette = max(silhouettes)
+        trial_results = [r for r in trial_results if best_silhouette-r.silhouette <= max_silhouette_diff]
 
-    # if good_clustering:
-    #     # Then I'll pick the one with most non-single clusters, 
-    #     # and the one with best silhouette if there are more than one
-    #     best_result = max(trial_results, key=lambda r: (r.n_clusters_non_single, r.silhouette))
-    # else:
-    #     # But if it's useless clustering, then I will pick one with least single clusters
-    #     # So that I won't remove too much
-    # Nevermind. I shouldn't have maximized cluster number. 
-    # There's no good reason for that
-    best_result = min(trial_results, key=lambda r: (r.n_clusters_single, -r.silhouette))
+        # Try to not have single clusters more than non-single
+        trial_results_2 = [r for r in trial_results if r.n_clusters_non_single >= r.n_clusters_single]
+        good_clustering_2 = len(trial_results_2) > 0
+        if good_clustering:
+            trial_results = trial_results_2
+
+        # if good_clustering:
+        #     # Then I'll pick the one with most non-single clusters, 
+        #     # and the one with best silhouette if there are more than one
+        #     best_result = max(trial_results, key=lambda r: (r.n_clusters_non_single, r.silhouette))
+        # else:
+        #     # But if it's useless clustering, then I will pick one with least single clusters
+        #     # So that I won't remove too much
+        # Nevermind. I shouldn't have maximized cluster number. 
+        # There's no good reason for that
+        best_result = min(trial_results, key=lambda r: (r.n_clusters_single, -r.silhouette))
+        best_result.best_silhouette = best_silhouette
+    else:
+        # Provided for single n_clusters
+        best_result = trial_results[0]
+        best_result.best_silhouette = best_result.silhouette
+
     best_result.good_clustering = good_clustering
     best_result.good_clustering_2 = good_clustering_2
-    best_result.best_silhouette = best_silhouette
     return best_result
 
 
