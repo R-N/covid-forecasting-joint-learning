@@ -122,7 +122,7 @@ def cluster_best(
     random_state=None,
     good_clustering_non_single=2,
     min_silhouette_percentile=0.75,
-    max_silhouette_diff=0.25,
+    max_silhouette_diff=0.1,
     **kwargs
 ):
     trial_labels = [(n, *cluster(
