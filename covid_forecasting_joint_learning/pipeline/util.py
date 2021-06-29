@@ -1,4 +1,6 @@
 from itertools import combinations, chain
+import torch
+import numpy as np
 from ..data.util import right_slice
 
 
@@ -22,3 +24,7 @@ def full_combinations(src, include_empty=True):
     n_src = len(src)
     combs = [list(combinations(src, x)) for x in range(0 if include_empty else 1, n_src+1)]
     return list(chain.from_iterable(combs))
+
+def global_random_seed(seed=257):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
