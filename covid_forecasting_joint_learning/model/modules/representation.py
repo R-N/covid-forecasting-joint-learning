@@ -2,6 +2,7 @@ import math
 import torch
 from torch import nn
 from .residual import ResidualStack
+from optuna.structs import TrialPruned
 
 
 class RepresentationSingle(nn.Module):
@@ -69,7 +70,7 @@ class RepresentationBlock(nn.Module):
         try:
             assert output_length >= dilated_kernel_size
         except AssertionError:
-            raise Exception("output_length can't be smaller than dilated_kernel_size: (%s, %s, %s, %s, %s, %s)" % (kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length))
+            raise TrialPruned("output_length can't be smaller than dilated_kernel_size: (%s, %s, %s, %s, %s, %s)" % (kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length))
         padding = data_length - output_length
         conv_kwargs["padding"] = padding
 
