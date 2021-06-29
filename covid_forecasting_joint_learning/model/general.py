@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from .modules.representation import check_conv_kwargs
 from .modules.main import SingleModel
 from .train import train, test
 from ..pipeline.main import preprocessing_5, preprocessing_6
@@ -235,6 +236,149 @@ class ObjectiveModel:
         past_length = 30 + additional_past_length
         future_length = 14
 
+        model_kwargs = {
+            "past_model": {
+                "representation_model": {
+                    "private_representation": {
+                        "depth": representation_past_private_depth,
+                        "data_length": past_length,
+                        "conv_kwargs":{
+                            "kernel_size": representation_past_private_kernel_size,
+                            "stride": representation_past_private_stride,
+                            "dilation": representation_past_private_dilation,
+                            "activation": conv_activation
+                        },
+                        "residual_kwargs":{
+                            "activation": residual_activation
+                        }
+                    },
+                    "pre_shared_representation": {
+                        "depth": representation_past_pre_shared_depth,
+                        "data_length": past_length,
+                        "conv_kwargs":{
+                            "kernel_size": representation_past_shared_kernel_size,
+                            "stride": representation_past_shared_stride,
+                            "dilation": representation_past_shared_dilation,
+                            "activation": conv_activation
+                        },
+                        "residual_kwargs":{
+                            "activation": residual_activation
+                        }
+                    } if (representation_past_shared_depth and representation_past_pre_shared_depth) else None,
+                    "shared_representation": {
+                        "depth": representation_past_shared_depth,
+                        "data_length": past_length,
+                        "conv_kwargs":{
+                            "kernel_size": representation_past_shared_kernel_size,
+                            "stride": representation_past_shared_stride,
+                            "dilation": representation_past_shared_dilation,
+                            "activation": conv_activation
+                        },
+                        "residual_kwargs":{
+                            "activation": residual_activation
+                        }
+                    } if representation_past_shared_depth else None,
+                    "combine_representation": {
+                        "w0_mean": combine_representation_past_w0_mean,
+                        "w0_std": combine_representation_past_w0_std,
+                    } if representation_past_shared_depth else None
+                } ,
+                "private_head": {
+                    "use_last_past": use_last_past
+                },
+                "shared_head": {
+                    "use_last_past": use_last_past
+                } if representation_past_shared_depth else None
+            },
+            "representation_future_model": {
+                "private_representation": {
+                    "depth": representation_future_private_depth,
+                    "data_length": future_length,
+                    "conv_kwargs":{
+                        "kernel_size": representation_future_private_kernel_size,
+                        "stride": representation_future_private_stride,
+                        "dilation": representation_future_private_dilation,
+                        "activation": conv_activation
+                    },
+                    "residual_kwargs":{
+                        "activation": residual_activation
+                    }
+                },
+                "pre_shared_representation": {
+                    "depth": representation_future_pre_shared_depth,
+                    "data_length": future_length,
+                    "conv_kwargs":{
+                        "kernel_size": representation_future_shared_kernel_size,
+                        "stride": representation_future_shared_stride,
+                        "dilation": representation_future_shared_dilation,
+                        "activation": conv_activation
+                    },
+                    "residual_kwargs":{
+                        "activation": residual_activation
+                    }
+                } if (representation_future_shared_depth and representation_future_pre_shared_depth) else None,
+                "shared_representation": {
+                    "depth": representation_future_shared_depth,
+                    "data_length": future_length,
+                    "conv_kwargs":{
+                        "kernel_size": representation_future_shared_kernel_size,
+                        "stride": representation_future_shared_stride,
+                        "dilation": representation_future_shared_dilation,
+                        "activation": conv_activation
+                    },
+                    "residual_kwargs":{
+                        "activation": residual_activation
+                    }
+                } if representation_future_shared_depth else None,
+                "combine_representation": {
+                    "w0_mean": combine_representation_future_w0_mean,
+                    "w0_std": combine_representation_future_w0_std,
+                } if representation_future_shared_depth else None
+            },
+            "private_head_future_cell": {},
+            "shared_head_future_cell": {} if representation_future_shared_depth else None,
+            "post_future_model": {
+                "combiner": {
+                    "w0_mean": combine_head_w0_mean,
+                    "w0_std": combine_head_w0_std
+                } if representation_future_shared_depth else None,
+                "precombine": {
+                    "depth": precombine_head_depth,
+                    "fc_activation": fc_activation,
+                    "residual_activation": residual_activation
+                } if representation_future_shared_depth else None,
+                "reducer": {
+                    "depth": combine_head_depth,
+                    "fc_activation": fc_activation,
+                    "residual_activation": residual_activation
+                }
+            },
+        }
+
+        try:
+            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["private_representation"]["conv_kwargs"])
+        except KeyError:
+            pass
+        try:
+            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["pre_shared_representation"]["conv_kwargs"])
+        except KeyError:
+            pass
+        try:
+            check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["shared_representation"]["conv_kwargs"])
+        except KeyError:
+            pass
+        try:
+            check_conv_kwargs(model_kwargs["representation_future_model"]["private_representation"]["conv_kwargs"])
+        except KeyError:
+            pass
+        try:
+            check_conv_kwargs(model_kwargs["representation_future_model"]["pre_shared_representation"]["conv_kwargs"])
+        except KeyError:
+            pass
+        try:
+            check_conv_kwargs(model_kwargs["representation_future_model"]["shared_representation"]["conv_kwargs"])
+        except KeyError:
+            pass
 
         members = cluster.members
         preprocessing_5(
@@ -257,6 +401,7 @@ class ObjectiveModel:
             input_size_past += sample["past_exo"].shape[-1]
             input_size_future += sample["future_exo"].shape[-1]
 
+
         self.model = ClusterModel(
             cluster,
             sizes={
@@ -268,124 +413,7 @@ class ObjectiveModel:
                 "shared_state_size": shared_state_size,
                 "output_size": 3,
             },
-            model_kwargs={
-                "past_model": {
-                    "representation_model": {
-                        "private_representation": {
-                            "depth": representation_past_private_depth,
-                            "data_length": past_length,
-                            "conv_kwargs":{
-                                "kernel_size": representation_past_private_kernel_size,
-                                "stride": representation_past_private_stride,
-                                "dilation": representation_past_private_dilation,
-                                "activation": conv_activation
-                            },
-                            "residual_kwargs":{
-                                "activation": residual_activation
-                            }
-                        },
-                        "pre_shared_representation": {
-                            "depth": representation_past_pre_shared_depth,
-                            "data_length": past_length,
-                            "conv_kwargs":{
-                                "kernel_size": representation_past_shared_kernel_size,
-                                "stride": representation_past_shared_stride,
-                                "dilation": representation_past_shared_dilation,
-                                "activation": conv_activation
-                            },
-                            "residual_kwargs":{
-                                "activation": residual_activation
-                            }
-                        } if (representation_past_shared_depth and representation_past_pre_shared_depth) else None,
-                        "shared_representation": {
-                            "depth": representation_past_shared_depth,
-                            "data_length": past_length,
-                            "conv_kwargs":{
-                                "kernel_size": representation_past_shared_kernel_size,
-                                "stride": representation_past_shared_stride,
-                                "dilation": representation_past_shared_dilation,
-                                "activation": conv_activation
-                            },
-                            "residual_kwargs":{
-                                "activation": residual_activation
-                            }
-                        } if representation_past_shared_depth else None,
-                        "combine_representation": {
-                            "w0_mean": combine_representation_past_w0_mean,
-                            "w0_std": combine_representation_past_w0_std,
-                        } if representation_past_shared_depth else None
-                    } ,
-                    "private_head": {
-                        "use_last_past": use_last_past
-                    },
-                    "shared_head": {
-                        "use_last_past": use_last_past
-                    } if representation_past_shared_depth else None
-                },
-                "representation_future_model": {
-                    "private_representation": {
-                        "depth": representation_future_private_depth,
-                        "data_length": future_length,
-                        "conv_kwargs":{
-                            "kernel_size": representation_future_private_kernel_size,
-                            "stride": representation_future_private_stride,
-                            "dilation": representation_future_private_dilation,
-                            "activation": conv_activation
-                        },
-                        "residual_kwargs":{
-                            "activation": residual_activation
-                        }
-                    },
-                    "pre_shared_representation": {
-                        "depth": representation_future_pre_shared_depth,
-                        "data_length": future_length,
-                        "conv_kwargs":{
-                            "kernel_size": representation_future_shared_kernel_size,
-                            "stride": representation_future_shared_stride,
-                            "dilation": representation_future_shared_dilation,
-                            "activation": conv_activation
-                        },
-                        "residual_kwargs":{
-                            "activation": residual_activation
-                        }
-                    } if (representation_future_shared_depth and representation_future_pre_shared_depth) else None,
-                    "shared_representation": {
-                        "depth": representation_future_shared_depth,
-                        "data_length": future_length,
-                        "conv_kwargs":{
-                            "kernel_size": representation_future_shared_kernel_size,
-                            "stride": representation_future_shared_stride,
-                            "dilation": representation_future_shared_dilation,
-                            "activation": conv_activation
-                        },
-                        "residual_kwargs":{
-                            "activation": residual_activation
-                        }
-                    } if representation_future_shared_depth else None,
-                    "combine_representation": {
-                        "w0_mean": combine_representation_future_w0_mean,
-                        "w0_std": combine_representation_future_w0_std,
-                    } if representation_future_shared_depth else None
-                },
-                "private_head_future_cell": {},
-                "shared_head_future_cell": {} if representation_future_shared_depth else None,
-                "post_future_model": {
-                    "combiner": {
-                        "w0_mean": combine_head_w0_mean,
-                        "w0_std": combine_head_w0_std
-                    } if representation_future_shared_depth else None,
-                    "precombine": {
-                        "depth": precombine_head_depth,
-                        "fc_activation": fc_activation,
-                        "residual_activation": residual_activation
-                    } if representation_future_shared_depth else None,
-                    "reducer": {
-                        "depth": combine_head_depth,
-                        "fc_activation": fc_activation,
-                        "residual_activation": residual_activation
-                    }
-                },
-            },
+            model_kwargs=model_kwargs,
             source_pick=source_pick,
             private_mode=private_mode,
             shared_mode=shared_mode,

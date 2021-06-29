@@ -44,6 +44,28 @@ class RepresentationSingle(nn.Module):
         return self.main(x)
 
 
+def conv_kwargs_default(conv_kwargs):
+    conv_kwargs = {**RepresentationSingle.DEFAULT_KWARGS, **conv_kwargs}
+    return conv_kwargs
+
+
+def conv_output_length(kernel_size, dilation, stride, data_length):
+    dilated_kernel_size = kernel_size + (kernel_size-1) * (dilation - 1)
+    output_length = math.ceil((data_length - (dilated_kernel_size - 1)) / stride)
+    try:
+        assert output_length >= dilated_kernel_size
+    except AssertionError:
+        raise TrialPruned("output_length can't be smaller than dilated_kernel_size: (%s, %s, %s, %s, %s, %s)" % (kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length))
+    return output_length
+
+
+def check_conv_kwargs(conv_kwargs):
+    conv_kwargs = conv_kwargs_default(conv_kwargs)
+    kernel_size, dilation, stride = [conv_kwargs[x] for x in ("kernel_size", "dilation", "stride")]
+    output_length = conv_output_length(kernel_size, dilation, stride, data_length)
+    return output_length
+
+
 class RepresentationBlock(nn.Module):
     DEFAULT_KWARGS = {
         **RepresentationSingle.DEFAULT_KWARGS,
@@ -61,16 +83,7 @@ class RepresentationBlock(nn.Module):
     ):
         super(RepresentationBlock, self).__init__()
 
-        conv_kwargs = {**RepresentationSingle.DEFAULT_KWARGS, **conv_kwargs}
-
-        kernel_size, dilation, stride = [conv_kwargs[x] for x in ("kernel_size", "dilation", "stride")]
-
-        dilated_kernel_size = kernel_size + (kernel_size-1) * (dilation - 1)
-        output_length = math.ceil((data_length - (dilated_kernel_size - 1)) / stride)
-        try:
-            assert output_length >= dilated_kernel_size
-        except AssertionError:
-            raise TrialPruned("output_length can't be smaller than dilated_kernel_size: (%s, %s, %s, %s, %s, %s)" % (kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length))
+        output_length = check_conv_kwargs(conv_kwargs)
         padding = data_length - output_length
         conv_kwargs["padding"] = padding
 
