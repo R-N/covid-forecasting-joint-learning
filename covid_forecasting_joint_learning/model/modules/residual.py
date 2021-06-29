@@ -24,7 +24,8 @@ class ResidualBlock(nn.Module):
         if highway:
             self.register_backward_hook(self.constraint_w)
         self.main_block = main_block
-        self.activation = activation or nn.Identity
+        activation = activation or nn.Identity
+        self.activation = activation()
         self.residual = nn.Identity()   
     
     def forward(self, x):
