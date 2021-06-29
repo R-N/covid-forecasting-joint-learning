@@ -224,6 +224,7 @@ class ObjectiveModel:
         batch_size,
         additional_past_length,
         use_last_past,
+        seed_length=30,
         source_pick=SourcePick.ALL,
         private_mode=SharedMode.PRIVATE,
         shared_mode=SharedMode.SHARED,
@@ -354,6 +355,7 @@ class ObjectiveModel:
                     "residual_activation": residual_activation
                 }
             },
+            "seed_length": seed_length
         }
 
         try:
@@ -401,6 +403,7 @@ class ObjectiveModel:
         if use_exo_cols:
             input_size_past += sample["past_exo"].shape[-1]
             input_size_future += sample["future_exo"].shape[-1]
+        model_kwargs["use_exo"] = use_exo_cols
 
 
         self.model = ClusterModel(

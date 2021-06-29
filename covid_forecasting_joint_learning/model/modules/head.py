@@ -19,6 +19,7 @@ class LILSTMCell(nn.Module):
         self.cx_0 = nn.Parameter(ModelUtil.learnable_xavier((state_size,)))
 
     def forward(self, x, hx=None):
+        # Input of dimension (Batch, Channel)
         batch_size = x.size(0)
         hx, cx = (None, None) if hx is None else hx
 
@@ -45,8 +46,6 @@ class PastHead(nn.Module):
         self.state_size = state_size
 
     def forward(self, x):
-        batch_size = x.size(0)
-        x = ModelUtil.to_sequential_tensor(x)
 
         hx, cx = None, None
 
@@ -83,6 +82,7 @@ class FutureHead(nn.Module):
 
     def forward(self, x, hx, cx=None):
         batch_size = x.size(0)
+        # Eh, whatever. I'm not using this
         x = ModelUtil.to_sequential_tensor(x)
 
         outputs = []

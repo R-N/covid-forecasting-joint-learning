@@ -22,9 +22,20 @@ def repeat_batch(t, batch_size):
     return t
 
 
-def to_sequential_tensor(t):
+# Linear tensor uses input of shape (Batch, Length, Channel)
+# RNN uses input of shape (Length, Batch, Channel)
+def linear_to_sequential_tensor(t):
     return t.permute(1, 0, 2)
 
 
-def to_batch_tensor(t):
+def sequential_to_linear_tensor(t):
     return t.permute(1, 0, 2)
+
+
+# Conv1d uses input of shape (Batch, Channel, Length)
+def linear_to_conv1d_tensor(t):
+    return t.permute(0, 2, 1)
+
+
+def conv1d_to_linear_tensor(t):
+    return t.permute(0, 2, 1)

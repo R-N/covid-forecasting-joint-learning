@@ -9,7 +9,8 @@ class CombineRepresentation(nn.Module):
         self,
         private_size,
         w0_mean=0.1,
-        w0_std=0.01
+        w0_std=0.01,
+        dim=-1
     ):
         super(CombineRepresentation, self).__init__()
 
@@ -19,11 +20,15 @@ class CombineRepresentation(nn.Module):
             std=w0_std
         ))
         self.w0.data = self.w0.data.clamp_(0, 1.0)
+        self.dim = dim
 
-    def forward(self, x):
-        x_private, x_shared = x
+    def forward(self, x_private, x_shared=None):
         x_private = self.w0 * x_private
-        ret = torch.cat([x_private, x_shared], x_private.dim()-1)
+        if x_shared is None:
+            return x_private
+        dim = self.dim
+        dim = dim if dim >= 0 else x_private.dim() + dim
+        ret = torch.cat([x_private, x_shared], dim)
         return ret
 
 
