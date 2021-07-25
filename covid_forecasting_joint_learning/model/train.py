@@ -6,15 +6,20 @@ from .modules.main import SingleModel
 def __train(samples, loss_fn, optimizer):
     optimizer.zero_grad()
     loss = 0
+
+    weights = 0
     
     for sample in samples:
         pred = sample["kabko"].model(sample)
         loss_s = loss_fn(sample["future"], pred)
-        loss += sample["kabko"].weight * loss_s
+        weight = sample["kabko"].weight
+        loss += weight * loss_s
+        weights += weight
 
         if sample["kabko"].is_target:
             target_loss = loss_s
 
+    loss /= weights
     loss.backward()
     optimizer.step()
     optimizer.zero_grad()
@@ -70,7 +75,7 @@ def train(
         target_loss += target_loss_s
 
         loss /= 2.0
-        loss /= 1 + ((len(samples)-1) * source_weight)
+        # loss /= 1 + ((len(samples)-1) * source_weight)
         target_loss /= 2.0
 
         avg_loss += loss
