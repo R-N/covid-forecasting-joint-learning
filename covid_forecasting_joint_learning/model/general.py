@@ -471,7 +471,8 @@ class ObjectiveModel:
         epoch = epoch if epoch is not None else self.train_epoch
         if self.log_dir:
             with self.train_summary_writer.as_default():
-                tf.summary.scalar('loss', loss.item(), step=epoch)
+                tf.summary.scalar('avg_loss', loss[0].item(), step=epoch)
+                tf.summary.scalar('target_loss', loss[1].item(), step=epoch)
         self.train_epoch = epoch + 1
         return loss
 
@@ -480,7 +481,8 @@ class ObjectiveModel:
         epoch = epoch if epoch is not None else self.val_epoch
         if self.log_dir:
             with self.val_summary_writer.as_default():
-                tf.summary.scalar('loss', loss.item(), step=epoch)
+                tf.summary.scalar('avg_loss', loss[0].item(), step=epoch)
+                tf.summary.scalar('target_loss', loss[1].item(), step=epoch)
         self.val_epoch = epoch + 1
         return loss
 
