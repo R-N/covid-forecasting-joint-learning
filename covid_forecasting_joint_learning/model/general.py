@@ -6,6 +6,7 @@ from .train import train, test
 from ..pipeline.main import preprocessing_5, preprocessing_6
 import json
 import datetime
+import tensorflow as tf
 
 
 class SourcePick:
