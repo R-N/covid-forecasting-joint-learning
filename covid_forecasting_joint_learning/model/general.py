@@ -457,8 +457,8 @@ class ObjectiveModel:
         self.log_dir = log_dir
 
         if self.log_dir:
-            train_log_dir = log_dir + self.trial_id + '/train'
-            val_log_dir = log_dir + self.trial_id + '/val'
+            train_log_dir = log_dir + str(self.trial_id) + '/train'
+            val_log_dir = log_dir + str(self.trial_id) + '/val'
             self.train_summary_writer = tf.summary.create_file_writer(train_log_dir)
             self.val_summary_writer = tf.summary.create_file_writer(val_log_dir)
 
