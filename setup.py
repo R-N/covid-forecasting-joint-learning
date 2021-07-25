@@ -32,6 +32,7 @@ setuptools.setup(
         "statsmodels==0.12",
         "scikit-learn==0.24.1",
         "tslearn",
-        "optuna"
+        "optuna",
+        "tensorflow"
     ]
 )

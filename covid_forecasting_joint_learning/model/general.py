@@ -5,6 +5,7 @@ from .modules.main import SingleModel
 from .train import train, test
 from ..pipeline.main import preprocessing_5, preprocessing_6
 import json
+import datetime
 
 
 class SourcePick:
@@ -232,7 +233,9 @@ class ObjectiveModel:
         optimizer_fn=torch.optim.Adam,
         optimizer_lr=1e-5,
         loss_fn=nn.MSELoss(),
-        source_weight=1.0
+        source_weight=1.0,
+        trial_id=None,
+        log_dir=None
     ):
         self.cluster = cluster
 
@@ -447,11 +450,38 @@ class ObjectiveModel:
             }
         )
 
-    def train(self):
-        return self.model.train()
+        self.trial_id = trial_id if trial_id is not None else datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
-    def val(self):
-        return self.model.val()
+        if isinstance(log_dir, str) and not log_dir.endswith("/"):
+            log_dir = log_dir + "/"
+        self.log_dir = log_dir
+
+        if self.log_dir:
+            train_log_dir = log_dir + self.trial_id + '/train'
+            val_log_dir = log_dir + self.trial_id + '/val'
+            self.train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+            self.val_summary_writer = tf.summary.create_file_writer(val_log_dir)
+
+        self.train_epoch = 0
+        self.val_epoch = 0
+
+    def train(self, epoch=None):
+        loss = self.model.train()
+        epoch = epoch if epoch is not None else self.train_epoch
+        if self.log_dir:
+            with self.train_summary_writer.as_default():
+                tf.summary.scalar('loss', loss, step=epoch)
+        self.train_epoch = epoch + 1
+        return loss
+
+    def val(self, epoch=None):
+        loss = self.model.val()
+        epoch = epoch if epoch is not None else self.val_epoch
+        if self.log_dir:
+            with self.val_summary_writer.as_default():
+                tf.summary.scalar('loss', loss, step=epoch)
+        self.val_epoch = epoch + 1
+        return loss
 
     def test(self):
         return self.model.test()
