@@ -1,4 +1,5 @@
 import torch
+import json
 from torch import nn
 
 
@@ -39,3 +40,12 @@ def linear_to_conv1d_tensor(t):
 
 def conv1d_to_linear_tensor(t):
     return t.permute(0, 2, 1)
+
+
+def str_dict(d):
+    return json.dumps(
+        d,
+        sort_keys=True,
+        indent=4,
+        default=str
+    )

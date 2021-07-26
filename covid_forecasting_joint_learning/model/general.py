@@ -4,7 +4,7 @@ from .modules.representation import check_conv_kwargs
 from .modules.main import SingleModel
 from .train import train, test
 from ..pipeline.main import preprocessing_5, preprocessing_6
-import json
+from .util import str_dict
 import datetime
 import tensorflow as tf
 
@@ -236,7 +236,8 @@ class ObjectiveModel:
         loss_fn=nn.MSELoss(),
         source_weight=1.0,
         trial_id=None,
-        log_dir=None
+        log_dir=None,
+        debug=False
     ):
         self.cluster = cluster
 
@@ -420,19 +421,9 @@ class ObjectiveModel:
             "output_size": 3,
         }
 
-        print(json.dumps(
-            sizes,
-            sort_keys=True,
-            indent=4,
-            default=str
-        ))
-
-        print(json.dumps(
-            model_kwargs,
-            sort_keys=True,
-            indent=4,
-            default=str
-        ))
+        if debug:
+            print(str_dict(sizes))
+            print(str_dict(model_kwargs))
 
         self.model = ClusterModel(
             cluster,
