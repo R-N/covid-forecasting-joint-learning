@@ -5,6 +5,7 @@ from .representation import RepresentationBlock
 from .head import PastHead, LILSTMCell
 from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
+from torchinfo import summary
 
 
 class RepresentationModel(nn.Module):
@@ -429,3 +430,7 @@ class SingleModel(nn.Module):
             self.representation_future_model.freeze_private(freeze)
         self.private_head_future_cell.requires_grad_(not freeze)
         self.post_future_model.freeze_shared(freeze)
+
+
+    def get_summary(self, batch):
+        return summary(self, batch)

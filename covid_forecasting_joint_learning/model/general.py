@@ -185,6 +185,9 @@ class ClusterModel:
             **self.train_kwargs
         )
 
+    def get_target_model_summary(self):
+        return self.target.get_model_summary()
+
 class ObjectiveModel:
     def __init__(
         self,
@@ -442,6 +445,9 @@ class ObjectiveModel:
             }
         )
 
+        if debug:
+            print(self.get_target_model_summary())
+
         self.trial_id = trial_id if trial_id is not None else datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
         if isinstance(log_dir, str) and not log_dir.endswith("/"):
@@ -479,3 +485,6 @@ class ObjectiveModel:
 
     def test(self):
         return self.model.test()
+
+    def get_target_model_summary(self):
+        return self.model.get_target_model_summary()

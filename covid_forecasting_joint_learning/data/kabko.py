@@ -120,3 +120,11 @@ class KabkoData:
             DataUtil.add_dates(df, date, k)
 
         return df
+
+
+    def get_batch_sample(self):
+        return next(iter(self.dataloaders[0]))
+
+
+    def get_model_summary(self):
+        return self.model.get_summary(self.get_batch_sample())
