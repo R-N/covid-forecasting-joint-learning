@@ -433,4 +433,4 @@ class SingleModel(nn.Module):
 
 
     def get_summary(self, batch):
-        return summary(self, batch)
+        return summary(self, input_data=[batch])
