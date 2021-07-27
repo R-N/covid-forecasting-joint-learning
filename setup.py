@@ -33,7 +33,6 @@ setuptools.setup(
         "scikit-learn==0.24.1",
         "tslearn",
         "optuna",
-        "tensorflow",
         "torchinfo"
     ]
 )
