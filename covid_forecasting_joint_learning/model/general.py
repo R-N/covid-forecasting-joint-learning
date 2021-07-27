@@ -6,7 +6,7 @@ from .train import train, test
 from ..pipeline.main import preprocessing_5, preprocessing_6
 from .util import str_dict
 import datetime
-import tensorflow as tf
+from torch.utils.tensorboard import SummaryWriter
 
 
 class SourcePick:
@@ -457,8 +457,12 @@ class ObjectiveModel:
         if self.log_dir:
             train_log_dir = log_dir + str(self.trial_id) + '/train'
             val_log_dir = log_dir + str(self.trial_id) + '/val'
-            self.train_summary_writer = tf.summary.create_file_writer(train_log_dir)
-            self.val_summary_writer = tf.summary.create_file_writer(val_log_dir)
+
+            # self.train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+            # self.val_summary_writer = tf.summary.create_file_writer(val_log_dir)
+
+            self.train_summary_writer = SummaryWriter(train_log_dir)
+            self.val_summary_writer = SummaryWriter(val_log_dir)
 
         self.train_epoch = 0
         self.val_epoch = 0
@@ -467,9 +471,11 @@ class ObjectiveModel:
         loss = self.model.train()
         epoch = epoch if epoch is not None else self.train_epoch
         if self.log_dir:
-            with self.train_summary_writer.as_default():
-                tf.summary.scalar('avg_loss', loss[0].item(), step=epoch)
-                tf.summary.scalar('target_loss', loss[1].item(), step=epoch)
+            # with self.train_summary_writer.as_default():
+            #     tf.summary.scalar('avg_loss', loss[0].item(), step=epoch)
+            #     tf.summary.scalar('target_loss', loss[1].item(), step=epoch)
+            self.train_summary_writer.add_scalar('avg_loss', loss[0].item(), global_step=epoch)
+            self.train_summary_writer.add_scalar('target_loss', loss[1].item(), global_step=epoch)
         self.train_epoch = epoch + 1
         return loss
 
@@ -477,9 +483,11 @@ class ObjectiveModel:
         loss = self.model.val()
         epoch = epoch if epoch is not None else self.val_epoch
         if self.log_dir:
-            with self.val_summary_writer.as_default():
-                tf.summary.scalar('avg_loss', loss[0].item(), step=epoch)
-                tf.summary.scalar('target_loss', loss[1].item(), step=epoch)
+            # with self.val_summary_writer.as_default():
+            #     tf.summary.scalar('avg_loss', loss[0].item(), step=epoch)
+            #     tf.summary.scalar('target_loss', loss[1].item(), step=epoch)
+            self.val_summary_writer.add_scalar('avg_loss', loss[0].item(), global_step=epoch)
+            self.val_summary_writer.add_scalar('target_loss', loss[1].item(), global_step=epoch)
         self.val_epoch = epoch + 1
         return loss
 
