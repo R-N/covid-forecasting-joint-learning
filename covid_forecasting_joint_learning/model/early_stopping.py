@@ -25,7 +25,7 @@ class EarlyStopping:
         self.val_loss_history = [*self.val_loss_history, val_loss][:self.smoothing]
         train_loss = sum(self.train_loss_history)/len(self.train_loss_history)
         val_loss = sum(self.val_loss_history)/len(self.val_loss_history)
-        if self.best_val_loss == None:
+        if self.best_val_loss is None:
             self.update_best(train_loss, val_loss)
         else:
             delta_val_loss = self.best_val_loss - val_loss
