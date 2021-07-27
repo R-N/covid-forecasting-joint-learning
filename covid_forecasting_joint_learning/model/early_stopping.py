@@ -21,8 +21,8 @@ class EarlyStopping:
         self.debug = debug
 
     def __call__(self, train_loss, val_loss):
-        self.train_loss_history = [*self.train_loss_history, train_loss][:self.smoothing]
-        self.val_loss_history = [*self.val_loss_history, val_loss][:self.smoothing]
+        self.train_loss_history = [*self.train_loss_history, train_loss][-self.smoothing:]
+        self.val_loss_history = [*self.val_loss_history, val_loss][-self.smoothing:]
         train_loss = sum(self.train_loss_history)/len(self.train_loss_history)
         val_loss = sum(self.val_loss_history)/len(self.val_loss_history)
         if self.best_val_loss is None:
