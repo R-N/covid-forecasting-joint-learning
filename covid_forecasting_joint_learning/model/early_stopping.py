@@ -1,5 +1,5 @@
 class EarlyStopping:
-    def __init__(self, model, rise_patience=5, still_patience=10, min_delta=1e-5, smoothing=5, debug=False):
+    def __init__(self, model, rise_patience=5, still_patience=10, min_delta=1e-5, smoothing=5, debug=0):
         """
         :param patience: how many epochs to wait before stopping when loss is
                not improving
@@ -25,6 +25,8 @@ class EarlyStopping:
         self.val_loss_history = [*self.val_loss_history, val_loss][-self.smoothing:]
         train_loss = sum(self.train_loss_history)/len(self.train_loss_history)
         val_loss = sum(self.val_loss_history)/len(self.val_loss_history)
+        if self.debug >= 3:
+            print("INFO: Early stopping check", train_loss, val_loss)
         if self.best_val_loss is None:
             self.update_best(train_loss, val_loss)
         else:
@@ -32,7 +34,7 @@ class EarlyStopping:
             rise = delta_val_loss > self.min_delta
             if rise:
                 self.rise_counter += 1
-                if self.debug:
+                if self.debug >= 2:
                     print(f"INFO: Early stopping rise {self.rise_counter}/{self.rise_patience}")
                 if self.rise_counter >= self.rise_patience:
                     self.early_stop("rise")
@@ -42,7 +44,7 @@ class EarlyStopping:
                 still = not (val_loss < self.best_val_loss or (still and train_loss < self.best_train_loss))
                 if still:
                     self.still_counter += 1
-                    if self.debug:
+                    if self.debug >= 2:
                         print(f"INFO: Early stopping still {self.still_counter}/{self.still_patience}")
                     if self.still_counter >= self.still_patience:
                         self.early_stop("still")
@@ -59,5 +61,5 @@ class EarlyStopping:
     def early_stop(self, reason="idk"):
         self.model.load_state_dict(self.best_state)
         self.early_stopped = True
-        if self.debug:
+        if self.debug >= 1:
             print(f"INFO: Early stopping due to {reason}")
