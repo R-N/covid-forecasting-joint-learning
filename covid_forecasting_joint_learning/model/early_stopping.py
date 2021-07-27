@@ -21,7 +21,7 @@ class EarlyStopping:
         if self.best_val_loss == None:
             self.update_best(train_loss, val_loss)
         else:
-            delta_val_loss = self.best_loss - val_loss
+            delta_val_loss = self.best_val_loss - val_loss
             rise = delta_val_loss < self.min_delta
             if rise:
                 self.rise_counter += 1
