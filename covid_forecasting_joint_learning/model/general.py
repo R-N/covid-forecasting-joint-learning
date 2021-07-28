@@ -190,7 +190,7 @@ class ClusterModel:
         return self.target.get_model_summary()
 
     def write_graph(self, path):
-        self.target.write_graph(path)
+        self.target.write_model_graph(path)
 
 class ObjectiveModel:
     def __init__(
