@@ -58,3 +58,17 @@ def filter_trials_undone(study):
 def count_trials_done(study):
   return len(study.trials) - len(filter_trials_undone(study))
 
+
+def smooth(scalars, weight):  # Weight between 0 and 1
+    last = scalars[0]  # First value in the plot (first timestep)
+    smoothed = list()
+    for point in scalars:
+        smoothed_val = last * weight + (1 - weight) * point  # Calculate smoothed value
+        smoothed.append(smoothed_val)                        # Save it
+        last = smoothed_val                                  # Anchor the last smoothed value
+
+    return smoothed
+
+
+def progressive_smooth(last, weight, point):
+    return last * weight + (1 - weight) * point

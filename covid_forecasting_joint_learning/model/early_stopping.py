@@ -1,3 +1,5 @@
+from .util import progressive_smooth
+
 class EarlyStopping:
     def __init__(
         self, 
@@ -6,7 +8,7 @@ class EarlyStopping:
         rise_patience=6, still_patience=10, 
         min_delta_val=1e-5, min_delta_val_percent=0.095, 
         min_delta_train=1.5e-6, min_delta_train_percent=0.020, 
-        smoothing=3,
+        smoothing=0.6,
         debug=0
     ):
         """
@@ -29,8 +31,8 @@ class EarlyStopping:
         self.min_delta_train_percent = min_delta_train_percent
         self.rise_counter = 0
         self.still_counter = 0
-        self.val_loss_history = []
-        self.train_loss_history = []
+        self.last_train_loss = None
+        self.last_val_loss = None
         self.best_val_loss = None
         self.best_train_loss = None
         self.early_stopped = False
@@ -38,10 +40,14 @@ class EarlyStopping:
         self.debug = debug
 
     def __call__(self, train_loss, val_loss):
-        self.train_loss_history = [*self.train_loss_history, train_loss][-self.smoothing:]
-        self.val_loss_history = [*self.val_loss_history, val_loss][-self.smoothing:]
-        train_loss = sum(self.train_loss_history)/len(self.train_loss_history)
-        val_loss = sum(self.val_loss_history)/len(self.val_loss_history)
+        # self.train_loss_history = [*self.train_loss_history, train_loss][-self.smoothing:]
+        # self.val_loss_history = [*self.val_loss_history, val_loss][-self.smoothing:]
+        if self.last_val_loss is not None:
+            train_loss = progressive_smooth(self.last_train_loss, self.smoothing, train_loss)
+            val_loss = progressive_smooth(self.last_val_loss, self.smoothing, val_loss)
+        self.last_train_loss = train_loss
+        self.last_val_loss = val_loss
+
         if self.wait_counter < self.wait:
             self.wait_counter += 1
             if self.debug >= 3:
