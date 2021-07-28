@@ -1,5 +1,5 @@
 class EarlyStopping:
-    def __init__(self, model, rise_patience=5, still_patience=10, min_delta=1e-5, smoothing=5, debug=0):
+    def __init__(self, model, rise_patience=5, still_patience=10, min_delta=1e-5, min_delta_percent=0.095, smoothing=5, debug=0):
         """
         :param patience: how many epochs to wait before stopping when loss is
                not improving
@@ -31,7 +31,8 @@ class EarlyStopping:
             delta_val_loss = val_loss - self.best_val_loss
             if self.debug >= 3:
                 print("INFO: Early stopping check", train_loss, val_loss, delta_val_loss)
-            rise = delta_val_loss > self.min_delta
+            min_delta_percent = self.min_delta_percent * val_loss
+            rise = delta_val_loss > self.min_delta and delta_val_loss > min_delta_percent
             if rise:
                 self.rise_counter += 1
                 if self.debug >= 2:
@@ -40,7 +41,7 @@ class EarlyStopping:
                     self.early_stop("rise")
             else:
                 self.rise_counter = 0
-                still = abs(delta_val_loss) < self.min_delta
+                still = abs(delta_val_loss) < self.min_delta or abs(delta_val_loss) < min_delta_percent
                 still = not (val_loss < self.best_val_loss or (still and train_loss < self.best_train_loss))
                 if still:
                     self.still_counter += 1
