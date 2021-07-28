@@ -36,7 +36,7 @@ class EarlyStopping:
         self.best_val_loss = None
         self.best_train_loss = None
         self.early_stopped = False
-        self.smoothing = smoothing
+        self.smoothing = min(1.0, max(0, 1.0 - smoothing))
         self.debug = debug
 
     def __call__(self, train_loss, val_loss):
