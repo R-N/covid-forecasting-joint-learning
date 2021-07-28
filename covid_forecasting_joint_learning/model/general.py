@@ -459,6 +459,7 @@ class ObjectiveModel:
         self.log_dir = log_dir
 
         if self.log_dir:
+            trial_log_dir = self.log_dir + str(self.trial_id)
             train_log_dir = trial_log_dir + '/train'
             val_log_dir = trial_log_dir + '/val'
 
