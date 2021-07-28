@@ -5,7 +5,7 @@ class EarlyStopping:
         self, 
         model,
         wait=10, wait_train_below_val=20, 
-        rise_patience=6, still_patience=10, 
+        rise_patience=10, still_patience=15, 
         min_delta_val=1e-5, min_delta_val_percent=0.095, 
         min_delta_train=1.5e-6, min_delta_train_percent=0.020, 
         smoothing=0.6,
