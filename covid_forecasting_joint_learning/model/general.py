@@ -476,6 +476,7 @@ class ObjectiveModel:
         if self.log_dir:
             self.train_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/avg_loss", loss[0].item(), global_step=epoch)
             self.train_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/target_loss", loss[1].item(), global_step=epoch)
+            self.train_summary_writer.flush()
         self.train_epoch = epoch + 1
         return loss
 
@@ -485,6 +486,7 @@ class ObjectiveModel:
         if self.log_dir:
             self.val_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/avg_loss", loss[0].item(), global_step=epoch)
             self.val_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/target_loss", loss[1].item(), global_step=epoch)
+            self.val_summary_writer.flush()
         self.val_epoch = epoch + 1
         return loss
 
