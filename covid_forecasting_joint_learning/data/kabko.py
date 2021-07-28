@@ -121,12 +121,13 @@ class KabkoData:
 
         return df
 
-
     def get_batch_sample(self):
         sample = next(iter(self.dataloaders[0]))
         del sample["kabko"]
         return sample
 
-
     def get_model_summary(self):
         return self.model.get_summary(self.get_batch_sample())
+
+    def write_model_graph(self, path):
+        return self.model.write_graph(path, self.get_batch_sample())

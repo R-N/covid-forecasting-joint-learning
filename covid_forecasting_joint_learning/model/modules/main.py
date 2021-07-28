@@ -434,3 +434,9 @@ class SingleModel(nn.Module):
 
     def get_summary(self, batch):
         return summary(self, input_data=[batch])
+
+    def write_graph(self, path, batch):
+        self.summary_writer = SummaryWriter(path)
+        self.eval()
+        self.summary_writer.add_graph(self, input_to_model=batch)
+        self.summary_writer.close()

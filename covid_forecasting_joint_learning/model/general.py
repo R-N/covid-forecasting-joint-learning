@@ -189,6 +189,9 @@ class ClusterModel:
     def get_target_model_summary(self):
         return self.target.get_model_summary()
 
+    def write_graph(self, path):
+        self.target.write_graph(path)
+
 class ObjectiveModel:
     def __init__(
         self,
@@ -456,18 +459,12 @@ class ObjectiveModel:
         self.log_dir = log_dir
 
         if self.log_dir:
-            trial_log_dir = log_dir + str(self.trial_id)
             train_log_dir = trial_log_dir + '/train'
             val_log_dir = trial_log_dir + '/val'
 
-            self.summary_writer = SummaryWriter(trial_log_dir)
             self.train_summary_writer = SummaryWriter(train_log_dir)
             self.val_summary_writer = SummaryWriter(val_log_dir)
 
-            dummy = self.cluster.target.get_batch_sample()
-            self.cluster.target.model.eval()
-            self.summary_writer.add_graph(self.cluster.target.model, input_to_model=dummy)
-            self.summary_writer.flush()
 
         self.train_epoch = 0
         self.val_epoch = 0
@@ -495,3 +492,6 @@ class ObjectiveModel:
 
     def get_target_model_summary(self):
         return self.model.get_target_model_summary()
+
+    def write_graph(self, path):
+        self.model.write_graph(path)
