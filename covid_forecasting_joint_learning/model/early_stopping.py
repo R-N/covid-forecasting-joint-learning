@@ -1,5 +1,13 @@
 class EarlyStopping:
-    def __init__(self, model, rise_patience=5, still_patience=10, min_delta=1e-5, min_delta_percent=0.095, smoothing=5, debug=0):
+    def __init__(
+        self, 
+        model, 
+        rise_patience=5, still_patience=10, 
+        min_delta_val=1e-5, min_delta_val_percent=0.095, 
+        min_delta_train=1.5e-6, min_delta_val_percent=0.020, 
+        smoothing=5, 
+        debug=0
+    ):
         """
         :param patience: how many epochs to wait before stopping when loss is
                not improving
@@ -9,7 +17,10 @@ class EarlyStopping:
         self.model = model
         self.rise_patience = rise_patience
         self.still_patience = still_patience
-        self.min_delta = min_delta
+        self.min_delta_val = min_delta_val
+        self.min_delta_val_percent = min_delta_val_percent
+        self.min_delta_train = min_delta_train
+        self.min_delta_train_percent = min_delta_train_percent
         self.rise_counter = 0
         self.still_counter = 0
         self.val_loss_history = []
@@ -29,10 +40,12 @@ class EarlyStopping:
             self.update_best(train_loss, val_loss)
         else:
             delta_val_loss = val_loss - self.best_val_loss
+            delta_train_loss = train_loss - self.best_train_loss
             if self.debug >= 3:
-                print("INFO: Early stopping check", train_loss, val_loss, delta_val_loss)
-            min_delta_percent = self.min_delta_percent * val_loss
-            rise = delta_val_loss > self.min_delta and delta_val_loss > min_delta_percent
+                print("INFO: Early stopping check", train_loss, val_loss, delta_train_loss, delta_val_loss)
+            min_delta_val_percent = self.min_delta_val_percent * val_loss
+            min_delta_val = max(self.min_delta_val, min_delta_val_percent)
+            rise = delta_val_loss > min_delta_val
             if rise:
                 self.rise_counter += 1
                 if self.debug >= 2:
@@ -41,8 +54,10 @@ class EarlyStopping:
                     self.early_stop("rise")
             else:
                 self.rise_counter = 0
-                still = abs(delta_val_loss) < self.min_delta or abs(delta_val_loss) < min_delta_percent
-                still = not (val_loss < self.best_val_loss or (still and train_loss < self.best_train_loss))
+                still = abs(delta_val_loss) < min_delta_val
+                min_delta_train_percent = self.min_delta_train_percent * train_loss
+                min_delta_train = max(self.min_delta_train, min_delta_train_percent)
+                still = not (val_loss < self.best_val_loss or (still and delta_train_loss < -min_delta_train))
                 if still:
                     self.still_counter += 1
                     if self.debug >= 2:
