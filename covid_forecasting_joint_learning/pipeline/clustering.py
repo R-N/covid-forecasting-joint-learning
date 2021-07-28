@@ -11,10 +11,12 @@ class Cluster:
     def __init__(
         self,
         id,
+        group,
         sources=None,
         target=None
     ):
         self.id = id
+        self.group = group
         self.sources = sources
         self.target = target
 

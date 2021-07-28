@@ -234,7 +234,7 @@ def clustering_1(
     if len(clustering_members) == 0 or best_clustering.n_clusters_non_single < good_clustering_non_single:
         # I want to see first if this will ever happen
         raise Exception("Group can't be clustered well")
-        clusters = [clustering.Cluster(0, [])]
+        clusters = [clustering.Cluster(0, group, [])]
         for k in group.members:
             clusters[0].sources.append(k)
             k.cluster = clusters[0]
