@@ -16,7 +16,7 @@ class EarlyStopping:
                new loss to be considered as an improvement
         """
         self.model = model
-        self.wait = wait
+        self.wait = max(wait, smoothing-1)
         self.wait_counter = 0
         self.rise_patience = rise_patience
         self.still_patience = still_patience
