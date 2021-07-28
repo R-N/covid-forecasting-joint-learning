@@ -2,10 +2,10 @@ class EarlyStopping:
     def __init__(
         self, 
         model, 
-        rise_patience=5, still_patience=10, 
+        rise_patience=6, still_patience=10, 
         min_delta_val=1e-5, min_delta_val_percent=0.095, 
         min_delta_train=1.5e-6, min_delta_train_percent=0.020, 
-        smoothing=5, 
+        smoothing=3, 
         debug=0
     ):
         """
