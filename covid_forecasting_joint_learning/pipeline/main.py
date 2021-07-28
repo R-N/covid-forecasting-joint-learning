@@ -239,7 +239,7 @@ def clustering_1(
             clusters[0].sources.append(k)
             k.cluster = clusters[0]
     else:
-        clusters = [clustering.Cluster(i, []) for i in range(best_clustering.n_clusters)]
+        clusters = [clustering.Cluster(i, group, []) for i in range(best_clustering.n_clusters)]
         for k in group.members:
             k.cluster = clustering.predict(best_clustering.model, k.data_clustering)
             clusters[k.cluster].sources.append(k)
