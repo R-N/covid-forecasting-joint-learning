@@ -2,11 +2,11 @@ class EarlyStopping:
     def __init__(
         self, 
         model,
-        wait=10,
+        wait=10, wait_train_below_val=20, 
         rise_patience=6, still_patience=10, 
         min_delta_val=1e-5, min_delta_val_percent=0.095, 
         min_delta_train=1.5e-6, min_delta_train_percent=0.020, 
-        smoothing=3, 
+        smoothing=3,
         debug=0
     ):
         """
@@ -18,6 +18,8 @@ class EarlyStopping:
         self.model = model
         self.wait = max(wait, smoothing-1)
         self.wait_counter = 0
+        self.wait_train_below_val = wait_train_below_val
+        self.wait_train_below_val_counter = 0
         self.rise_patience = rise_patience
         self.still_patience = still_patience
         self.min_delta_val = min_delta_val
@@ -43,6 +45,10 @@ class EarlyStopping:
             self.wait_counter += 1
             if self.debug >= 3:
                 print(f"INFO: Early stopping wait {self.wait_counter}/{self.wait}")
+        elif val_loss < train_loss and self.wait_train_below_val_counter < self.wait_train_below_val:
+            self.wait_train_below_val_counter += 1
+            if self.debug >= 3:
+                print(f"INFO: Early stopping wait train below val {self.wait_train_below_val_counter}/{self.wait_train_below_val}")
         else:
             if self.best_val_loss is None:
                 self.update_best(train_loss, val_loss)
