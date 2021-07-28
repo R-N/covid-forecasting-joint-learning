@@ -58,6 +58,7 @@ class ClusterModel:
         optimizer_kwargs={},
         train_kwargs={}
     ):
+        self.cluster = cluster
         if source_pick == SourcePick.ALL:
             self.sources = cluster.sources
         elif source_pick == SourcePick.CLOSEST:
@@ -463,9 +464,9 @@ class ObjectiveModel:
             self.train_summary_writer = SummaryWriter(train_log_dir)
             self.val_summary_writer = SummaryWriter(val_log_dir)
 
-            dummy = self.model.target.get_batch_sample()
-            self.model.target.model.eval()
-            self.summary_writer.add_graph(self.model.target.model, input_to_model=dummy)
+            dummy = self.cluster.target.get_batch_sample()
+            self.cluster.target.model.eval()
+            self.summary_writer.add_graph(self.cluster.target.model, input_to_model=dummy)
             self.summary_writer.flush()
 
         self.train_epoch = 0
@@ -475,8 +476,8 @@ class ObjectiveModel:
         loss = self.model.train()
         epoch = epoch if epoch is not None else self.train_epoch
         if self.log_dir:
-            self.train_summary_writer.add_scalar('avg_loss', loss[0].item(), global_step=epoch)
-            self.train_summary_writer.add_scalar('target_loss', loss[1].item(), global_step=epoch)
+            self.train_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/avg_loss", loss[0].item(), global_step=epoch)
+            self.train_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/target_loss", loss[1].item(), global_step=epoch)
         self.train_epoch = epoch + 1
         return loss
 
@@ -484,8 +485,8 @@ class ObjectiveModel:
         loss = self.model.val()
         epoch = epoch if epoch is not None else self.val_epoch
         if self.log_dir:
-            self.val_summary_writer.add_scalar('avg_loss', loss[0].item(), global_step=epoch)
-            self.val_summary_writer.add_scalar('target_loss', loss[1].item(), global_step=epoch)
+            self.val_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/avg_loss", loss[0].item(), global_step=epoch)
+            self.val_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/target_loss", loss[1].item(), global_step=epoch)
         self.val_epoch = epoch + 1
         return loss
 
