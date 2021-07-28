@@ -49,3 +49,12 @@ def str_dict(d):
         indent=4,
         default=str
     )
+
+
+def filter_trials_undone(study):
+  return [t.number for t in study.trials if not (t.state == TrialState.COMPLETE or t.state == TrialState.PRUNED)]
+
+
+def count_trials_done(study):
+  return len(study.trials) - len(filter_trials_undone(study))
+
