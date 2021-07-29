@@ -164,14 +164,14 @@ class EarlyStopping2:
         self.debug = debug
         self.calculate_interval = self.calculate_interval_1 if simple else self.calculate_interval_2
 
-    def calculate_interval_1(history):
+    def calculate_interval_1(self, history):
         min_val = min(history)
         max_val = max(history)
         delta = 0.5 * (1.0 - self.interval_percent) * (max_val - min_val)
         mid = 0.5 * (min_val + max_val)
         return mid, delta
 
-    def calculate_interval_2(history):
+    def calculate_interval_2(self, history):
         mean = sum(history)/self.history_length
         sum_err = sum([(mean-x)**2 for x in history])
         stdev = sqrt(1 / (self.history_length - 2) * sum_err)
