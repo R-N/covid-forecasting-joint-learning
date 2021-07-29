@@ -162,7 +162,7 @@ class ClusterModel:
         self.train_kwargs = train_kwargs
 
         self.optimizer = self.create_optimizer()
-        self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr)
+        self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr, total_steps=len(self.target.datasets[0]) * 100)
 
     @property
     def members(self):
@@ -259,7 +259,7 @@ class ObjectiveModel:
         private_mode=SharedMode.PRIVATE,
         shared_mode=SharedMode.SHARED,
         optimizer_fn=torch.optim.Adam,
-        optimizer_lr=1e-5,
+        lr=1e-5,
         loss_fn=nn.MSELoss(),
         source_weight=1.0,
         trial_id=None,
@@ -460,8 +460,8 @@ class ObjectiveModel:
             private_mode=private_mode,
             shared_mode=shared_mode,
             optimizer_fn=optimizer_fn,
+            lr=lr,
             optimizer_kwargs={
-                "lr": optimizer_lr
             },
             train_kwargs={
                 "loss_fn": loss_fn,
