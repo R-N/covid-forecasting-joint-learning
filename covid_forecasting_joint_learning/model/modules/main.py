@@ -432,7 +432,6 @@ class SingleModel(nn.Module):
         self.private_head_future_cell.requires_grad_(not freeze)
         self.post_future_model.freeze_shared(freeze)
 
-
     def get_summary(self, batch):
         return summary(self, input_data=[batch])
 

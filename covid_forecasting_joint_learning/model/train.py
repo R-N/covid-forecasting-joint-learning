@@ -30,6 +30,7 @@ def train(
     sources,
     target,
     optimizer,
+    scheduler=None,
     loss_fn=nn.MSELoss(),
     source_weight=1.0,
     device="cpu",
@@ -62,7 +63,7 @@ def train(
         loss = 0
         target_loss = 0
 
-        loss_s, target_loss_s = __train(samples, loss_fn, optimizer)
+        loss_s, target_loss_s = __train(samples, loss_fn, optimizer,)
         loss += loss_s
         target_loss += target_loss_s
 
@@ -70,7 +71,7 @@ def train(
             sample["kabko"].model.freeze_private(False)
             sample["kabko"].model.freeze_shared(True)
 
-        loss_s, target_loss_s = __train(samples, loss_fn, optimizer)
+        loss_s, target_loss_s = __train(samples, loss_fn, optimizer,)
         loss += loss_s
         target_loss += target_loss_s
 
@@ -81,6 +82,8 @@ def train(
         avg_loss += loss
         avg_target_loss += target_loss
 
+    if scheduler:
+        scheduler.step()
     avg_loss /= size
     avg_target_loss /= size
     return avg_loss, avg_target_loss

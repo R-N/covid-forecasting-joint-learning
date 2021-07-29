@@ -7,6 +7,8 @@ from ..pipeline.main import preprocessing_5, preprocessing_6
 from .util import str_dict
 import datetime
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import OneCycleLR
+from torch.optim import Adam
 
 
 class SourcePick:
@@ -54,7 +56,8 @@ class ClusterModel:
         source_pick=SourcePick.ALL,
         private_mode=SharedMode.PRIVATE,
         shared_mode=SharedMode.SHARED,
-        optimizer_fn=torch.optim.Adam,
+        optimizer_fn=Adam,
+        lr=1e-5,
         optimizer_kwargs={},
         train_kwargs={}
     ):
@@ -153,19 +156,36 @@ class ClusterModel:
 
         self.models = nn.ModuleList([k.model for k in self.members])
         self.optimizer_fn = optimizer_fn
+        self.lr = lr
+        optimizer_kwargs["lr"] = lr
         self.optimizer_kwargs = optimizer_kwargs
         self.train_kwargs = train_kwargs
+
+        self.optimizer = self.create_optimizer()
+        self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr)
 
     @property
     def members(self):
         return [*self.sources, self.target]
 
+    def create_optimizer(self):
+        return self.optimizer_fn(self.models.parameters(), **self.optimizer_kwargs)
+
+    def freeze_shared(self, freeze=True):
+        for k in self.members:
+            self.k.model.freeze_shared(freeze)
+
+    def freeze_private(self, freeze=True):
+        for k in self.members:
+            self.k.model.freeze_private(freeze)
+
     def train(self):
-        optimizer = self.optimizer_fn(self.models.parameters(), **self.optimizer_kwargs)
+        # optimizer = self.create_optimizer()
         return train(
             self.sources,
             self.target,
-            optimizer,
+            self.optimizer,
+            self.scheduler,
             key=lambda k: k.dataloaders[0],
             **self.train_kwargs
         )
@@ -498,3 +518,9 @@ class ObjectiveModel:
 
     def write_graph(self, path):
         self.model.write_graph(path)
+
+    def freeze_shared(self, freeze=True):
+        self.model.freeze_shared(freeze)
+
+    def freeze_private(self, freeze=True):
+        self.model.freeze_private(freeze)
