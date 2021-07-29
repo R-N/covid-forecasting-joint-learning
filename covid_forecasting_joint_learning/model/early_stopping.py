@@ -5,9 +5,9 @@ class EarlyStopping:
         self, 
         model,
         wait=10, wait_train_below_val=20, 
-        rise_patience=10, still_patience=15, 
-        min_delta_val=1e-5, min_delta_val_percent=0.095, 
-        min_delta_train=1.5e-6, min_delta_train_percent=0.020, 
+        rise_patience=8, still_patience=10, 
+        min_delta_val=1.5e-5, min_delta_val_percent=0.1, 
+        min_delta_train=2e-6, min_delta_train_percent=0.025, 
         smoothing=0.6,
         debug=0
     ):
@@ -35,6 +35,7 @@ class EarlyStopping:
         self.last_val_loss = None
         self.best_val_loss = None
         self.best_train_loss = None
+        self.best_val_loss_2 = None
         self.early_stopped = False
         self.smoothing = min(1.0, max(0, 1.0 - smoothing))
         self.debug = debug
@@ -59,6 +60,7 @@ class EarlyStopping:
         else:
             self.train_below_val = True
             if self.best_val_loss is None:
+                self.update_best_2(val_loss)
                 self.update_best(train_loss, val_loss)
             else:
                 delta_val_loss = val_loss - self.best_val_loss
@@ -79,9 +81,14 @@ class EarlyStopping:
                     still = abs(delta_val_loss) < min_delta_val
                     min_delta_train_percent = self.min_delta_train_percent * train_loss
                     min_delta_train = max(self.min_delta_train, min_delta_train_percent)
-                    still = not (val_loss < self.best_val_loss or (still and delta_train_loss < -min_delta_train))
                     if still:
-                        self.still_counter += 1
+                        if val_loss < self.best_val_loss_2:
+                            self.still_counter += 0.5
+                            self.update_best_2(val_loss)
+                        elif delta_train_loss < -min_delta_train:
+                            self.still_counter += 0.75
+                        else:
+                            self.still_counter += 1
                         if self.debug >= 2:
                             print(f"INFO: Early stopping still {self.still_counter}/{self.still_patience}")
                         if self.still_counter >= self.still_patience:
@@ -91,10 +98,18 @@ class EarlyStopping:
                         self.still_counter = 0
         return self.early_stopped
 
+    def update_state(self):
+        self.best_state = self.model.state_dict()
+
+    def update_best_2(self, val_loss):
+        self.best_val_loss_2 = val_loss
+        self.update_state()
+
     def update_best(self, train_loss, val_loss):
         self.best_train_loss = train_loss
         self.best_val_loss = val_loss
-        self.best_state = self.model.state_dict()
+        if val_loss < self.best_val_loss_2:
+            self.update_best_2(val_loss)
 
     def early_stop(self, reason="idk"):
         self.model.load_state_dict(self.best_state)
