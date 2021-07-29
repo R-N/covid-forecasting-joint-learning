@@ -4,9 +4,9 @@ class EarlyStopping:
     def __init__(
         self, 
         model,
-        wait=10, wait_train_below_val=20, 
-        rise_patience=8, still_patience=10, 
-        min_delta_val=1.5e-5, min_delta_val_percent=0.1, 
+        wait=20, wait_train_below_val=20, 
+        rise_patience=10, still_patience=12, 
+        min_delta_val=1.5e-5, min_delta_val_percent=0.15, 
         min_delta_train=2e-6, min_delta_train_percent=0.025, 
         smoothing=0.6,
         debug=0
