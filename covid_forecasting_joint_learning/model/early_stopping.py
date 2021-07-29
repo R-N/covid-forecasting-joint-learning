@@ -72,6 +72,7 @@ class EarlyStopping:
                 rise = delta_val_loss > min_delta_val
                 if rise:
                     self.rise_counter += 1
+                    self.still_counter = 0  # It will need time to go down
                     if self.debug >= 2:
                         print(f"INFO: Early stopping rise {self.rise_counter}/{self.rise_patience}")
                     if self.rise_counter >= self.rise_patience:
