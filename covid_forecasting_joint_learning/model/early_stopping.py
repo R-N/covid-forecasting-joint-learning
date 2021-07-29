@@ -1,5 +1,6 @@
 from .util import progressive_smooth
 import scipy.stats as st
+from math import sqrt
 
 
 class EarlyStopping:
