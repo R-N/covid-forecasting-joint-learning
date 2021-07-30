@@ -242,23 +242,6 @@ class EarlyStopping2:
             val_loss = progressive_smooth(self.val_loss_history[-1], self.smoothing, val_loss)
         self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
         self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
-        mid_val_loss, min_delta_val_percent = self.calculate_interval(self.val_loss_history)
-        mid_train_loss, min_delta_train_percent = self.calculate_interval(self.train_loss_history)
-        min_delta_val = max(self.min_delta_val, min_delta_val_percent)
-        min_delta_train = max(self.min_delta_train, min_delta_train_percent)
-
-        self.log_stop(
-            label="val_stop", epoch=epoch,
-            loss=val_loss,
-            min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
-            best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
-        )
-        self.log_stop(
-            label="train_stop", epoch=epoch,
-            loss=train_loss,
-            min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
-            best_loss=self.best_train_loss
-        )
 
         if self.wait_counter < self.wait:
             self.wait_counter += 1
@@ -274,6 +257,25 @@ class EarlyStopping2:
                 self.update_best_2(val_loss)
                 self.update_best(train_loss, val_loss)
             else:
+
+                mid_val_loss, min_delta_val_percent = self.calculate_interval(self.val_loss_history)
+                mid_train_loss, min_delta_train_percent = self.calculate_interval(self.train_loss_history)
+                min_delta_val = max(self.min_delta_val, min_delta_val_percent)
+                min_delta_train = max(self.min_delta_train, min_delta_train_percent)
+
+                self.log_stop(
+                    label="val_stop", epoch=epoch,
+                    loss=val_loss,
+                    min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
+                    best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
+                )
+                self.log_stop(
+                    label="train_stop", epoch=epoch,
+                    loss=train_loss,
+                    min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
+                    best_loss=self.best_train_loss
+                )
+                
                 delta_val_loss = val_loss - self.best_val_loss
                 delta_train_loss = train_loss - self.best_train_loss
                 if self.debug >= 3:
@@ -316,7 +318,7 @@ class EarlyStopping2:
 
         self.still_writer.flush()
         self.rise_writer.flush()
-        
+
         self.epoch = epoch + 1
         return self.early_stopped
 
