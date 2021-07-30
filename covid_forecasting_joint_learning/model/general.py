@@ -474,13 +474,15 @@ class ObjectiveModel:
 
         self.trial_id = trial_id if trial_id is not None else datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
-        if isinstance(log_dir, str) and not log_dir.endswith("/"):
-            log_dir = log_dir + "/"
-        self.log_dir = log_dir + str(self.trial_id)
+        if isinstance(log_dir, str):
+            if not log_dir.endswith("/"):
+                log_dir = log_dir + "/"
+            log_dir = log_dir + str(self.trial_id)
+        self.log_dir = log_dir
 
         if self.log_dir:
-            self.train_summary_writer = SummaryWriter(log_dir + '/train')
-            self.val_summary_writer = SummaryWriter(log_dir + '/val')
+            self.train_summary_writer = SummaryWriter(self.log_dir + '/train')
+            self.val_summary_writer = SummaryWriter(self.log_dir + '/val')
 
 
         self.train_epoch = 0
