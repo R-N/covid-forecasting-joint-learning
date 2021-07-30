@@ -134,7 +134,9 @@ class EarlyStopping2:
         history_length=None,
         smoothing=0.6,
         simple=False,
-        debug=0
+        debug=0,
+        log_dir=None,
+        label=None
     ):
         """
         :param patience: how many epochs to wait before stopping when loss is
@@ -167,6 +169,25 @@ class EarlyStopping2:
         self.interval_percent = interval_percent
         self.debug = debug
         self.calculate_interval = self.calculate_interval_1 if simple else self.calculate_interval_2
+        self.log_dir = log_dir
+        self.label = label
+        self.epoch = 0
+
+        if self.log_dir is not None or self.label is not None:
+            assert self.log_dir is not None and self.label is not None
+
+            self.min_percent_high_writer = SummaryWriter(log_dir + "/min_percent_high")
+            self.min_percent_low_writer = SummaryWriter(log_dir + "/min_percent_low")
+
+            self.min_high_writer = SummaryWriter(log_dir + "/min_high")
+            self.min_low_writer = SummaryWriter(log_dir + "/min_low")
+
+            self.loss_writer = SummaryWriter(log_dir + "/loss")
+            self.best_loss_writer = SummaryWriter(log_dir + "/best_loss")
+            self.best_loss_2_writer = SummaryWriter(log_dir + "/best_loss_2")
+
+            self.still_writer = SummaryWriter(log_dir + "/still")
+            self.rise_writer = SummaryWriter(log_dir + "/rise")
 
     def calculate_interval_1(self, history):
         min_val = min(history)
@@ -183,12 +204,48 @@ class EarlyStopping2:
         sigma = mul * stdev
         return mean, sigma
 
-    def __call__(self, train_loss, val_loss):
+    def log_stop(
+        self,
+        label,epoch,
+        loss, 
+        min_delta, min_delta_percent,
+        best_loss, best_loss_2=None
+    ):
+        self.min_percent_high_writer.add_scalar(self.label + label, best_loss + min_delta_percent, global_step=epoch)
+        self.min_percent_low_writer.add_scalar(self.label + label, best_loss - min_delta_percent, global_step=epoch)
+
+        self.min_high_writer.add_scalar(self.label + label, best_loss - min_delta, global_step=epoch)
+        self.min_low_writer.add_scalar(self.label + label, best_loss - min_delta, global_step=epoch)
+
+        self.loss_writer.add_scalar(self.label + label, loss, global_step=epoch)
+        self.best_loss_writer.add_scalar(self.label + label, best_loss, global_step=epoch)
+        if best_loss_2:
+            self.best_loss_2_writer.add_scalar(self.label + label, best_loss_2, global_step=epoch)
+
+    def __call__(self, train_loss, val_loss, epoch=None):
+        epoch = epoch if epoch is not None else self.epoch
         if len(self.val_loss_history):
             train_loss = progressive_smooth(self.train_loss_history[-1], self.smoothing, train_loss)
             val_loss = progressive_smooth(self.val_loss_history[-1], self.smoothing, val_loss)
         self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
         self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
+        mid_val_loss, min_delta_val_percent = self.calculate_interval(self.val_loss_history)
+        mid_train_loss, min_delta_train_percent = self.calculate_interval(self.train_loss_history)
+        min_delta_val = max(self.min_delta_val, min_delta_val_percent)
+        min_delta_train = max(self.min_delta_train, min_delta_train_percent)
+
+        self.log_stop(
+            label="val_stop", epoch=epoch,
+            loss=val_loss,
+            min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
+            best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
+        )
+        self.log_stop(
+            label="train_stop", epoch=epoch,
+            loss=train_loss,
+            min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
+            best_loss=self.best_train_loss
+        )
 
         if self.wait_counter < self.wait:
             self.wait_counter += 1
@@ -204,12 +261,10 @@ class EarlyStopping2:
                 self.update_best_2(val_loss)
                 self.update_best(train_loss, val_loss)
             else:
-                mid_val_loss, min_delta_val_percent = self.calculate_interval(self.val_loss_history)
-                min_delta_val = max(self.min_delta_val, min_delta_val_percent)
                 delta_val_loss = val_loss - self.best_val_loss
                 delta_train_loss = train_loss - self.best_train_loss
                 if self.debug >= 3:
-                    print("INFO: Early stopping check", train_loss, val_loss, delta_train_loss, delta_val_loss)
+                    print("INFO: Early stopping check", train_loss, val_loss, delta_train_loss, delta_val_loss, min_delta_val)
                 rise = delta_val_loss > min_delta_val
                 if rise:
                     self.rise_counter += 1
@@ -221,8 +276,6 @@ class EarlyStopping2:
                 else:
                     self.rise_counter = 0
                     still = abs(delta_val_loss) < min_delta_val
-                    mid_train_loss, min_delta_train_percent = self.calculate_interval(self.train_loss_history)
-                    min_delta_train = max(self.min_delta_train, min_delta_train_percent)
                     if still:
                         still_increment = 0
                         if self.min_min_delta_val < min_delta_val:
@@ -242,6 +295,13 @@ class EarlyStopping2:
                     else:
                         self.update_best(train_loss, val_loss)
                         self.still_counter = 0
+
+
+
+        self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
+        self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
+
+        self.epoch = epoch + 1
         return self.early_stopped
 
     def update_state(self):

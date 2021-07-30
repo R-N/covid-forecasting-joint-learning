@@ -476,26 +476,24 @@ class ObjectiveModel:
 
         if isinstance(log_dir, str) and not log_dir.endswith("/"):
             log_dir = log_dir + "/"
-        self.log_dir = log_dir
+        self.log_dir = log_dir + str(self.trial_id)
 
         if self.log_dir:
-            trial_log_dir = self.log_dir + str(self.trial_id)
-            train_log_dir = trial_log_dir + '/train'
-            val_log_dir = trial_log_dir + '/val'
-
-            self.train_summary_writer = SummaryWriter(train_log_dir)
-            self.val_summary_writer = SummaryWriter(val_log_dir)
+            self.train_summary_writer = SummaryWriter(log_dir + '/train')
+            self.val_summary_writer = SummaryWriter(log_dir + '/val')
 
 
         self.train_epoch = 0
         self.val_epoch = 0
 
+        self.label = f"G{self.cluster.group.id}.C{self.cluster.id}/"
+
     def train(self, epoch=None):
         loss = self.model.train()
         epoch = epoch if epoch is not None else self.train_epoch
         if self.log_dir:
-            self.train_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/avg_loss", loss[0].item(), global_step=epoch)
-            self.train_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/target_loss", loss[1].item(), global_step=epoch)
+            self.train_summary_writer.add_scalar(self.label + "avg_loss", loss[0].item(), global_step=epoch)
+            self.train_summary_writer.add_scalar(self.label + "target_loss", loss[1].item(), global_step=epoch)
             self.train_summary_writer.flush()
         self.train_epoch = epoch + 1
         return loss
@@ -504,8 +502,8 @@ class ObjectiveModel:
         loss = self.model.val()
         epoch = epoch if epoch is not None else self.val_epoch
         if self.log_dir:
-            self.val_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/avg_loss", loss[0].item(), global_step=epoch)
-            self.val_summary_writer.add_scalar(f"{self.cluster.group.id}.{self.cluster.id}/target_loss", loss[1].item(), global_step=epoch)
+            self.val_summary_writer.add_scalar(self.label + "avg_loss", loss[0].item(), global_step=epoch)
+            self.val_summary_writer.add_scalar(self.label + "target_loss", loss[1].item(), global_step=epoch)
             self.val_summary_writer.flush()
         self.val_epoch = epoch + 1
         return loss
