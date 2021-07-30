@@ -213,11 +213,11 @@ class EarlyStopping:
                 self.update_best(train_loss, val_loss)
                 self.still_counter = 0
 
-            self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
-            self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
+        self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
+        self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
 
-            self.still_writer.flush()
-            self.rise_writer.flush()
+        self.still_writer.flush()
+        self.rise_writer.flush()
 
         self.epoch = epoch + 1
         return self.early_stopped
