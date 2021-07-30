@@ -275,7 +275,7 @@ class EarlyStopping2:
                     min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
                     best_loss=self.best_train_loss
                 )
-                
+
                 delta_val_loss = val_loss - self.best_val_loss
                 delta_train_loss = train_loss - self.best_train_loss
                 if self.debug >= 3:
@@ -311,13 +311,11 @@ class EarlyStopping2:
                         self.update_best(train_loss, val_loss)
                         self.still_counter = 0
 
+                self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
+                self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
 
-
-        self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
-        self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
-
-        self.still_writer.flush()
-        self.rise_writer.flush()
+                self.still_writer.flush()
+                self.rise_writer.flush()
 
         self.epoch = epoch + 1
         return self.early_stopped
