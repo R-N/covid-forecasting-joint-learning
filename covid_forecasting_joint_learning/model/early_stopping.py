@@ -86,7 +86,7 @@ class EarlyStopping:
         history = self.val_loss_history if val else self.train_loss_history
         percent = self.min_delta_val_percent if val else self.min_delta_train_percent
         max_val = max(history)
-        delta = self.min_delta_train_percent * max_val
+        delta = percent * max_val
         mid = history[-2]
         return mid, delta
 
