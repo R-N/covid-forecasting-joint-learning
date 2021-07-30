@@ -197,9 +197,9 @@ class EarlyStopping:
             if still:
                 still_increment = 0
                 if self.min_min_delta_val < min_delta_val:
-                    still_increment = 1.0/3
+                    still_increment = 2.0/3
                 elif val_loss < self.best_val_loss_2:
-                    still_increment = 0.5
+                    still_increment = 2.0/3
                     self.update_best_2(val_loss)
                 elif delta_train_loss < -min_delta_train:
                     still_increment = 0.75
