@@ -220,7 +220,7 @@ class EarlyStopping:
                     if self.active:
                         self.early_stop("still", epoch)
                     else:
-                        self.forgive()
+                        self.forgive_wait()
             else:
                 self.update_best(train_loss, val_loss)
                 self.forgive_still()
