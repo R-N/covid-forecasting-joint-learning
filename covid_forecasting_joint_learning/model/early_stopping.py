@@ -129,7 +129,8 @@ class EarlyStopping2:
         wait=20, wait_train_below_val=20, 
         rise_patience=10, still_patience=6,
         interval_percent=0.05,
-        min_delta_val=1.5e-5, min_delta_train=2e-6, 
+        min_delta_val=1.5e-5, min_delta_train=2e-6,
+        min_min_delta_val=1e-3, min_min_delta_train=1e-4,
         history_length=None,
         smoothing=0.6,
         simple=False,
@@ -153,7 +154,7 @@ class EarlyStopping2:
         self.min_delta_train = min_delta_train
         self.rise_counter = 0
         self.still_counter = 0
-        self.history_length = history_length or max(rise_patience, still_patience)
+        self.history_length = history_length or min(rise_patience, still_patience)
         self.train_loss_history = []
         self.val_loss_history = []
         self.best_val_loss = None
@@ -221,13 +222,17 @@ class EarlyStopping2:
                     mid_train_loss, min_delta_train_percent = self.calculate_interval(self.train_loss_history)
                     min_delta_train = max(self.min_delta_train, min_delta_train_percent)
                     if still:
-                        if val_loss < self.best_val_loss_2:
-                            self.still_counter += 0.5
+                        still_increment = 0
+                        if self.min_min_delta_val < min_delta_val:
+                            still_increment = 1.0/3
+                        elif val_loss < self.best_val_loss_2:
+                            still_increment = 0.5
                             self.update_best_2(val_loss)
                         elif delta_train_loss < -min_delta_train:
-                            self.still_counter += 0.75
+                            still_increment = 0.75
                         else:
-                            self.still_counter += 1
+                            still_increment = 1
+                        self.still_counter += still_increment
                         if self.debug >= 2:
                             print(f"INFO: Early stopping still {self.still_counter}/{self.still_patience}")
                         if self.still_counter >= self.still_patience:
