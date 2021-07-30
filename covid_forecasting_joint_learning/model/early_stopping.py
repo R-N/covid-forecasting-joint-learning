@@ -215,7 +215,7 @@ class EarlyStopping2:
         self.min_percent_high_writer.add_scalar(self.label + label, best_loss + min_delta_percent, global_step=epoch)
         self.min_percent_low_writer.add_scalar(self.label + label, best_loss - min_delta_percent, global_step=epoch)
 
-        self.min_high_writer.add_scalar(self.label + label, best_loss - min_delta, global_step=epoch)
+        self.min_high_writer.add_scalar(self.label + label, best_loss + min_delta, global_step=epoch)
         self.min_low_writer.add_scalar(self.label + label, best_loss - min_delta, global_step=epoch)
 
         self.loss_writer.add_scalar(self.label + label, loss, global_step=epoch)
