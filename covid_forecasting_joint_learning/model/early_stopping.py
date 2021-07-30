@@ -18,6 +18,11 @@ class EarlyStopping:
         smoothing=0.6,
         interval_mode=2,
         max_epoch=100,
+        rise_forgiveness=0.6,
+        still_forgiveness=0.6,
+        variance_still_tolerance=0.7,
+        val_reduction_still_tolerance=0.7,
+        train_reduction_still_tolerance=0.8,
         debug=0,
         log_dir=None,
         label=None
@@ -59,6 +64,13 @@ class EarlyStopping:
             self.calculate_interval_2
         ]
         self.interval_mode = interval_mode
+
+        self.rise_forgiveness = rise_forgiveness
+        self.still_forgiveness = still_forgiveness
+        self.variance_still_tolerance = variance_still_tolerance
+        self.val_reduction_still_tolerance = val_reduction_still_tolerance
+        self.train_reduction_still_tolerance = train_reduction_still_tolerance
+
         self.max_epoch = max_epoch
         self.log_dir = log_dir
         self.label = label
@@ -185,26 +197,24 @@ class EarlyStopping:
         rise = delta_val_loss > min_delta_val
         if rise:
             self.rise_counter += 1
-            self.still_counter = 0  # It will need time to go down
+            self.forgive_still()  # It will need time to go down
             if self.active and self.rise_counter >= self.rise_patience:
                 if self.active:
                     self.early_stop("rise", epoch)
                 else:
-                    self.forgive()
+                    self.forgive_wait()
         else:
-            self.rise_counter = 0
+            self.forgive_rise()
             still = abs(delta_val_loss) < min_delta_val
             if still:
-                still_increment = 0
+                still_increment = 1
                 if self.min_min_delta_val < min_delta_val:
-                    still_increment = 2.0/3
-                elif val_loss < self.best_val_loss_2:
-                    still_increment = 2.0/3
+                    still_increment *= variance_still_tolerance
+                if val_loss < self.best_val_loss_2:
+                    still_increment *= val_reduction_still_tolerance
                     self.update_best_2(val_loss)
-                elif delta_train_loss < -min_delta_train:
-                    still_increment = 0.75
-                else:
-                    still_increment = 1
+                if delta_train_loss < -min_delta_train:
+                    still_increment *= train_reduction_still_tolerance
                 self.still_counter += still_increment
                 if self.still_counter >= self.still_patience:
                     if self.active:
@@ -213,7 +223,7 @@ class EarlyStopping:
                         self.forgive()
             else:
                 self.update_best(train_loss, val_loss)
-                self.still_counter = 0
+                self.forgive_still()
 
         self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
         self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
@@ -252,6 +262,15 @@ class EarlyStopping:
         if self.debug >= 1:
             print(f"INFO: Early stopping due to {reason} at epoch {epoch}")
 
-    def forgive(self):
+    def calculate_forgiveness(self, counter, forgiveness, patience):
+        return max(0, counter - forgiveness * patience)
+
+    def forgive_rise(self):
+        self.rise_counter = self.calculate_forgiveness(self.rise_counter, self.rise_forgiveness, self.rise_counter)
+
+    def forgive_still(self):
+        self.still_counter = self.calculate_forgiveness(self.still_counter, self.still_forgiveness, self.still_counter)
+
+    def forgive_wait(self):
         if self.debug >= 1:
             print(f"INFO: Early stopping forgiven due to wait")
