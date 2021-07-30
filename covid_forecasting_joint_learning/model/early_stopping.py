@@ -152,6 +152,8 @@ class EarlyStopping2:
         self.still_patience = still_patience
         self.min_delta_val = min_delta_val
         self.min_delta_train = min_delta_train
+        self.min_min_delta_val = min_min_delta_val
+        self.min_min_delta_train = min_min_delta_train
         self.rise_counter = 0
         self.still_counter = 0
         self.history_length = history_length or min(rise_patience, still_patience)
