@@ -149,7 +149,7 @@ class EarlyStopping:
             self.wait_counter += 1
         elif not self.active and val_loss < train_loss and self.wait_train_below_val_counter < self.wait_train_below_val:
             self.wait_train_below_val_counter += 1
-        else:
+        else if not self.active:
             self.active = True
             self.still_counter = 0
             self.rise_counter = 0
