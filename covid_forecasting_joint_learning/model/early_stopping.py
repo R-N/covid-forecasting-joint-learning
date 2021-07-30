@@ -17,6 +17,7 @@ class EarlyStopping:
         history_length=None,
         smoothing=0.6,
         interval_mode=2,
+        max_epoch=100,
         debug=0,
         log_dir=None,
         label=None
@@ -48,7 +49,7 @@ class EarlyStopping:
         self.best_val_loss = None
         self.best_train_loss = None
         self.best_val_loss_2 = None
-        self.early_stopped = False
+        self.stopped = False
         self.smoothing = min(1.0, max(0, 1.0 - smoothing))
         self.interval_percent = interval_percent
         self.debug = debug
@@ -58,6 +59,7 @@ class EarlyStopping:
             self.calculate_interval_2
         ]
         self.interval_mode = interval_mode
+        self.max_epoch = max_epoch
         self.log_dir = log_dir
         self.label = label
         self.epoch = 0
@@ -186,7 +188,7 @@ class EarlyStopping:
             self.still_counter = 0  # It will need time to go down
             if self.active and self.rise_counter >= self.rise_patience:
                 if self.active:
-                    self.early_stop("rise")
+                    self.early_stop("rise", epoch)
                 else:
                     self.forgive()
         else:
@@ -206,7 +208,7 @@ class EarlyStopping:
                 self.still_counter += still_increment
                 if self.still_counter >= self.still_patience:
                     if self.active:
-                        self.early_stop("still")
+                        self.early_stop("still", epoch)
                     else:
                         self.forgive()
             else:
@@ -219,8 +221,13 @@ class EarlyStopping:
         self.still_writer.flush()
         self.rise_writer.flush()
 
+        if self.max_epoch and epoch >= self.max_epoch:
+            self.stop()
+            if self.debug >= 1:
+                print(f"INFO: Stopping at max epoch {epoch}")
+
         self.epoch = epoch + 1
-        return self.early_stopped
+        return self.stopped
 
     def update_state(self):
         self.best_state = self.model.state_dict()
@@ -235,11 +242,15 @@ class EarlyStopping:
         if val_loss < self.best_val_loss_2:
             self.update_best_2(val_loss)
 
-    def early_stop(self, reason="idk"):
+    def stop(self):
         self.model.load_state_dict(self.best_state)
-        self.early_stopped = True
+        self.stopped = True
+
+    def early_stop(self, reason="idk", epoch=None):
+        epoch = epoch if epoch is not None else self.epoch
+        self.stop()
         if self.debug >= 1:
-            print(f"INFO: Early stopping due to {reason}")
+            print(f"INFO: Early stopping due to {reason} at epoch {epoch}")
 
     def forgive(self):
         if self.debug >= 1:
