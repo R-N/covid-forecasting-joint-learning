@@ -1,6 +1,7 @@
 from .util import progressive_smooth
 import scipy.stats as st
 from math import sqrt
+from torch.utils.tensorboard import SummaryWriter
 
 
 class EarlyStopping:
@@ -219,8 +220,20 @@ class EarlyStopping2:
 
         self.loss_writer.add_scalar(self.label + label, loss, global_step=epoch)
         self.best_loss_writer.add_scalar(self.label + label, best_loss, global_step=epoch)
+
+
+        self.min_percent_high_writer.flush()
+        self.min_percent_low_writer.flush()
+
+        self.min_high_writer.flush()
+        self.min_low_writer.flush()
+
+        self.loss_writer.flush()
+        self.best_loss_writer.flush()
+
         if best_loss_2:
             self.best_loss_2_writer.add_scalar(self.label + label, best_loss_2, global_step=epoch)
+            self.best_loss_2_writer.flush()
 
     def __call__(self, train_loss, val_loss, epoch=None):
         epoch = epoch if epoch is not None else self.epoch
@@ -301,6 +314,9 @@ class EarlyStopping2:
         self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
         self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
 
+        self.still_writer.flush()
+        self.rise_writer.flush()
+        
         self.epoch = epoch + 1
         return self.early_stopped
 
