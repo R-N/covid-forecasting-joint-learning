@@ -32,7 +32,6 @@ class EarlyStopping:
         self.wait_counter = 0
         self.wait_train_below_val = wait_train_below_val
         self.wait_train_below_val_counter = 0
-        self.train_below_val = False
         self.rise_patience = rise_patience
         self.still_patience = still_patience
         self.min_delta_val = min_delta_val
@@ -62,6 +61,7 @@ class EarlyStopping:
         self.log_dir = log_dir
         self.label = label
         self.epoch = 0
+        self.active = False
 
         if self.log_dir is not None or self.label is not None:
             assert self.log_dir is not None and self.label is not None
@@ -147,77 +147,77 @@ class EarlyStopping:
 
         if self.wait_counter < self.wait:
             self.wait_counter += 1
-            if self.debug >= 3:
-                print(f"INFO: Early stopping wait {self.wait_counter}/{self.wait}")
-        elif not self.train_below_val and val_loss < train_loss and self.wait_train_below_val_counter < self.wait_train_below_val:
+        elif not self.active and val_loss < train_loss and self.wait_train_below_val_counter < self.wait_train_below_val:
             self.wait_train_below_val_counter += 1
-            if self.debug >= 3:
-                print(f"INFO: Early stopping wait train below val {self.wait_train_below_val_counter}/{self.wait_train_below_val}")
         else:
-            self.train_below_val = True
-            if self.best_val_loss is None:
-                self.update_best_2(val_loss)
-                self.update_best(train_loss, val_loss)
-            else:
+            self.active = True
+            self.still_counter = 0
+            self.rise_counter = 0
+            print (f"INFO: Early stopping active at epoch {epoch}")
 
-                mid_val_loss, min_delta_val_percent = self.calculate_interval(val=True)
-                mid_train_loss, min_delta_train_percent = self.calculate_interval(val=False)
-                min_delta_val = max(self.min_delta_val, min_delta_val_percent)
-                min_delta_train = max(self.min_delta_train, min_delta_train_percent)
+        if self.best_val_loss is None:
+            self.update_best_2(val_loss)
+            self.update_best(train_loss, val_loss)
 
-                self.log_stop(
-                    label="val_stop", epoch=epoch,
-                    loss=val_loss,
-                    min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
-                    best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
-                )
-                self.log_stop(
-                    label="train_stop", epoch=epoch,
-                    loss=train_loss,
-                    min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
-                    best_loss=self.best_train_loss
-                )
+        mid_val_loss, min_delta_val_percent = self.calculate_interval(val=True)
+        mid_train_loss, min_delta_train_percent = self.calculate_interval(val=False)
+        min_delta_val = max(self.min_delta_val, min_delta_val_percent)
+        min_delta_train = max(self.min_delta_train, min_delta_train_percent)
 
-                delta_val_loss = val_loss - self.best_val_loss
-                delta_train_loss = train_loss - self.best_train_loss
-                if self.debug >= 3:
-                    print("INFO: Early stopping check", train_loss, val_loss, delta_train_loss, delta_val_loss, min_delta_val)
-                rise = delta_val_loss > min_delta_val
-                if rise:
-                    self.rise_counter += 1
-                    self.still_counter = 0  # It will need time to go down
-                    if self.debug >= 2:
-                        print(f"INFO: Early stopping rise {self.rise_counter}/{self.rise_patience}")
-                    if self.rise_counter >= self.rise_patience:
-                        self.early_stop("rise")
+        self.log_stop(
+            label="val_stop", epoch=epoch,
+            loss=val_loss,
+            min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
+            best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
+        )
+        self.log_stop(
+            label="train_stop", epoch=epoch,
+            loss=train_loss,
+            min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
+            best_loss=self.best_train_loss
+        )
+
+        delta_val_loss = val_loss - self.best_val_loss
+        delta_train_loss = train_loss - self.best_train_loss
+
+        rise = delta_val_loss > min_delta_val
+        if rise:
+            self.rise_counter += 1
+            self.still_counter = 0  # It will need time to go down
+            if self.active and self.rise_counter >= self.rise_patience:
+                if self.active:
+                    self.early_stop("rise")
                 else:
-                    self.rise_counter = 0
-                    still = abs(delta_val_loss) < min_delta_val
-                    if still:
-                        still_increment = 0
-                        if self.min_min_delta_val < min_delta_val:
-                            still_increment = 1.0/3
-                        elif val_loss < self.best_val_loss_2:
-                            still_increment = 0.5
-                            self.update_best_2(val_loss)
-                        elif delta_train_loss < -min_delta_train:
-                            still_increment = 0.75
-                        else:
-                            still_increment = 1
-                        self.still_counter += still_increment
-                        if self.debug >= 2:
-                            print(f"INFO: Early stopping still {self.still_counter}/{self.still_patience}")
-                        if self.still_counter >= self.still_patience:
-                            self.early_stop("still")
+                    self.forgive()
+        else:
+            self.rise_counter = 0
+            still = abs(delta_val_loss) < min_delta_val
+            if still:
+                still_increment = 0
+                if self.min_min_delta_val < min_delta_val:
+                    still_increment = 1.0/3
+                elif val_loss < self.best_val_loss_2:
+                    still_increment = 0.5
+                    self.update_best_2(val_loss)
+                elif delta_train_loss < -min_delta_train:
+                    still_increment = 0.75
+                else:
+                    still_increment = 1
+                self.still_counter += still_increment
+                if self.still_counter >= self.still_patience:
+                    if self.active:
+                        self.early_stop("still")
                     else:
-                        self.update_best(train_loss, val_loss)
-                        self.still_counter = 0
+                        self.forgive()
+            else:
+                self.update_best(train_loss, val_loss)
+                self.still_counter = 0
 
-                self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
-                self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
+            self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
+            self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
 
-                self.still_writer.flush()
-                self.rise_writer.flush()
+            self.still_writer.flush()
+            self.rise_writer.flush()
 
         self.epoch = epoch + 1
         return self.early_stopped
@@ -240,3 +240,7 @@ class EarlyStopping:
         self.early_stopped = True
         if self.debug >= 1:
             print(f"INFO: Early stopping due to {reason}")
+
+    def forgive(self):
+        if self.debug >= 1:
+            print(f"INFO: Early stopping forgiven due to wait")
