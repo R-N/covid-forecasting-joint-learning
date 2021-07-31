@@ -29,6 +29,7 @@ def __train(samples, loss_fn, optimizer, clip_grad_norm=None, grad_scaler=None):
     loss /= weights
 
     if grad_scaler:
+        print("Use amp!")
         grad_scaler.scale(loss).backward()
         grad_scaler.unscale_(optimizer)
     else:
