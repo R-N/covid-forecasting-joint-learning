@@ -340,17 +340,14 @@ def preprocessing_5(
 
 def preprocessing_6(
     kabkos,
-    batch_size=5,
-    cuda=False
+    batch_size=5
 ):
     for kabko in kabkos:
         def collate_fn(samples):
             keys = list(samples[0].keys())
             samples_1 = {key: torch.stack(
                 [torch.from_numpy(samples[i][key]) for i in range(len(samples))]
-            ).detach() for key in keys}
-            if cuda:
-                samples_1 = {key: samples_1[key].cuda() for key in keys}
+            ).cuda().detach() for key in keys}
             samples_1["kabko"] = kabko
             return samples_1
 
