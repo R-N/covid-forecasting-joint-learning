@@ -219,7 +219,7 @@ class ClusterModel:
         self.target.write_model_graph(path)
 
     def to(self, device):
-        self.models.to(device)
+        return self.models.to(device)
 
 class ObjectiveModel:
     def __init__(
@@ -535,4 +535,4 @@ class ObjectiveModel:
         self.model.freeze_private(freeze)
 
     def to(self, device):
-        self.model.to(device)
+        return self.model.to(device)
