@@ -19,6 +19,7 @@ class KabkoData:
         cluster=None,
         scaler_2=None,
         datasets=None,
+        datasets_torch=None,
         dataloaders=None,
         model=None
     ):
@@ -37,6 +38,7 @@ class KabkoData:
         self.cluster = cluster
         self.scaler_2 = scaler_2
         self.datasets = datasets
+        self.datasets_torch = datasets_torch
         self.dataloaders = dataloaders
         self.model = model
 
@@ -84,6 +86,7 @@ class KabkoData:
             cluster=self.cluster,
             scaler_2=self.scaler_2,
             datasets=self.datasets,
+            datasets_torch=self.datasets_torch,
             dataloaders=self.dataloaders,
             model=self.model
         )

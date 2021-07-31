@@ -3,12 +3,29 @@ import json
 from torch import nn
 
 
+CUDA = False
+HALF = False
+DEFAULT_TENSOR = "torch.FloatTensor"
+DEVICE = None
+
+
 def init(cuda=True, half=False):
     cuda = cuda and torch.cuda.is_available()
     device = torch.device('cuda' if cuda else 'cpu')
     tensor_precision = "HalfTensor" if half else "FloatTensor"
     tensor_device = "torch.cuda" if cuda else "torch"
-    torch.set_default_tensor_type(f"{tensor_device}.{tensor_precision}")
+    default_tensor = f"{tensor_device}.{tensor_precision}"
+    torch.set_default_tensor_type(default_tensor)
+
+    global CUDA
+    CUDA = cuda
+    global HALF
+    HALF = half
+    global DEFAULT_TENSOR
+    DEFAULT_TENSOR = default_tensor
+    global DEVICE
+    DEVICE = device
+
     return device
 
 

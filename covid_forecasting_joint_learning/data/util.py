@@ -5,7 +5,7 @@ from . import cols as DataCol
 
 def add_dates(df, ranges, name):
     ranges = ranges.itertuples(index=False) if isinstance(ranges, pd.DataFrame) else ranges
-    df.loc[:, name] = pd.Series(0.0, index=df.index, dtype=np.float16)
+    df.loc[:, name] = pd.Series(0.0, index=df.index, dtype=np.float32)
     for start, end, value in ranges:
         # start, end = pd.to_datetime((start, end))
         df.loc[start:end, name] = value
@@ -21,7 +21,7 @@ def prepare_dates(
     df.loc[:, start_col] = pd.to_datetime(df.loc[:, start_col])
     df.loc[:, end_col] = pd.to_datetime(df.loc[:, end_col])
     if val_col not in df.columns:
-        df[val_col] = pd.Series(np.array(len(df) * [1.0]), dtype=np.float16)
+        df[val_col] = pd.Series(np.array(len(df) * [1.0]), dtype=np.float32)
     df.rename(columns={
         name_col: DataCol.NAME,
         start_col: DataCol.START,

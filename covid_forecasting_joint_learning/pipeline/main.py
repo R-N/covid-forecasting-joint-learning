@@ -342,12 +342,14 @@ def preprocessing_6(
     kabkos,
     batch_size=5
 ):
+    keys = list(kabkos[0].datasets[0][0].keys())
     for kabko in kabkos:
+        kabko.datasets_torch = [[{torch.Tensor(sample[key]) for key in keys} for sample in dataset] for dataset in kabko.datasets]
+
         def collate_fn(samples):
-            keys = list(samples[0].keys())
             samples_1 = {key: torch.stack(
-                [torch.from_numpy(samples[i][key]) for i in range(len(samples))]
-            ).cuda().detach() for key in keys}
+                [sample[key] for sample in samples]
+            ).detach() for key in keys}
             samples_1["kabko"] = kabko
             return samples_1
 
@@ -358,4 +360,4 @@ def preprocessing_6(
             collate_fn=collate_fn,
             num_workers=0,
             pin_memory=True
-        ) for dataset in kabko.datasets]
+        ) for dataset in kabko.datasets_torch]
