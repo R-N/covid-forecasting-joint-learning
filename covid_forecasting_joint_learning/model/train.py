@@ -106,9 +106,11 @@ def test(
 
     for source in sources:
         source.is_target = False
+        source.weight = source_weight
         source.model.eval()
 
     target.is_target = True
+    target.weight = 1.0
     target.model.eval()
 
     avg_loss = 0
