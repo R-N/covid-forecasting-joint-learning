@@ -69,7 +69,7 @@ def train(
 
     joint_dataloader_enum = zip(*[key(k) for k in members])
 
-    grad_scaler = torch.cuda.amp.GradScaler() if use_amp else None
+    grad_scaler = torch.cuda.amp.GradScaler(init_scale=8192) if use_amp else None
 
     for batch_id, samples in enumerate(joint_dataloader_enum):
         loss = 0
