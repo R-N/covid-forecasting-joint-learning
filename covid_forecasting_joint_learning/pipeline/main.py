@@ -344,7 +344,7 @@ def preprocessing_6(
 ):
     keys = list(kabkos[0].datasets[0][0].keys())
     for kabko in kabkos:
-        kabko.datasets_torch = [[{torch.Tensor(sample[key]) for key in keys} for sample in dataset] for dataset in kabko.datasets]
+        kabko.datasets_torch = [[{key: torch.Tensor(sample[key]) for key in keys} for sample in dataset] for dataset in kabko.datasets]
 
         def collate_fn(samples):
             samples_1 = {key: torch.stack(
