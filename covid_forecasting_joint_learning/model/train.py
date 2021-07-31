@@ -41,7 +41,6 @@ def train(
     scheduler=None,
     loss_fn=nn.MSELoss(),
     source_weight=1.0,
-    device="cpu",
     key=lambda k: k.dataloaders[0],
     clip_grad_norm=None
 ):
@@ -98,7 +97,6 @@ def test(
     target,
     loss_fn=nn.MSELoss(),
     source_weight=1.0,
-    device="cpu",
     key=lambda k: k.dataloaders[1]
 ):
     members = [*sources, target]
