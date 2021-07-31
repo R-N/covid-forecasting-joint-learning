@@ -106,11 +106,9 @@ def test(
 
     for source in sources:
         source.is_target = False
-        source.weight = source_weight
         source.model.eval()
 
     target.is_target = True
-    target.weight = 1.0
     target.model.eval()
 
     avg_loss = 0
@@ -122,15 +120,18 @@ def test(
         for batch_id, samples in enumerate(joint_dataloader_enum):
             loss = 0
             
+            weights = 0
             for sample in samples:
                 pred = sample["kabko"].model(sample)
                 loss_s = loss_fn(sample["future"], pred)
-                loss += sample["kabko"].weight * loss_s
+                weight = sample["kabko"].weight
+                loss += weight * loss_s
+                weights += weight
 
                 if sample["kabko"].is_target:
                     target_loss = loss_s
 
-            loss /= 1 + ((len(samples)-1) * source_weight)
+            loss /= weights
 
             avg_loss += loss
             avg_target_loss += target_loss
