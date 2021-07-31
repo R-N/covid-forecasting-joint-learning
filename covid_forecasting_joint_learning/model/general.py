@@ -192,7 +192,7 @@ class ClusterModel:
             self.optimizer,
             self.scheduler,
             key=lambda k: k.dataloaders[0],
-            clip_grad_norm=self.clip_grad_norm
+            clip_grad_norm=self.clip_grad_norm,
             **self.train_kwargs
         )
 
