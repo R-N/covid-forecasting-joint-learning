@@ -42,7 +42,8 @@ def train(
     loss_fn=nn.MSELoss(),
     source_weight=1.0,
     key=lambda k: k.dataloaders[0],
-    clip_grad_norm=None
+    clip_grad_norm=None,
+    use_amp=False
 ):
     members = [*sources, target]
     shortest = min(members, key=lambda k: len(key(k).dataset))
@@ -62,7 +63,7 @@ def train(
 
     joint_dataloader_enum = zip(*[key(k) for k in members])
 
-    grad_scaler = torch.cuda.amp.GradScaler()
+    grad_scaler = torch.cuda.amp.GradScaler() if use_amp else None
 
     for batch_id, samples in enumerate(joint_dataloader_enum):
         loss = 0
