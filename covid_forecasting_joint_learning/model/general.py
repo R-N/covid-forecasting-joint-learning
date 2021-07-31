@@ -403,8 +403,7 @@ class ObjectiveModel:
                 }
             },
             "seed_length": seed_length,
-            "teacher_forcing": teacher_forcing,
-            "use_amp": use_amp
+            "teacher_forcing": teacher_forcing
         }
 
         try:
@@ -476,6 +475,7 @@ class ObjectiveModel:
             private_mode=private_mode,
             shared_mode=shared_mode,
             optimizer_fn=optimizer_fn,
+            use_amp=use_amp
             lr=lr,
             optimizer_kwargs={
             },
