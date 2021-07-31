@@ -29,7 +29,6 @@ def __train(samples, loss_fn, optimizer, clip_grad_norm=None, grad_scaler=None):
     loss /= weights
 
     if grad_scaler:
-        print("Use amp!")
         grad_scaler.scale(loss).backward()
         grad_scaler.unscale_(optimizer)
     else:
@@ -71,7 +70,6 @@ def train(
     joint_dataloader_enum = zip(*[key(k) for k in members])
 
     grad_scaler = torch.cuda.amp.GradScaler() if use_amp else None
-    print("Use amp3!", use_amp)
 
     for batch_id, samples in enumerate(joint_dataloader_enum):
         loss = 0
@@ -82,7 +80,6 @@ def train(
         target_loss += target_loss_s
 
         if grad_scaler:
-            print("Use amp2!")
             grad_scaler.step(optimizer)
             grad_scaler.update()
         else:
