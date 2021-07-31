@@ -1,6 +1,9 @@
 import torch
 from torch import nn
 from .modules.main import SingleModel
+import contextlib
+
+dummy_context = contextlib.nullcontext()
 
 def dummy():
     pass
@@ -9,19 +12,10 @@ def __train(samples, loss_fn, optimizer, clip_grad_norm=None, grad_scaler=None):
     optimizer.zero_grad(set_to_none=True)
     loss = 0
     weights = 0
-    
-    if grad_scaler:
-        with torch.cuda.amp.autocast():
-            for sample in samples:
-                pred = sample["kabko"].model(sample)
-                loss_s = loss_fn(sample["future"], pred)
-                weight = sample["kabko"].weight
-                loss += weight * loss_s
-                weights += weight
 
-                if sample["kabko"].is_target:
-                    target_loss = loss_s
-    else:
+    context = torch.cuda.amp.autocast() if grad_scaler else dummy_context
+    
+    with context:
         for sample in samples:
             pred = sample["kabko"].model(sample)
             loss_s = loss_fn(sample["future"], pred)
