@@ -73,7 +73,7 @@ def train(
         target_loss += target_loss_s
 
         if grad_scaler:
-            grad_scaler.step(optimizer).step()
+            grad_scaler.step(optimizer)
         else:
             optimizer.step()
             
