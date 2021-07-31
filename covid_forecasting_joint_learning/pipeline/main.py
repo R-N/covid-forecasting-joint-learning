@@ -340,7 +340,8 @@ def preprocessing_5(
 
 def preprocessing_6(
     kabkos,
-    batch_size=5
+    batch_size=5,
+    pin_memory=False
 ):
     keys = list(kabkos[0].datasets[0][0].keys())
     for kabko in kabkos:
@@ -359,5 +360,5 @@ def preprocessing_6(
             shuffle=True,
             collate_fn=collate_fn,
             num_workers=0,
-            pin_memory=True
+            pin_memory=pin_memory
         ) for dataset in kabko.datasets_torch]
