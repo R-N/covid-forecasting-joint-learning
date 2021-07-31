@@ -360,8 +360,6 @@ class SingleModel(nn.Module):
         hx_private, hx_shared = self.past_model(x_past)
 
         x_future = None
-        if not self.training:
-            print("Eval!")
         teacher_forcing = self.teacher_forcing and self.training
         if teacher_forcing:
             x_future = ModelUtil.linear_to_sequential_tensor(input["future"])
