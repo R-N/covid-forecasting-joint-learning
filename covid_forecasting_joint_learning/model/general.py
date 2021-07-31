@@ -276,6 +276,7 @@ class ObjectiveModel:
         source_weight=1.0,
         trial_id=None,
         log_dir=None,
+        teacher_forcing=True,
         debug=False
     ):
         self.cluster = cluster
@@ -400,7 +401,8 @@ class ObjectiveModel:
                     "residual_activation": residual_activation
                 }
             },
-            "seed_length": seed_length
+            "seed_length": seed_length,
+            "teacher_forcing": teacher_forcing
         }
 
         try:
