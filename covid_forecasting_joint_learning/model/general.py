@@ -167,7 +167,6 @@ class ClusterModel:
         self.optimizer = self.create_optimizer()
         self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr, total_steps=len(self.target.datasets[0]) * 100)
         self.use_amp = use_amp
-        print("Use amp5!", use_amp)
 
     def clip_grad_norm(self):
         torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
@@ -190,7 +189,6 @@ class ClusterModel:
     def train(self, use_amp=False):
         use_amp = use_amp or self.use_amp
         # optimizer = self.create_optimizer()
-        print("Use amp4!", use_amp)
         return train(
             self.sources,
             self.target,
@@ -198,6 +196,7 @@ class ClusterModel:
             self.scheduler,
             key=lambda k: k.dataloaders[0],
             clip_grad_norm=self.clip_grad_norm,
+            use_amp=use_amp,
             **self.train_kwargs
         )
 
