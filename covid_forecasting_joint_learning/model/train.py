@@ -68,7 +68,7 @@ def train(
         loss = 0
         target_loss = 0
 
-        loss_s, target_loss_s = __train(samples, loss_fn, optimizer, clip_grad_norm, grad_scaler)
+        loss_s, target_loss_s = __train(samples, loss_fn, optimizer, clip_grad_norm=clip_grad_norm, grad_scaler=grad_scaler)
         loss += loss_s
         target_loss += target_loss_s
 
@@ -77,16 +77,16 @@ def train(
         else:
             optimizer.step()
             
-        optimizer.zero_grad(set_to_none=True)
-
         grad_scaler.update()
+
+        optimizer.zero_grad(set_to_none=True)
 
         avg_loss += loss
         avg_target_loss += target_loss
 
     if scheduler:
         scheduler.step()
-        
+
     avg_loss /= size
     avg_target_loss /= size
     return avg_loss, avg_target_loss
