@@ -75,10 +75,10 @@ def train(
 
         if grad_scaler:
             grad_scaler.step(optimizer)
+            grad_scaler.update()
         else:
             optimizer.step()
             
-        grad_scaler.update()
 
         optimizer.zero_grad(set_to_none=True)
 
