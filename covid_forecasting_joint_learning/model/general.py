@@ -274,9 +274,10 @@ class ObjectiveModel:
         lr=1e-5,
         loss_fn=nn.MSELoss(),
         source_weight=1.0,
+        teacher_forcing=True,
+        use_amp=False,
         trial_id=None,
         log_dir=None,
-        teacher_forcing=True,
         debug=False
     ):
         self.cluster = cluster
@@ -402,7 +403,8 @@ class ObjectiveModel:
                 }
             },
             "seed_length": seed_length,
-            "teacher_forcing": teacher_forcing
+            "teacher_forcing": teacher_forcing,
+            "use_amp": use_amp
         }
 
         try:
