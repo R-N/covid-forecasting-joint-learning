@@ -3,14 +3,23 @@ import json
 from torch import nn
 
 
+def init(cuda=True, half=False):
+    cuda = cuda and torch.cuda.is_available()
+    device = torch.device('cuda' if cuda else 'cpu')
+    tensor_precision = "HalfTensor" if half else "FloatTensor"
+    tensor_device = "torch.cuda" if cuda else "torch"
+    torch.set_default_tensor_type(f"{tensor_device}.{tensor_precision}")
+    return device
+
+
 def learnable_normal(size, mean, std):
-    t = torch.zeros(*size, dtype=torch.float32, requires_grad=True)
+    t = torch.zeros(*size, requires_grad=True)
     nn.init.normal_(t, mean, std)
     return t
 
 
 def learnable_xavier(size):
-    t = torch.zeros(1, *size, dtype=torch.float32, requires_grad=True)
+    t = torch.zeros(1, *size, requires_grad=True)
     nn.init.xavier_normal_(t)
     return t[0].detach()
 

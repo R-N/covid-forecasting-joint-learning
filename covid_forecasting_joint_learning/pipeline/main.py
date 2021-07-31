@@ -348,7 +348,7 @@ def preprocessing_6(
             keys = list(samples[0].keys())
             samples_1 = {key: torch.stack(
                 [torch.from_numpy(samples[i][key]) for i in range(len(samples))]
-            ).float().detach() for key in keys}
+            ).detach() for key in keys}
             if cuda:
                 samples_1 = {key: samples_1[key].cuda() for key in keys}
             samples_1["kabko"] = kabko
@@ -359,5 +359,6 @@ def preprocessing_6(
             batch_size=batch_size,
             shuffle=True,
             collate_fn=collate_fn,
-            num_workers=0
+            num_workers=0,
+            pin_memory=True
         ) for dataset in kabko.datasets]

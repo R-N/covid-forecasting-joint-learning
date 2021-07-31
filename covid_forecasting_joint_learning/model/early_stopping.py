@@ -9,9 +9,9 @@ class EarlyStopping:
         self, 
         model,
         wait=20, wait_train_below_val=20, 
-        rise_patience=25, still_patience=6,
+        rise_patience=25, still_patience=8,
         interval_percent=0.05,
-        min_delta_val=1.5e-5, min_delta_train=2e-6,
+        min_delta_val=1e-5, min_delta_train=2e-6,
         min_delta_val_percent=0.15, min_delta_train_percent=0.025, 
         min_min_delta_val=1e-3, min_min_delta_train=1e-4,
         history_length=None,
@@ -20,9 +20,10 @@ class EarlyStopping:
         max_epoch=100,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
-        variance_still_tolerance=0.3,
-        val_reduction_still_tolerance=0.3,
-        train_reduction_still_tolerance=0.2,
+        variance_still_tolerance=0.35,
+        rel_val_reduction_tolerance=0.2,
+        val_reduction_still_tolerance=0.35,
+        train_reduction_still_tolerance=0.25,
         debug=0,
         log_dir=None,
         label=None
@@ -68,6 +69,7 @@ class EarlyStopping:
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
         self.variance_still_tolerance = variance_still_tolerance
+        self.rel_val_reduction_tolerance = rel_val_reduction_tolerance
         self.val_reduction_still_tolerance = val_reduction_still_tolerance
         self.train_reduction_still_tolerance = train_reduction_still_tolerance
 
@@ -210,6 +212,8 @@ class EarlyStopping:
                 still_increment = 1
                 if self.min_min_delta_val < min_delta_val:
                     still_increment *= (1.0 - self.variance_still_tolerance)
+                if val_loss < self.val_loss_history[-1]:
+                    still_increment *= (1.0 - self.rel_val_reduction_still_tolerance)
                 if val_loss < self.best_val_loss_2:
                     still_increment *= (1.0 - self.val_reduction_still_tolerance)
                     self.update_best_2(val_loss)

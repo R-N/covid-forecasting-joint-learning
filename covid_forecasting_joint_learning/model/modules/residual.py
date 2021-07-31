@@ -17,7 +17,6 @@ class ResidualBlock(nn.Module):
         super(ResidualBlock, self).__init__()
         self.w = nn.Parameter(torch.ones(
             1,  # size,
-            dtype=torch.float32,
             requires_grad=True
         ))
         self.highway = highway

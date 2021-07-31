@@ -50,7 +50,7 @@ class DataCenter:
             **rename_cols
         }
         df.rename(columns=rename_cols, inplace=True)
-        df.loc[:, labels] = df[labels].astype(np.float32)
+        df.loc[:, labels] = df[labels].astype(np.float16)
         self.__covid_local = df
         self.__kabko = df[kabko_col].unique()
         return self.__covid_local

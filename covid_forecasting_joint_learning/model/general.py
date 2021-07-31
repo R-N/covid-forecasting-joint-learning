@@ -8,7 +8,7 @@ from .util import str_dict
 import datetime
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import OneCycleLR
-from torch.optim import Adam
+from torch.optim import AdamW
 
 
 class SourcePick:
@@ -56,8 +56,9 @@ class ClusterModel:
         source_pick=SourcePick.ALL,
         private_mode=SharedMode.PRIVATE,
         shared_mode=SharedMode.SHARED,
-        optimizer_fn=Adam,
+        optimizer_fn=AdamW,
         lr=1e-5,
+        max_grad_norm=1.0,
         optimizer_kwargs={},
         train_kwargs={}
     ):
@@ -161,8 +162,12 @@ class ClusterModel:
         self.optimizer_kwargs = optimizer_kwargs
         self.train_kwargs = train_kwargs
 
+        self.max_grad_norm = max_grad_norm
         self.optimizer = self.create_optimizer()
         self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr, total_steps=len(self.target.datasets[0]) * 100)
+
+    def clip_grad_norm(self):
+        torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
 
     @property
     def members(self):
@@ -187,6 +192,7 @@ class ClusterModel:
             self.optimizer,
             self.scheduler,
             key=lambda k: k.dataloaders[0],
+            clip_grad_norm=self.clip_grad_norm
             **self.train_kwargs
         )
 
@@ -211,6 +217,9 @@ class ClusterModel:
 
     def write_graph(self, path):
         self.target.write_model_graph(path)
+
+    def to(self, device):
+        self.models.to(device)
 
 class ObjectiveModel:
     def __init__(
@@ -524,3 +533,6 @@ class ObjectiveModel:
 
     def freeze_private(self, freeze=True):
         self.model.freeze_private(freeze)
+
+    def to(self, device):
+        self.model.to(device)
