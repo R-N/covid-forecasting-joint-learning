@@ -50,7 +50,6 @@ def train(
     key=lambda k: k.dataloaders[0],
     clip_grad_norm=None,
     grad_scaler=None
-    grad_scaler=None
 ):
     members = [*sources, target]
     shortest = min(members, key=lambda k: len(key(k).dataset))
