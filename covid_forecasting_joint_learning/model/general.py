@@ -225,6 +225,10 @@ class ClusterModel:
     def to(self, device):
         return self.models.to(device)
 
+    def share_memory(self):
+        return self.models.share_memory()
+
+
 class ObjectiveModel:
     def __init__(
         self,
@@ -544,3 +548,6 @@ class ObjectiveModel:
 
     def to(self, device):
         return self.model.to(device)
+
+    def share_memory(self):
+        return self.model.share_memory()
