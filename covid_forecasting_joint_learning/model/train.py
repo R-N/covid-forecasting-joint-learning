@@ -93,8 +93,6 @@ def train(
         avg_loss += loss
         avg_target_loss += target_loss
 
-    print("Scale: ", scale, stepped)
-    
     if scheduler and stepped:
         scheduler.step()
 
