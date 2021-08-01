@@ -61,7 +61,7 @@ class ClusterModel:
         max_grad_norm=1.0,
         optimizer_kwargs={},
         train_kwargs={},
-        use_amp=False
+        grad_scaler=None
     ):
         self.cluster = cluster
         if source_pick == SourcePick.ALL:
@@ -166,7 +166,7 @@ class ClusterModel:
         self.max_grad_norm = max_grad_norm
         self.optimizer = self.create_optimizer()
         self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr, total_steps=len(self.target.datasets[0]) * 100)
-        self.use_amp = use_amp
+        self.grad_scaler = grad_scaler
 
     def clip_grad_norm(self):
         torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
@@ -186,8 +186,8 @@ class ClusterModel:
         for k in self.members:
             self.k.model.freeze_private(freeze)
 
-    def train(self, use_amp=False):
-        use_amp = use_amp or self.use_amp
+    def train(self, grad_scaler=None):
+        grad_scaler = grad_scaler or self.grad_scaler
         # optimizer = self.create_optimizer()
         return train(
             self.sources,
@@ -196,7 +196,7 @@ class ClusterModel:
             self.scheduler,
             key=lambda k: k.dataloaders[0],
             clip_grad_norm=self.clip_grad_norm,
-            use_amp=use_amp,
+            grad_scaler=grad_scaler,
             **self.train_kwargs
         )
 
@@ -276,7 +276,7 @@ class ObjectiveModel:
         loss_fn=nn.MSELoss(),
         source_weight=1.0,
         teacher_forcing=True,
-        use_amp=False,
+        grad_scaler=None,
         trial_id=None,
         log_dir=None,
         debug=False
@@ -476,7 +476,7 @@ class ObjectiveModel:
             private_mode=private_mode,
             shared_mode=shared_mode,
             optimizer_fn=optimizer_fn,
-            use_amp=use_amp,
+            grad_scaler=grad_scaler,
             lr=lr,
             optimizer_kwargs={
             },

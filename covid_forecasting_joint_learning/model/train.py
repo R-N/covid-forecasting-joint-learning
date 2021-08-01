@@ -49,7 +49,8 @@ def train(
     source_weight=1.0,
     key=lambda k: k.dataloaders[0],
     clip_grad_norm=None,
-    use_amp=False
+    grad_scaler=None
+    grad_scaler=None
 ):
     members = [*sources, target]
     shortest = min(members, key=lambda k: len(key(k).dataset))
@@ -69,7 +70,7 @@ def train(
 
     joint_dataloader_enum = zip(*[key(k) for k in members])
 
-    grad_scaler = torch.cuda.amp.GradScaler(init_scale=8192) if use_amp else None
+    stepped = False
 
     for batch_id, samples in enumerate(joint_dataloader_enum):
         loss = 0
@@ -80,18 +81,20 @@ def train(
         target_loss += target_loss_s
 
         if grad_scaler:
+            scale = grad_scaler.get_scale()
             grad_scaler.step(optimizer)
             grad_scaler.update()
+            stepped = stepped or scale == grad_scaler.get_scale()
         else:
             optimizer.step()
+            stepped = True
             
-
         optimizer.zero_grad(set_to_none=True)
 
         avg_loss += loss
         avg_target_loss += target_loss
 
-    if scheduler:
+    if scheduler and stepped:
         scheduler.step()
 
     avg_loss /= size
