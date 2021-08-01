@@ -16,17 +16,19 @@ def __train(samples, loss_fn, optimizer, clip_grad_norm=None, grad_scaler=None):
     context = torch.cuda.amp.autocast() if grad_scaler else dummy_context
     
     for sample in samples:
+        weight = sample["kabko"].weight
+        weights += weight
+        
         with context:
             pred = sample["kabko"].model(sample)
-        loss_s = loss_fn(sample["future"], pred)
-        weight = sample["kabko"].weight
-        loss += weight * loss_s
-        weights += weight
+            loss_s = loss_fn(sample["future"], pred)
+            loss += weight * loss_s
 
-        if sample["kabko"].is_target:
-            target_loss = loss_s
+            if sample["kabko"].is_target:
+                target_loss = loss_s
 
-    loss /= weights
+    with context:
+        loss /= weights
 
     if grad_scaler:
         grad_scaler.scale(loss).backward()
