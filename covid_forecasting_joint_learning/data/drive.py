@@ -25,9 +25,9 @@ class Drive:
 		self.client = client
 		return client
 
-	def download_file(self, id, save_path):
+	def download_file(self, file_id, save_path):
 		DataUtil.mkparent(Path(save_path))
-		drive_file = self.client.CreateFile({'id': id})
+		drive_file = self.client.CreateFile({'id': file_id})
 		drive_file.GetContentFile(save_path)
 		return drive_file
 
