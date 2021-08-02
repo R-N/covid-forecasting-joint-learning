@@ -7,8 +7,8 @@ from . import util as DataUtil
 
 
 class Drive:
-	def __init__(self):
-		self.client = self.auth()
+	def __init__(self, creds_path="drive_creds.json"):
+		self.client = self.auth(creds_path=creds_path)
 
 	def auth(self, creds_path="drive_creds.json"):
 		auth.authenticate_user()
