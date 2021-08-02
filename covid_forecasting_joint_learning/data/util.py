@@ -3,6 +3,10 @@ import pandas as pd
 from . import cols as DataCol
 
 
+def mkparent(path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+
 def add_dates(df, ranges, name):
     ranges = ranges.itertuples(index=False) if isinstance(ranges, pd.DataFrame) else ranges
     df.loc[:, name] = pd.Series(0.0, index=df.index, dtype=np.float32)
