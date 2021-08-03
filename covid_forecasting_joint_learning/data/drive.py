@@ -86,7 +86,7 @@ class Drive:
 
     def get_folder_files(self, folder_id):
         files = self.client.ListFile(
-            {'q': "'{0}' in parents and trashed=false".format(parent_id)}
+            {'q': "'{0}' in parents and trashed=false".format(folder_id)}
         ).GetList()
         return files
 
