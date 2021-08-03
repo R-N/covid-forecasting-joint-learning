@@ -505,7 +505,6 @@ class ObjectiveModel:
             self.train_summary_writer = SummaryWriter(self.log_dir + '/train')
             self.val_summary_writer = SummaryWriter(self.log_dir + '/val')
 
-
         self.train_epoch = 0
         self.val_epoch = 0
 
@@ -537,8 +536,8 @@ class ObjectiveModel:
     def get_target_model_summary(self):
         return self.model.get_target_model_summary()
 
-    def write_graph(self, path):
-        self.model.write_graph(path)
+    def write_graph(self):
+        self.model.write_graph(self.log_dir)
 
     def freeze_shared(self, freeze=True):
         self.model.freeze_shared(freeze)
