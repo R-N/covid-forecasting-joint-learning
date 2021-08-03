@@ -7,6 +7,13 @@ def mkparent(path):
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
+def get_sub_dirs_files(path):
+    childs = list(path.iterdir())
+    dirs = [p.relative_to(path) for p in childs if p.is_dir()]
+    files = [p.relative_to(path) for p in childs if p.is_file()]
+    return dirs, files
+
+
 def add_dates(df, ranges, name):
     ranges = ranges.itertuples(index=False) if isinstance(ranges, pd.DataFrame) else ranges
     df.loc[:, name] = pd.Series(0.0, index=df.index, dtype=np.float32)

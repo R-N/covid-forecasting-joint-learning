@@ -65,6 +65,13 @@ class Drive:
 		return drive_file
 
 	def create_folder(self, folder_name, parent_id):
+
+        folders = self.client.ListFile(
+			{'q': f"title='{folder_name}' and '{parent_id}' in parents and trashed=false".format()}
+		).GetList()
+		if len(folders) > 0:
+			return folders[0]
+
 	    folder = self.client.CreateFile({
 	        "title": folder_name,
 	        "mimeType": FOLDER_MIME,
@@ -83,13 +90,62 @@ class Drive:
 		).GetList()
         return files
 
-    def find_files(self, file_names, folder_id=None, files=None):
-    	assert folder_id is not None or files is not None
+    def find_files(self, file_names, parent_id=None, files=None):
+    	assert parent_id is not None or files is not None
     	if files is None:
-    		files = self.get_folder_files(folder_id)
+    		files = self.get_folder_files(parent_id)
     	files = {
     		**{file_name: None for file_name in file_names},
     		**{file['title']: file for file in files if file['title'] in file_names}
 		}
 		return files
+
+
+	def upload_folder(self, folder_path, parent_id, only_contents=False, update=True):
+		folder = Path(folder)
+		dirs, files = DataUtil.get_sub_dirs_files(folder)
+
+		if not only_contents:
+			parent_id = self.create_folder(folder.name, parent_id)["id"]
+
+		existing = self.get_folder_files(parent_id)
+
+		existing_files = self.find_files(
+			file_names=[str(file) for file in files],
+			files=existing
+		)
+		for file in files:
+			file_path = f"{folder_path}/{str(dir)}"
+			if file.name in existing_files:
+				self.update_file(
+					file_path,
+					file_id=existing_files[file.name]["id"]
+				)
+			else:
+				self.upload_file(
+					file_path,
+					parent_id=parent_id
+				)
+
+		existing_folders = self.find_files(
+			file_names=[str(folder) for folder in folders],
+			files=existing
+		)
+		for dir in dirs:
+			if dir in existing_folders:
+				self.upload_folder(
+					f"{folder_path}/{str(dir)}",
+					parent_id=existing_folders[dir]["id"],
+					only_contents=True
+				)
+			else:
+				self.upload_folder(
+					f"{folder_path}/{str(dir)}",
+					parent_id=parent_id,
+					only_contents=False
+				)
+		drive_parent = self.client.CreateFile({
+			"id": parent_id
+		})
+		return drive_parent
 
