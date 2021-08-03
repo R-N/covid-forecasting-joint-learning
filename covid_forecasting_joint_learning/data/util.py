@@ -14,6 +14,12 @@ def get_sub_folders_files(path):
     return folders, files
 
 
+def write_string(s, path):
+    text_file = open(path, "w")
+    n = text_file.write(s)
+    text_file.close()
+
+
 def add_dates(df, ranges, name):
     ranges = ranges.itertuples(index=False) if isinstance(ranges, pd.DataFrame) else ranges
     df.loc[:, name] = pd.Series(0.0, index=df.index, dtype=np.float32)
