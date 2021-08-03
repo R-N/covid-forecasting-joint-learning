@@ -65,7 +65,7 @@ class Drive:
 		return drive_file
 
 	def create_folder(self, folder_name, parent_id):
-	    folder = drive.CreateFile({
+	    folder = self.client.CreateFile({
 	        "title": folder_name,
 	        "mimeType": FOLDER_MIME,
 			"parents": [{
@@ -76,3 +76,18 @@ class Drive:
 	    folder.Upload()
 
 	    return folder
+
+    def get_folder_files(self, folder_id):
+        files = self.client.ListFile(
+			{'q': "'{0}' in parents and trashed=false".format(parent_id)}
+		).GetList()
+        return files
+
+    def find_files(self, file_names, folder_id):
+    	files = self.get_folder_files(folder_id)
+    	files = {
+    		**{file_name: None for file_name in file_names},
+    		**{file['title']: file for file in files if file['title'] in file_names}
+		}
+		return files
+
