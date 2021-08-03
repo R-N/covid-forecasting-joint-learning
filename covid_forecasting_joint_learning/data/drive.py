@@ -102,7 +102,7 @@ class Drive:
 
 
     def upload_folder(self, folder_path, parent_id, only_contents=False, update=True):
-        folder = Path(folder)
+        folder = Path(folder_path)
         dirs, files = DataUtil.get_sub_dirs_files(folder)
 
         if not only_contents:
