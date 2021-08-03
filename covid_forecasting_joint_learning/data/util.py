@@ -7,11 +7,11 @@ def mkparent(path):
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def get_sub_dirs_files(path):
+def get_sub_folders_files(path):
     childs = list(path.iterdir())
-    dirs = [p.relative_to(path) for p in childs if p.is_dir()]
+    folders = [p.relative_to(path) for p in childs if p.is_dir()]
     files = [p.relative_to(path) for p in childs if p.is_file()]
-    return dirs, files
+    return folders, files
 
 
 def add_dates(df, ranges, name):
