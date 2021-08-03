@@ -83,8 +83,10 @@ class Drive:
 		).GetList()
         return files
 
-    def find_files(self, file_names, folder_id):
-    	files = self.get_folder_files(folder_id)
+    def find_files(self, file_names, folder_id=None, files=None):
+    	assert folder_id is not None or files is not None
+    	if files is None:
+    		files = self.get_folder_files(folder_id)
     	files = {
     		**{file_name: None for file_name in file_names},
     		**{file['title']: file for file in files if file['title'] in file_names}
