@@ -9,7 +9,7 @@ class DataGetter:
         self.endpoint = endpoint if endpoint.endswith("/") else endpoint + "/"
 
     def generate_date_range(self, start, end):
-        dates = pd.date_range(start=start,end=end).to_pydatetime().tolist()
+        dates = pd.date_range(start=start, end=end).to_pydatetime().tolist()
         dates = [d.strftime("%Y-%m-%d") for d in dates]
         return dates
 
@@ -28,7 +28,7 @@ class DataGetter:
         } for x in data]
         data = [{
             **x,
-            "infected": (x["infected_total"]-x["recovered"]-x["dead"])
+            "infected": (x["infected_total"] - x["recovered"] - x["dead"])
         } for x in data]
         return data
 

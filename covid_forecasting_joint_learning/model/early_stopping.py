@@ -116,8 +116,8 @@ class EarlyStopping:
 
     def calculate_interval_2(self, val=True):
         history = self.val_loss_history if val else self.train_loss_history
-        mean = sum(history)/self.history_length
-        sum_err = sum([(mean-x)**2 for x in history])
+        mean = sum(history) / self.history_length
+        sum_err = sum([(mean - x)**2 for x in history])
         stdev = sqrt(1 / (self.history_length - 2) * sum_err)
         mul = st.norm.ppf(1.0 - self.interval_percent) if self.interval_percent >= 0 else 2 + self.interval_percent
         sigma = mul * stdev
@@ -125,7 +125,7 @@ class EarlyStopping:
 
     def log_stop(
         self,
-        label,epoch,
+        label, epoch,
         loss, 
         min_delta, min_delta_percent,
         best_loss, best_loss_2=None
@@ -169,7 +169,7 @@ class EarlyStopping:
             self.active = True
             self.still_counter = 0
             self.rise_counter = 0
-            print (f"INFO: Early stopping active at epoch {epoch}")
+            print(f"INFO: Early stopping active at epoch {epoch}")
 
         if self.best_val_loss is None:
             self.update_best_2(val_loss)
@@ -229,8 +229,8 @@ class EarlyStopping:
                 self.update_best(train_loss, val_loss)
                 self.forgive_still()
 
-        self.still_writer.add_scalar(self.label + "patience", self.still_counter/self.still_patience, global_step=epoch)
-        self.rise_writer.add_scalar(self.label + "patience", self.rise_counter/self.rise_patience, global_step=epoch)
+        self.still_writer.add_scalar(self.label + "patience", self.still_counter / self.still_patience, global_step=epoch)
+        self.rise_writer.add_scalar(self.label + "patience", self.rise_counter / self.rise_patience, global_step=epoch)
 
         self.still_writer.flush()
         self.rise_writer.flush()

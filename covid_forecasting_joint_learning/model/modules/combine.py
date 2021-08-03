@@ -44,7 +44,7 @@ class CombineHead(nn.Module):
     ):
         super(CombineHead, self).__init__()
 
-        use_shared_head = False;
+        use_shared_head = False
         if precombine is not None\
             or shared_size:
             assert precombine is not None\
@@ -66,7 +66,7 @@ class CombineHead(nn.Module):
 
         if isinstance(reducer, dict):
             reducer = ResidualFC(
-                input_size=private_size+shared_size,
+                input_size=private_size + shared_size,
                 output_size=output_size,
                 **reducer
             )

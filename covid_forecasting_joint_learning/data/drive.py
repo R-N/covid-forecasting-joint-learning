@@ -42,7 +42,7 @@ class Drive:
         DataUtil.mkparent(file_path_2)
         file_name = file_name or file_path_2.name
         drive_file = self.client.CreateFile({
-            "title": file_name, 
+            "title": file_name,
             "parents": [{
                 "id": parent_id,
                 "kind": PARENT_KIND,
@@ -76,7 +76,7 @@ class Drive:
             "title": folder_name,
             "mimeType": FOLDER_MIME,
             "parents": [{
-                "kind": PARENT_KIND, 
+                "kind": PARENT_KIND,
                 "id": parent_id
             }]
         })
@@ -149,4 +149,3 @@ class Drive:
             "id": parent_id
         })
         return drive_parent
-

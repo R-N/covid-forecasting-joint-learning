@@ -204,7 +204,7 @@ def scatter_matrix(df, lib="seaborn", name="", **kwargs):
 
 
 def plot_corr_lag_single(corr, ax):
-    n_lags = len(corr)-1
+    n_lags = len(corr) - 1
     lags = np.linspace(0, n_lags, n_lags+1)
     ax.vlines(lags, [0], corr)
     ax.plot(lags, corr, marker="o", markersize=5, linestyle="None")

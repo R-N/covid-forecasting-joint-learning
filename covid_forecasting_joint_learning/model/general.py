@@ -296,39 +296,39 @@ class ObjectiveModel:
                     "private_representation": {
                         "depth": representation_past_private_depth,
                         "data_length": past_length,
-                        "conv_kwargs":{
+                        "conv_kwargs": {
                             "kernel_size": representation_past_private_kernel_size,
                             "stride": representation_past_private_stride,
                             "dilation": representation_past_private_dilation,
                             "activation": conv_activation
                         },
-                        "residual_kwargs":{
+                        "residual_kwargs": {
                             "activation": residual_activation
                         }
                     },
                     "pre_shared_representation": {
                         "depth": representation_past_pre_shared_depth,
                         "data_length": past_length,
-                        "conv_kwargs":{
+                        "conv_kwargs": {
                             "kernel_size": representation_past_shared_kernel_size,
                             "stride": representation_past_shared_stride,
                             "dilation": representation_past_shared_dilation,
                             "activation": conv_activation
                         },
-                        "residual_kwargs":{
+                        "residual_kwargs": {
                             "activation": residual_activation
                         }
                     } if (representation_past_shared_depth and representation_past_pre_shared_depth) else None,
                     "shared_representation": {
                         "depth": representation_past_shared_depth,
                         "data_length": past_length,
-                        "conv_kwargs":{
+                        "conv_kwargs": {
                             "kernel_size": representation_past_shared_kernel_size,
                             "stride": representation_past_shared_stride,
                             "dilation": representation_past_shared_dilation,
                             "activation": conv_activation
                         },
-                        "residual_kwargs":{
+                        "residual_kwargs": {
                             "activation": residual_activation
                         }
                     } if representation_past_shared_depth else None,
@@ -336,7 +336,7 @@ class ObjectiveModel:
                         "w0_mean": combine_representation_past_w0_mean,
                         "w0_std": combine_representation_past_w0_std,
                     } if representation_past_shared_depth else None
-                } ,
+                },
                 "private_head": {
                     "use_last_past": use_last_past
                 },
@@ -348,39 +348,39 @@ class ObjectiveModel:
                 "private_representation": {
                     "depth": representation_future_private_depth,
                     "data_length": future_length,
-                    "conv_kwargs":{
+                    "conv_kwargs": {
                         "kernel_size": representation_future_private_kernel_size,
                         "stride": representation_future_private_stride,
                         "dilation": representation_future_private_dilation,
                         "activation": conv_activation
                     },
-                    "residual_kwargs":{
+                    "residual_kwargs": {
                         "activation": residual_activation
                     }
                 },
                 "pre_shared_representation": {
                     "depth": representation_future_pre_shared_depth,
                     "data_length": future_length,
-                    "conv_kwargs":{
+                    "conv_kwargs": {
                         "kernel_size": representation_future_shared_kernel_size,
                         "stride": representation_future_shared_stride,
                         "dilation": representation_future_shared_dilation,
                         "activation": conv_activation
                     },
-                    "residual_kwargs":{
+                    "residual_kwargs": {
                         "activation": residual_activation
                     }
                 } if (representation_future_shared_depth and representation_future_pre_shared_depth) else None,
                 "shared_representation": {
                     "depth": representation_future_shared_depth,
                     "data_length": future_length,
-                    "conv_kwargs":{
+                    "conv_kwargs": {
                         "kernel_size": representation_future_shared_kernel_size,
                         "stride": representation_future_shared_stride,
                         "dilation": representation_future_shared_dilation,
                         "activation": conv_activation
                     },
-                    "residual_kwargs":{
+                    "residual_kwargs": {
                         "activation": residual_activation
                     }
                 } if representation_future_shared_depth else None,

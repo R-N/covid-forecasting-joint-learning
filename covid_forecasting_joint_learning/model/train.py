@@ -14,11 +14,11 @@ def __train(samples, loss_fn, optimizer, clip_grad_norm=None, grad_scaler=None):
     weights = 0
 
     context = torch.cuda.amp.autocast() if grad_scaler else dummy_context
-    
+
     for sample in samples:
         weight = sample["kabko"].weight
         weights += weight
-        
+
     with context:
         for sample in samples:
             pred = sample["kabko"].model(sample)
@@ -89,7 +89,7 @@ def train(
         else:
             optimizer.step()
             stepped = True
-            
+
         optimizer.zero_grad(set_to_none=True)
 
         avg_loss += loss
@@ -131,7 +131,7 @@ def test(
 
         for batch_id, samples in enumerate(joint_dataloader_enum):
             loss = 0
-            
+
             weights = 0
             for sample in samples:
                 pred = sample["kabko"].model(sample)
