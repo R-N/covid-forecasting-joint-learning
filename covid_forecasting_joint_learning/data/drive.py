@@ -116,7 +116,7 @@ class Drive:
 		)
 		for file in files:
 			file_path = f"{folder_path}/{str(dir)}"
-			if file.name in existing_files:
+			if update and file.name in existing_files:
 				self.update_file(
 					file_path,
 					file_id=existing_files[file.name]["id"]
@@ -132,7 +132,7 @@ class Drive:
 			files=existing
 		)
 		for dir in dirs:
-			if dir in existing_folders:
+			if update and dir in existing_folders:
 				self.upload_folder(
 					f"{folder_path}/{str(dir)}",
 					parent_id=existing_folders[dir]["id"],
