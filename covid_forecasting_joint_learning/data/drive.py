@@ -27,7 +27,9 @@ class Drive:
 
 	def download_file(self, file_id, save_path):
 		DataUtil.mkparent(Path(save_path))
-		drive_file = self.client.CreateFile({'id': file_id})
+		drive_file = self.client.CreateFile({
+			'id': file_id
+		})
 		drive_file.GetContentFile(save_path)
 		return drive_file
 
@@ -35,7 +37,13 @@ class Drive:
 		file_path_2 = Path(file_path)
 		DataUtil.mkparent(file_path_2)
 		file_name = file_name or file_path_2.name
-		drive_file = self.client.CreateFile({'title': file_name, 'parents': [{'id': parent_id}]})
+		drive_file = self.client.CreateFile({
+			'title': file_name, 
+			'parents': [{
+				'id': parent_id,
+				"kind": "drive#fileLink",
+			}]
+		})
 		drive_file.SetContentFile(file_path)
 		drive_file.Upload()
 		return drive_file
@@ -44,7 +52,10 @@ class Drive:
 		file_path_2 = Path(file_path)
 		DataUtil.mkparent(file_path_2)
 		file_name = file_name or file_path_2.name
-		drive_file = self.client.CreateFile({'title': file_name, 'id': file_id})
+		drive_file = self.client.CreateFile({
+			'title': file_name,
+			'id': file_id
+		})
 		drive_file.SetContentFile(file_path)
 		drive_file.Upload()
 		return drive_file
