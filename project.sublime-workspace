@@ -1,0 +1,323 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"combine_representation",
+				"combine_representation_past_w0_mean"
+			],
+			[
+				"share",
+				"shared_representation"
+			],
+			[
+				"repre",
+				"representation_future_model"
+			],
+			[
+				"represen",
+				"representation_future_model"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"disable",
+				"Package Control: Disable Package"
+			],
+			[
+				"enable",
+				"Package Control: Enable Package"
+			],
+			[
+				"enab",
+				"Package Control: Enable Package"
+			],
+			[
+				"ena",
+				"Package Control: Enable Package"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"packagesync",
+				"PackageSync: Backup/Restore - Restore Packages From Zip (Recommended)"
+			],
+			[
+				"disab",
+				"Package Control: Disable Package"
+			],
+			[
+				"anaconda",
+				"Anaconda: Set Python interpreter"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"disable ",
+				"Package Control: Disable Package"
+			],
+			[
+				"install pack",
+				"Package Control: Install Package"
+			],
+			[
+				"install pac",
+				"Package Control: Install Package"
+			],
+			[
+				"install p",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/D/github/covid-forecasting-joint-learning",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning"
+	],
+	"file_history":
+	[
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/early_stopping.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/__init__.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/general.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/data/drive.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/data/__init__.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/train.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/modules/main.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/pipeline/preprocessing.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/pipeline/main.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/data/kabko.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/util.py",
+		"/D/github/covid-forecasting-joint-learning/setup.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/modules/residual.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/modules/representation.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/data/center.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/data/util.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/pipeline/clustering.py",
+		"/D/github/covid-forecasting-joint-learning/.gitignore",
+		"/D/github/covid-forecasting-joint-learning/LICENSE",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/modules/head.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/model/modules/combine.py",
+		"/D/github/covid-forecasting-joint-learning/covid_forecasting_joint_learning/pipeline/util.py"
+	],
+	"find":
+	{
+		"height": 32.2388059701
+	},
+	"find_in_files":
+	{
+		"height": 132.955223881,
+		"where_history":
+		[
+			"D:\\github\\covid-forecasting-joint-learning\\covid_forecasting_joint_learning"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"is_folder",
+			"dir",
+			"log_dir",
+			"write_graph",
+			"use_amp",
+			"grad_scaler",
+			"use_amp",
+			"float32",
+			"use_amp=",
+			"use_amp",
+			"amp",
+			"training",
+			"clip_g",
+			"float16",
+			"pin_memory",
+			"cpu",
+			"preprocessing_6",
+			"to(",
+			"to",
+			"float",
+			"DataLoader",
+			"zero_grad",
+			"Adam",
+			"forgive_wait",
+			"variance_still",
+			"early_stopped",
+			"train_below_val",
+			"schedu",
+			"val",
+			"Band",
+			"band",
+			"Adam",
+			"writer",
+			"self.cluster =",
+			"target.",
+			"train_loss_history",
+			"Cluster(",
+			"Cluster",
+			"best_loss",
+			"KabkoData",
+			"sizes",
+			"print",
+			"trial_id",
+			"log_dir"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"folder",
+			"stopped",
+			"train",
+			"Interval",
+			"interval"
+		],
+		"reverse": false,
+		"scrollbar_highlights": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"use_gitignore": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 32.2388059701
+	},
+	"input":
+	{
+		"height": 49.8507462687
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.SublimeLinter":
+	{
+		"height": 0.0
+	},
+	"output.diagnostics":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "project.sublime-project",
+	"replace":
+	{
+		"height": 60.8955223881
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 274.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
