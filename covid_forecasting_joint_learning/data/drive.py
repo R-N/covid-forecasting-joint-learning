@@ -6,6 +6,10 @@ from pathlib import Path
 from . import util as DataUtil
 
 
+FOLDER_MIME = "application/vnd.google-apps.folder"
+PARENT_KIND = "drive#fileLink"
+
+
 class Drive:
 	def __init__(self, creds_path="drive_creds.json"):
 		self.client = self.auth(creds_path=creds_path)
@@ -28,7 +32,7 @@ class Drive:
 	def download_file(self, file_id, save_path):
 		DataUtil.mkparent(Path(save_path))
 		drive_file = self.client.CreateFile({
-			'id': file_id
+			"id": file_id
 		})
 		drive_file.GetContentFile(save_path)
 		return drive_file
@@ -38,10 +42,10 @@ class Drive:
 		DataUtil.mkparent(file_path_2)
 		file_name = file_name or file_path_2.name
 		drive_file = self.client.CreateFile({
-			'title': file_name, 
-			'parents': [{
-				'id': parent_id,
-				"kind": "drive#fileLink",
+			"title": file_name, 
+			"parents": [{
+				"id": parent_id,
+				"kind": PARENT_KIND,
 			}]
 		})
 		drive_file.SetContentFile(file_path)
@@ -53,10 +57,22 @@ class Drive:
 		DataUtil.mkparent(file_path_2)
 		file_name = file_name or file_path_2.name
 		drive_file = self.client.CreateFile({
-			'title': file_name,
-			'id': file_id
+			"title": file_name,
+			"id": file_id
 		})
 		drive_file.SetContentFile(file_path)
 		drive_file.Upload()
 		return drive_file
 
+	def create_folder(self, folder_name, parent_id):
+	    folder = drive.CreateFile({
+	        "title": folder_name,
+	        "mimeType": FOLDER_MIME,
+			"parents": [{
+				"kind": PARENT_KIND, 
+				"id": parent_id
+			}]
+	    })
+	    folder.Upload()
+
+	    return folder
