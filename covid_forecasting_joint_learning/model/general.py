@@ -61,7 +61,8 @@ class ClusterModel:
         max_grad_norm=1.0,
         optimizer_kwargs={},
         train_kwargs={},
-        grad_scaler=None
+        grad_scaler=None,
+        min_epochs=50
     ):
         self.cluster = cluster
         if source_pick == SourcePick.ALL:
@@ -165,7 +166,8 @@ class ClusterModel:
 
         self.max_grad_norm = max_grad_norm
         self.optimizer = self.create_optimizer()
-        self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr, total_steps=len(self.target.datasets[0]) * 100)
+        self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr, total_steps=len(self.target.datasets[0]) * min_epochs)
+        self.min_epochs = min_epochs
         self.grad_scaler = grad_scaler
 
     def clip_grad_norm(self):
@@ -283,7 +285,8 @@ class ObjectiveModel:
         grad_scaler=None,
         trial_id=None,
         log_dir=None,
-        debug=False
+        debug=False,
+        min_epochs=50
     ):
         self.cluster = cluster
 
@@ -482,6 +485,7 @@ class ObjectiveModel:
             optimizer_fn=optimizer_fn,
             grad_scaler=grad_scaler,
             lr=lr,
+            min_epochs=min_epochs,
             optimizer_kwargs={
             },
             train_kwargs={

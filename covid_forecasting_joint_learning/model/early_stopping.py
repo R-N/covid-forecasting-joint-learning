@@ -6,13 +6,13 @@ from torch.utils.tensorboard import SummaryWriter
 
 class EarlyStopping:
     def __init__(
-        self, 
+        self,
         model,
-        wait=20, wait_train_below_val=20, 
+        wait=50, wait_train_below_val=20,
         rise_patience=25, still_patience=8,
         interval_percent=0.05,
         min_delta_val=1e-5, min_delta_train=2e-6,
-        min_delta_val_percent=0.15, min_delta_train_percent=0.025, 
+        min_delta_val_percent=0.15, min_delta_train_percent=0.025,
         min_min_delta_val=1e-3, min_min_delta_train=1e-4,
         history_length=None,
         smoothing=0.6,
@@ -200,11 +200,8 @@ class EarlyStopping:
         if rise:
             self.rise_counter += 1
             self.forgive_still()  # It will need time to go down
-            if self.active and self.rise_counter >= self.rise_patience:
-                if self.active:
-                    self.early_stop("rise", epoch)
-                else:
-                    self.forgive_wait()
+            if self.rise_counter >= self.rise_patience:
+                self.early_stop("rise", epoch)
         else:
             self.forgive_rise()
             still = abs(delta_val_loss) < min_delta_val
@@ -221,21 +218,23 @@ class EarlyStopping:
                     still_increment *= (1.0 - self.train_reduction_still_tolerance)
                 self.still_counter += still_increment
                 if self.still_counter >= self.still_patience:
-                    if self.active:
-                        self.early_stop("still", epoch)
-                    else:
-                        self.forgive_wait()
+                    self.early_stop("still", epoch)
             else:
                 self.update_best(train_loss, val_loss)
                 self.forgive_still()
 
-        self.still_writer.add_scalar(self.label + "patience", self.still_counter / self.still_patience, global_step=epoch)
-        self.rise_writer.add_scalar(self.label + "patience", self.rise_counter / self.rise_patience, global_step=epoch)
+        still_percent = self.still_counter / self.still_patience
+        rise_percent = self.rise_counter / self.rise_patience
+        self.still_writer.add_scalar(self.label + "patience", still_percent, global_step=epoch)
+        self.rise_writer.add_scalar(self.label + "patience", rise_percent, global_step=epoch)
 
         self.still_writer.flush()
         self.rise_writer.flush()
 
-        if self.max_epoch and epoch >= self.max_epoch:
+        # stilling = still_percent >= (1.0 - self.still_forgiveness)
+        # rising = rise_percent >= (1.0 - self.rise_forgiveness)
+
+        if self.max_epoch and epoch >= self.max_epoch and (rise or still):
             self.stop()
             if self.debug >= 1:
                 print(f"INFO: Stopping at max epoch {epoch}")
@@ -261,6 +260,9 @@ class EarlyStopping:
         self.stopped = True
 
     def early_stop(self, reason="idk", epoch=None):
+        if not self.active:
+            self.forgive_wait()
+            return
         epoch = epoch if epoch is not None else self.epoch
         self.stop()
         if self.debug >= 1:
