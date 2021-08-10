@@ -343,7 +343,6 @@ def preprocessing_6(
     batch_size=5,
     pin_memory=False
 ):
-    keys = list(kabkos[0].datasets[0][0].keys())
     for kabko in kabkos:
         kabko.datasets_torch = [[
             {
