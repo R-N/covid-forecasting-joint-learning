@@ -7,6 +7,7 @@ from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
+from captum.attr import IntegratedGradients
 
 
 class RepresentationModel(nn.Module):
@@ -440,3 +441,10 @@ class SingleModel(nn.Module):
         self.eval()
         self.summary_writer.add_graph(self, input_to_model=batch)
         self.summary_writer.close()
+
+    def get_input_importance(self, batch):
+        ig = IntegratedGradients(self)
+        batch.requires_grad_()
+        attr, delta = ig.attribute(batch, target=[0, 1, 2], return_convergence_delta=True)
+        attr = attr.detach().numpy()
+        return attr

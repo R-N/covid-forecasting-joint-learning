@@ -36,6 +36,7 @@ setuptools.setup(
         "torch==1.8.1",
         "torchinfo",
         "scipy",
-        "pydrive"
+        "pydrive",
+        "captum"
     ]
 )

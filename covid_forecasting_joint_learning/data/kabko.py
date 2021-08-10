@@ -134,3 +134,6 @@ class KabkoData:
 
     def write_model_graph(self, path):
         return self.model.write_graph(path, self.get_batch_sample())
+
+    def get_input_importance(self):
+        return self.model.get_input_importance(self.get_batch_sample())
