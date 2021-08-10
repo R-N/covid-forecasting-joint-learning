@@ -345,9 +345,9 @@ def preprocessing_6(
 ):
     for kabko in kabkos:
         kabko.datasets_torch = [[
-            {
-                tuple(torch.Tensor(sample[i]) for i in range(5))
-            } for sample in dataset
+            tuple(
+                torch.Tensor(sample[i]) for i in range(5)
+            ) for sample in dataset
         ] for dataset in kabko.datasets]
 
         def collate_fn(samples):
