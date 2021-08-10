@@ -442,6 +442,6 @@ class SingleModel(nn.Module):
         ig = IntegratedGradients(self)
         for t in batch:
             t.requires_grad_()
-        attr, delta = ig.attribute(batch, target=[0, 1, 2], return_convergence_delta=True)
+        attr, delta = ig.attribute(batch, target=(0, 0), return_convergence_delta=True)
         attr = attr.detach().numpy()
         return attr
