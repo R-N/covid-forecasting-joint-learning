@@ -254,7 +254,7 @@ def clustering_1(
         # Remove outliers if they're not target
         c.sources = [k for k in c.sources if k not in outliers]
         for s in c.sources:
-          assert c.target.data.last_valid_index() >= s.data.last_valid_index()
+            assert c.target.data.last_valid_index() >= s.data.last_valid_index()
     group.clustering_info = best_clustering.get_info()
     group.clusters = clusters
     return clusters
