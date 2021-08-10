@@ -126,8 +126,7 @@ class KabkoData:
 
     def get_batch_sample(self):
         sample = next(iter(self.dataloaders[0]))
-        del sample["kabko"]
-        return sample
+        return sample[:-1]
 
     def get_model_summary(self):
         return self.model.get_summary(self.get_batch_sample())
