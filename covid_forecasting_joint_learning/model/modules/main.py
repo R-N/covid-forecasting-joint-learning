@@ -358,10 +358,8 @@ class SingleModel(nn.Module):
         #     x_past = torch.cat(x_past, input["past_exo"])
         hx_private, hx_shared = self.past_model(past)
 
-        future = None
         teacher_forcing = self.teacher_forcing and self.training
-        if teacher_forcing:
-            future = ModelUtil.linear_to_sequential_tensor(future)
+        future = ModelUtil.linear_to_sequential_tensor(future) if teacher_forcing else None
 
         if self.use_exo:
             future_exo = ModelUtil.linear_to_sequential_tensor(future_exo)
