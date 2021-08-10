@@ -21,7 +21,7 @@ def __train(samples, loss_fn, optimizer, clip_grad_norm=None, grad_scaler=None):
 
     with context:
         for sample in samples:
-            pred = sample["kabko"].model(sample)
+            pred = sample["kabko"].model(*sample)
             loss_s = loss_fn(sample["future"], pred)
             loss += weight * loss_s
 
@@ -134,7 +134,7 @@ def test(
 
             weights = 0
             for sample in samples:
-                pred = sample["kabko"].model(sample)
+                pred = sample["kabko"].model(*sample)
                 loss_s = loss_fn(sample["future"], pred)
                 weight = sample["kabko"].weight
                 loss += weight * loss_s

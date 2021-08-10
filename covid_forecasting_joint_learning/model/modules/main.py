@@ -105,7 +105,7 @@ class PastModel(nn.Module):
         shared_head=None
     ):
         super(PastModel, self).__init__()
-        
+
         use_representation = False
         if hidden_size_past\
             or representation_model is not None:
@@ -121,7 +121,6 @@ class PastModel(nn.Module):
                 and shared_head is not None
             use_shared_head = True
         self.use_shared_head = use_shared_head
-
 
         self.use_shared_representation = False
         self.representation_model = None
@@ -188,7 +187,7 @@ class PostFutureModel(nn.Module):
         combine_head={}
     ):
         super(PostFutureModel, self).__init__()
-        
+
         use_shared_head = False
         if shared_state_size\
             or shared_head_future is not None\
@@ -265,7 +264,7 @@ class SingleModel(nn.Module):
         use_exo=True
     ):
         super(SingleModel, self).__init__()
-        
+
         use_representation_future = False
         if hidden_size_future\
             or representation_future_model is not None:
@@ -354,28 +353,27 @@ class SingleModel(nn.Module):
             x_private, x_shared = past_seed_full, past_seed_full
         return past_seed_full, x_private[-1], x_shared[-1]
 
-    def forward(self, input):
-        x_past = input["past"]
+    def forward(self, past, past_seed, past_exo=None, future=None, future_exo=None):
         # if self.use_exo:
         #     x_past = torch.cat(x_past, input["past_exo"])
-        hx_private, hx_shared = self.past_model(x_past)
+        hx_private, hx_shared = self.past_model(past)
 
-        x_future = None
+        future = None
         teacher_forcing = self.teacher_forcing and self.training
         if teacher_forcing:
-            x_future = ModelUtil.linear_to_sequential_tensor(input["future"])
+            future = ModelUtil.linear_to_sequential_tensor(future)
 
         if self.use_exo:
-            x_future_exo = ModelUtil.linear_to_sequential_tensor(input["future_exo"])
+            future_exo = ModelUtil.linear_to_sequential_tensor(future_exo)
 
         hx_private, hx_shared = hx_private[0], hx_shared[0]
 
-        if teacher_forcing or x_future is not None:
-            assert teacher_forcing and x_future is not None
+        if teacher_forcing or future is not None:
+            assert teacher_forcing and future is not None
 
-        past_seed = ModelUtil.linear_to_sequential_tensor(input["past_seed"])
+        past_seed = ModelUtil.linear_to_sequential_tensor(past_seed)
         if self.use_exo:
-            past_exo = ModelUtil.linear_to_sequential_tensor(input["past_exo"])
+            past_exo = ModelUtil.linear_to_sequential_tensor(past_exo)
             past_seed_full = torch.cat([past_seed, past_exo], dim=past_seed.dim()-1)
         else:
             past_seed_full = past_seed
@@ -411,9 +409,9 @@ class SingleModel(nn.Module):
             outputs.append(o)
 
             if teacher_forcing:
-                o = x_future[i]
+                o = future[i]
             if self.use_exo:
-                o_exo = x_future_exo[i]
+                o_exo = future_exo[i]
 
         ret = ModelUtil.sequential_to_linear_tensor(torch.stack(outputs))
         return ret
@@ -434,7 +432,7 @@ class SingleModel(nn.Module):
         self.post_future_model.freeze_shared(freeze)
 
     def get_summary(self, batch):
-        return summary(self, input_data=[batch])
+        return summary(self, input_data=batch)
 
     def write_graph(self, path, batch):
         self.summary_writer = SummaryWriter(path)
@@ -444,7 +442,8 @@ class SingleModel(nn.Module):
 
     def get_input_importance(self, batch):
         ig = IntegratedGradients(self)
-        batch.requires_grad_()
+        for t in batch:
+            t.requires_grad_()
         attr, delta = ig.attribute(batch, target=[0, 1, 2], return_convergence_delta=True)
         attr = attr.detach().numpy()
         return attr

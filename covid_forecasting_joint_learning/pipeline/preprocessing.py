@@ -149,6 +149,7 @@ def generate_dataset(
     past = [x.to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
+    """
     ret = [{
         "past": past[i],
         "past_seed": past_seed[i],
@@ -156,6 +157,15 @@ def generate_dataset(
         "future": future[i],
         "future_exo": future_exo[i]
     } for i in range(count)]
+    """
+
+    ret = [(
+        past[i],
+        past_seed[i],
+        past_exo[i],
+        future[i],
+        future_exo[i]
+    ) for i in range(count)]
 
     return ret
 
