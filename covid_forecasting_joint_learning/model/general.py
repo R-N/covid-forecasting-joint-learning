@@ -455,13 +455,13 @@ class ObjectiveModel:
         )
 
         sample = cluster.target.datasets[0][0]
-        input_size_past = sample["past"].shape[-1]
-        input_size_future = sample["future"].shape[-1]
+        input_size_past = sample[0].shape[-1]
+        input_size_future = sample[3].shape[-1]
 
         use_exo_cols = future_exo_cols is not None and len(future_exo_cols) > 0
         if use_exo_cols:
-            # input_size_past += sample["past_exo"].shape[-1]
-            input_size_future += sample["future_exo"].shape[-1]
+            # input_size_past += sample[2].shape[-1]
+            input_size_future += sample[4].shape[-1]
         model_kwargs["use_exo"] = use_exo_cols
 
         sizes = {
