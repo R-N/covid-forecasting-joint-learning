@@ -354,7 +354,10 @@ def preprocessing_6(
             samples_1 = tuple(torch.stack(
                 [sample[i] for sample in samples]
             ).detach() for i in range(5))
-            samples_1["kabko"] = kabko
+            samples_1 = tuple(
+                *samples_1,
+                kabko
+            )
             return samples_1
 
         kabko.dataloaders = [DataLoader(
