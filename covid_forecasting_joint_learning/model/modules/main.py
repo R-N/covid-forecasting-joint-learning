@@ -336,7 +336,7 @@ class SingleModel(nn.Module):
         # past_seed_full is of sequential shape (Length, Batch, Channel)
         # o and o_exo is of sequential item shape (Batch, Channel)
         if o is not None:
-            o = o.detach()
+            # o = o.detach()
             if o_exo is not None:
                 o = torch.cat([o, o_exo], dim=o.dim()-1)
             past_seed_full = torch.cat([past_seed_full, torch.stack([o])], dim=0)
@@ -408,6 +408,8 @@ class SingleModel(nn.Module):
 
             if teacher_forcing:
                 o = future[i]
+            else:
+                o = o.detach()
             if self.use_exo:
                 o_exo = future_exo[i]
 
