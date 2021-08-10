@@ -25,8 +25,8 @@ class ResidualBlock(nn.Module):
         self.main_block = main_block
         activation = activation or nn.Identity
         self.activation = activation()
-        self.residual = nn.Identity()   
-    
+        self.residual = nn.Identity()
+
     def forward(self, x):
         residual = self.residual(x)
         if self.highway:
