@@ -13,6 +13,17 @@ def filter_args(args, teacher_forcing=True, use_exo=True, use_seed=True, none=Tr
     ret = ret if none else filter_none(ret)
     return ret
 
+def filter_batch(batch, teacher_forcing=True, use_exo=True, use_seed=True, none=False):
+    ret = (
+        batch[0],
+        batch[1] if use_seed else None,
+        batch[2] if use_exo and use_seed else None, 
+        batch[3] if teacher_forcing else None,
+        batch[4] if use_exo else None
+    )
+    ret = ret if none else filter_none(ret)
+    return ret
+
 def filter_none(tup):
     return tuple(x for x in tup if x is not None)
 
@@ -20,16 +31,8 @@ def filter_none(tup):
 LABELS = ["past", "past_use_seed", "past_exo", "future", "future_exo"]
 
 
-def get_result_label(teacher_forcing=True, use_exo=True, use_seed=True, none=False):
-    ret = (
-        LABELS[0],
-        LABELS[1] if use_seed else None,
-        LABELS[2] if use_exo and use_seed else None, 
-        LABELS[3] if teacher_forcing else None,
-        LABELS[4] if use_exo else None
-    )
-    ret = ret if none else filter_none(ret)
-    return ret
+def get_result_label(*args, **kwargs):
+    return filter_batch(LABELS, *args, **kwargs)
 
 
 def wrap_params(model, *f_args, **f_kwargs):
@@ -85,7 +88,7 @@ def calc_input_weight(
         model = wrap_sum(model)
     ig = method(model)
 
-    batch = filter_args(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
+    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     # batch = tuple(single_batch(t) for t in batch)
     labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     if single:
