@@ -18,14 +18,13 @@ class LILSTMCell(nn.Module):
         self.hx_0 = nn.Parameter(ModelUtil.learnable_xavier((state_size,)))
         self.cx_0 = nn.Parameter(ModelUtil.learnable_xavier((state_size,)))
 
-    def forward(self, x, hx=None):
+    def forward(self, x, hx=None, cx=None):
         # Input of dimension (Batch, Channel)
         batch_size = x.size(0)
-        hx, cx = (None, None) if hx is None else hx
 
         hx = ModelUtil.repeat_batch(self.hx_0, batch_size) if hx is None else hx
         cx = ModelUtil.repeat_batch(self.cx_0, batch_size) if cx is None else cx
-        
+
         hx, cx = self.cell(x, (hx, cx))
 
         return hx, cx
@@ -53,7 +52,7 @@ class PastHead(nn.Module):
         past_length = past_length if self.use_last_past else past_length - 1
 
         for i in range(past_length):
-            hx, cx = self.cell(x[i], (hx, cx))
+            hx, cx = self.cell(x[i], hx, cx)
 
         return hx, cx
 
@@ -93,7 +92,7 @@ class FutureHead(nn.Module):
             cx = ModelUtil.to_sequential_tensor(wrapper.obj)
             hx, cx = self.future_cell(
                 x,
-                (hx, cx)
+                hx, cx
             )
             wrapper = FutureSingle(FutureHead.POST_FUTURE, ModelUtil.to_batch_tensor(cx))
             yield wrapper
@@ -148,4 +147,4 @@ class Head(nn.Module):
             if ret.code == FutureHead.DONE:
                 break
 
-        return FutureSingle(FutureHead.DONE, obj)
+        return FutureSingle(FutureHead.DONE, ret.obj)

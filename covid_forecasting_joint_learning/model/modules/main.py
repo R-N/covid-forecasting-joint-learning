@@ -154,15 +154,15 @@ class PastModel(nn.Module):
         else:
             x_private, x_shared = x, x
         x_private = ModelUtil.linear_to_sequential_tensor(x_private)
-        hx_private = self.private_head(x_private)
+        hx_private, cx_private = self.private_head(x_private)
         if self.use_shared_head:
             x_shared = ModelUtil.linear_to_sequential_tensor(x_shared)
-            hx_shared = self.shared_head(x_shared)
+            hx_shared, cx_shared = self.shared_head(x_shared)
         else:
-            hx_shared = None
+            hx_shared, cx_shared = None, None
 
         # hx stays in sequential shape
-        return hx_private, hx_shared
+        return hx_private, cx_private, hx_shared, cx_shared
 
     def freeze_shared(self, freeze=True):
         if self.use_representation:
@@ -356,7 +356,7 @@ class SingleModel(nn.Module):
     def forward(self, past, past_seed, past_exo=None, future=None, future_exo=None):
         # if self.use_exo:
         #     x_past = torch.cat(x_past, input["past_exo"])
-        hx_private, hx_shared = self.past_model(past)
+        hx_private, cx_private, hx_shared, cx_shared = self.past_model(past)
 
         teacher_forcing = self.teacher_forcing and self.training
         future = ModelUtil.linear_to_sequential_tensor(future) if teacher_forcing else None
@@ -364,15 +364,13 @@ class SingleModel(nn.Module):
         if self.use_exo:
             future_exo = ModelUtil.linear_to_sequential_tensor(future_exo)
 
-        hx_private, hx_shared = hx_private[0], hx_shared[0]
-
         if teacher_forcing or future is not None:
             assert teacher_forcing and future is not None
 
         past_seed = ModelUtil.linear_to_sequential_tensor(past_seed)
         if self.use_exo:
             past_exo = ModelUtil.linear_to_sequential_tensor(past_exo)
-            past_seed_full = torch.cat([past_seed, past_exo], dim=past_seed.dim()-1)
+            past_seed_full = torch.cat([past_seed, past_exo], dim=past_seed.dim() - 1)
         else:
             past_seed_full = past_seed
 
@@ -395,12 +393,12 @@ class SingleModel(nn.Module):
 
             hx_private, cx_private = self.private_head_future_cell(
                 x_private,
-                (hx_private, cx_private)
+                hx_private, cx_private
             )
             if self.use_shared_head:
                 hx_shared, cx_shared = self.shared_head_future_cell(
                     x_shared,
-                    (hx_shared, cx_shared)
+                    hx_shared, cx_shared
                 )
 
             o = self.post_future_model(cx_private, cx_shared)
