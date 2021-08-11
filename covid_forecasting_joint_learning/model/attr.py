@@ -39,9 +39,10 @@ def detach_tuple(tup):
     return tuple(x.detach() for x in tup)
 
 def postprocess_result(tup):
-    tup = detach_tuple(tup)
-    print("before", tup[0].size())
-    ret = tuple(torch.sum(t, dim=0) for t in tup)
+    ret = detach_tuple(tup)
+    print("before", ret[0].size())
+    ret = tuple(t[0] for t in ret)
+    ret = tuple(torch.sum(t, dim=0) for t in ret)
     print("after", ret[0].size())
     return ret
 
@@ -55,6 +56,9 @@ def prepare_batch(batch):
         t.grad = None
         t.requires_grad_()
     return batch
+
+def single_batch(t):
+    return torch.stack([t[0]])
 
 def calc_input_weight(
     model,
@@ -75,6 +79,7 @@ def calc_input_weight(
     ig = method(model)
 
     batch = filter_args(batch, tf=tf, exo=exo, seed=seed, none=False)
+    batch = tuple(single_batch(t) for t in batch)
     labels = get_result_label(tf=tf, exo=exo, seed=seed, none=False)
     if single:
         attr = postprocess_result(ig.attribute(prepare_batch(batch)))
