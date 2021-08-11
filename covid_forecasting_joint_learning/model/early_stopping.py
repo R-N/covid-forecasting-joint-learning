@@ -278,5 +278,5 @@ class EarlyStopping:
         self.still_counter = self.calculate_forgiveness(self.still_counter, self.still_forgiveness, self.still_counter)
 
     def forgive_wait(self):
-        if self.debug >= 1:
+        if self.debug >= 2:
             print(f"INFO: Early stopping forgiven due to wait")
