@@ -63,6 +63,8 @@ def select_tuple(tup, indices=(0, 3)):
 
 def prepare_batch(batch):
     for t in batch:
+        if t is None:
+            continue
         t.grad = None
         t.requires_grad_()
     return batch
@@ -95,7 +97,7 @@ def __calc_weight(
     single=True,
     out_dim=3
 ):
-    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=True)
+    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     # batch = tuple(single_batch(t) for t in batch)
     if single:
         attr = postprocess_result(method.attribute(prepare_batch(batch)))
