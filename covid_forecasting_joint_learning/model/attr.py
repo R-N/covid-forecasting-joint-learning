@@ -1,5 +1,5 @@
 import torch
-from captum.attr import Saliency, LayerGradCAM
+from captum.attr import Saliency, LayerGradCam
 
 def filter_args(args, teacher_forcing=True, use_exo=True, use_seed=True, none=True):
     i = iter(args)
@@ -137,7 +137,7 @@ def calc_layer_weight(
     model,
     layer,
     batch,
-    method=LayerGradCAM,
+    method=LayerGradCam,
     teacher_forcing=True,
     use_exo=True,
     use_seed=True,
