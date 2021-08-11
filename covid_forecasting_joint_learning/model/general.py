@@ -230,8 +230,8 @@ class ClusterModel:
     def share_memory(self):
         return self.models.share_memory()
 
-    def get_target_input_importance(self):
-        return self.target.get_input_importance()
+    def get_target_input_importance(self, *args, **kwargs):
+        return self.target.get_input_importance(*args, **kwargs)
 
 
 class ObjectiveModel:
@@ -558,5 +558,5 @@ class ObjectiveModel:
     def share_memory(self):
         return self.model.share_memory()
 
-    def get_target_input_importance(self):
-        return self.model.get_target_input_importance()
+    def get_target_input_importance(self, *args, **kwargs):
+        return self.model.get_target_input_importance(*args, **kwargs)

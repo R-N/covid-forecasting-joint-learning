@@ -131,11 +131,11 @@ class KabkoData:
             sample = next(iter(self.dataloaders[0]))
         return sample[:-1]
 
-    def get_model_summary(self):
-        return self.model.get_summary(self.get_batch_sample())
+    def get_model_summary(self, sample_last=False):
+        return self.model.get_summary(self.get_batch_sample(last=sample_last))
 
-    def write_model_graph(self, path):
-        return self.model.write_graph(path, self.get_batch_sample())
+    def write_model_graph(self, path, sample_last=False):
+        return self.model.write_graph(path, self.get_batch_sample(last=sample_last))
 
-    def get_input_importance(self):
-        return self.model.get_input_importance(self.get_batch_sample())
+    def get_input_importance(self, *args, sample_last=False, **kwargs):
+        return self.model.get_input_importance(self.get_batch_sample(last=sample_last), *args, **kwargs)
