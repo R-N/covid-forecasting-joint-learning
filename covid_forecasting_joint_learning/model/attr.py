@@ -40,10 +40,9 @@ def detach_tuple(tup):
 
 def postprocess_result(tup):
     ret = detach_tuple(tup)
-    print("before", ret[0].size())
-    ret = tuple(t[0] for t in ret)
-    ret = tuple(torch.sum(t, dim=0) for t in ret)
-    print("after", ret[0].size())
+    # ret = tuple(t[0] for t in ret)
+    while ret[0].dim() > 1:
+        ret = tuple(torch.sum(t, dim=0) for t in ret)
     return ret
 
 def select_tuple(tup, indices=(0, 3)):
@@ -79,7 +78,7 @@ def calc_input_weight(
     ig = method(model)
 
     batch = filter_args(batch, tf=tf, exo=exo, seed=seed, none=False)
-    batch = tuple(single_batch(t) for t in batch)
+    # batch = tuple(single_batch(t) for t in batch)
     labels = get_result_label(tf=tf, exo=exo, seed=seed, none=False)
     if single:
         attr = postprocess_result(ig.attribute(prepare_batch(batch)))
