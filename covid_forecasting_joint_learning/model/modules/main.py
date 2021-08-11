@@ -7,7 +7,7 @@ from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
-from ..attr import calc_input_weight
+from ..attr import calc_input_weight, calc_layer_weight
 
 
 class RepresentationModel(nn.Module):
@@ -440,11 +440,21 @@ class SingleModel(nn.Module):
         self.summary_writer.add_graph(self, input_to_model=batch)
         self.summary_writer.close()
 
-    def get_input_weight(self, batch, *args, **kwargs):
+    def __weight_kwargs_default(self, kwargs):
         if "teacher_forcing" not in kwargs:
             kwargs["teacher_forcing"] = self.teacher_forcing
         if "use_exo" not in kwargs:
             kwargs["use_exo"] = self.use_exo
         if "use_seed" not in kwargs:
             kwargs["use_seed"] = self.representation_future_model is not None
+        return kwargs
+
+    def get_input_weight(self, batch, *args, **kwargs):
+        kwargs = self.__weight_kwargs_default(kwargs)
         return calc_input_weight(self, batch, *args, **kwargs)
+
+    def get_layer_weight(self, layer, batch, *args, **kwargs):
+        if not layer:
+            return None
+        kwargs = self.__weight_kwargs_default(kwargs)
+        return calc_layer_weight(self, layer, batch, *args, **kwargs)

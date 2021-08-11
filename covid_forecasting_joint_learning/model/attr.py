@@ -1,5 +1,5 @@
 import torch
-from captum.attr import Saliency
+from captum.attr import Saliency, LayerGradCAM
 
 def filter_args(args, teacher_forcing=True, use_exo=True, use_seed=True, none=True):
     i = iter(args)
@@ -70,6 +70,40 @@ def prepare_batch(batch):
 def single_batch(t):
     return torch.stack([t[0]])
 
+def __prepare_model(
+    model,
+    teacher_forcing=True,
+    use_exo=True,
+    use_seed=True,
+    single=True
+):
+    if not (teacher_forcing and use_exo and use_seed):
+        model = wrap_params(model, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed)
+
+    model = wrap_sum(model)
+    if single:
+        model = wrap_sum(model)
+    return model
+
+def __calc_weight(
+    method,
+    batch,
+    teacher_forcing=True,
+    use_exo=True,
+    use_seed=True,
+    single=True,
+    out_dim=3
+):
+    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
+    # batch = tuple(single_batch(t) for t in batch)
+    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
+    if single:
+        attr = postprocess_result(method.attribute(prepare_batch(batch)))
+    else:
+        attr = [postprocess_result(method.attribute(prepare_batch(batch), target=i)) for i in range(out_dim)]
+        attr = list(zip(*attr))
+    return dict(zip(labels, attr))
+
 def calc_input_weight(
     model,
     batch,
@@ -80,20 +114,51 @@ def calc_input_weight(
     single=True,
     out_dim=3
 ):
-    if not (teacher_forcing and use_exo and use_seed):
-        model = wrap_params(model, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed)
+    model == __prepare_model(
+        model,
+        teacher_forcing=teacher_forcing,
+        use_exo=use_exo,
+        use_seed=use_seed,
+        single=single
+    )
+    method = method(model)
+    return __calc_weight(
+        method,
+        batch,
+        teacher_forcing=teacher_forcing,
+        use_exo=use_exo,
+        use_seed=use_seed,
+        single=single,
+        out_dim=3
+    )
 
-    model = wrap_sum(model)
-    if single:
-        model = wrap_sum(model)
-    ig = method(model)
 
-    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
-    # batch = tuple(single_batch(t) for t in batch)
-    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
-    if single:
-        attr = postprocess_result(ig.attribute(prepare_batch(batch)))
-    else:
-        attr = [postprocess_result(ig.attribute(prepare_batch(batch), target=i)) for i in range(out_dim)]
-        attr = list(zip(*attr))
-    return dict(zip(labels, attr))
+def calc_layer_weight(
+    model,
+    layer,
+    batch,
+    method=LayerGradCAM,
+    teacher_forcing=True,
+    use_exo=True,
+    use_seed=True,
+    single=True,
+    out_dim=3
+):
+    model == __prepare_model(
+        model,
+        teacher_forcing=teacher_forcing,
+        use_exo=use_exo,
+        use_seed=use_seed,
+        single=single
+    )
+    method = method(model, layer)
+    return __calc_weight(
+        method,
+        batch,
+        teacher_forcing=teacher_forcing,
+        use_exo=use_exo,
+        use_seed=use_seed,
+        single=single,
+        out_dim=3
+    )
+

@@ -139,3 +139,6 @@ class KabkoData:
 
     def get_input_weight(self, *args, sample_last=False, **kwargs):
         return self.model.get_input_weight(self.get_batch_sample(last=sample_last), *args, **kwargs)
+
+    def get_layer_weight(self, layer, *args, sample_last=False, **kwargs):
+        return self.model.get_layer_weight(layer, self.get_batch_sample(last=sample_last), *args, **kwargs)
