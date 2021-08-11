@@ -97,7 +97,7 @@ def __calc_weight(
     single=True,
     out_dim=3
 ):
-    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
+    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=True)
     # batch = tuple(single_batch(t) for t in batch)
     if single:
         attr = postprocess_result(method.attribute(prepare_batch(batch)))
@@ -133,7 +133,7 @@ def calc_input_weight(
         single=single,
         out_dim=3
     )
-    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
+    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=True)
     return dict(zip(labels, attr))
 
 
