@@ -96,13 +96,12 @@ def __calc_weight(
 ):
     batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     # batch = tuple(single_batch(t) for t in batch)
-    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     if single:
         attr = postprocess_result(method.attribute(prepare_batch(batch)))
     else:
         attr = [postprocess_result(method.attribute(prepare_batch(batch), target=i)) for i in range(out_dim)]
         attr = list(zip(*attr))
-    return dict(zip(labels, attr))
+    return attr
 
 def calc_input_weight(
     model,
@@ -122,7 +121,7 @@ def calc_input_weight(
         single=single
     )
     method = method(model)
-    return __calc_weight(
+    attr = __calc_weight(
         method,
         batch,
         teacher_forcing=teacher_forcing,
@@ -131,6 +130,8 @@ def calc_input_weight(
         single=single,
         out_dim=3
     )
+    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
+    return dict(zip(labels, attr))
 
 
 def calc_layer_weight(
