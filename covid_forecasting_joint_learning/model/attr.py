@@ -1,5 +1,5 @@
 import torch
-from captum.attr import IntegratedGradients
+from captum.attr import Saliency
 
 def filter_args(args, teacher_forcing=True, use_exo=True, use_seed=True, none=True):
     i = iter(args)
@@ -62,7 +62,7 @@ def single_batch(t):
 def calc_input_weight(
     model,
     batch,
-    method=IntegratedGradients,
+    method=Saliency,
     teacher_forcing=True,
     use_exo=True,
     use_seed=True,
