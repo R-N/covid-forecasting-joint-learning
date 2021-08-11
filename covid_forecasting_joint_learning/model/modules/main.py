@@ -7,7 +7,7 @@ from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
-from ..attr import calc_input_importance
+from ..attr import calc_input_weight
 
 
 class RepresentationModel(nn.Module):
@@ -440,5 +440,5 @@ class SingleModel(nn.Module):
         self.summary_writer.add_graph(self, input_to_model=batch)
         self.summary_writer.close()
 
-    def get_input_importance(self, batch, *args, **kwargs):
-        return calc_input_importance(self, batch, *args, **kwargs)
+    def get_input_weight(self, batch, *args, **kwargs):
+        return calc_input_weight(self, batch, *args, **kwargs)

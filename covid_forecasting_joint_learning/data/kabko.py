@@ -137,5 +137,5 @@ class KabkoData:
     def write_model_graph(self, path, sample_last=False):
         return self.model.write_graph(path, self.get_batch_sample(last=sample_last))
 
-    def get_input_importance(self, *args, sample_last=False, **kwargs):
-        return self.model.get_input_importance(self.get_batch_sample(last=sample_last), *args, **kwargs)
+    def get_input_weight(self, *args, sample_last=False, **kwargs):
+        return self.model.get_input_weight(self.get_batch_sample(last=sample_last), *args, **kwargs)

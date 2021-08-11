@@ -49,7 +49,7 @@ def prepare_batch(batch):
         t.requires_grad_()
     return batch
 
-def calc_input_importance(
+def calc_input_weight(
     model,
     batch,
     method=IntegratedGradients,
