@@ -20,8 +20,16 @@ def filter_none(tup):
 LABELS = ["past", "past_use_seed", "past_exo", "future", "future_exo"]
 
 
-def get_result_label(*f_args, **f_kwargs):
-    return filter_args(LABELS, *f_args, **f_kwargs)
+def get_result_label(teacher_forcing=True, use_exo=True, use_seed=True, none=False):
+    ret = (
+        LABELS[0],
+        LABELS[1] if use_seed else None,
+        LABELS[2] if use_exo and use_seed else None, 
+        LABELS[3] if teacher_forcing else None,
+        LABELS[4] if use_exo else None
+    )
+    ret = ret if none else filter_none(ret)
+    return ret
 
 
 def wrap_params(model, *f_args, **f_kwargs):
