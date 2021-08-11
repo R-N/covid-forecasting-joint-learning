@@ -114,7 +114,7 @@ def calc_input_weight(
     single=True,
     out_dim=3
 ):
-    model == __prepare_model(
+    model = __prepare_model(
         model,
         teacher_forcing=teacher_forcing,
         use_exo=use_exo,
@@ -144,7 +144,7 @@ def calc_layer_weight(
     single=True,
     out_dim=3
 ):
-    model == __prepare_model(
+    model = __prepare_model(
         model,
         teacher_forcing=teacher_forcing,
         use_exo=use_exo,
