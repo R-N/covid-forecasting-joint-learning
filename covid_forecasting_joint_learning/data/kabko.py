@@ -124,8 +124,11 @@ class KabkoData:
 
         return df
 
-    def get_batch_sample(self):
-        sample = next(iter(self.dataloaders[0]))
+    def get_batch_sample(self, last=False):
+        if last:
+            *_, sample = iter(self.dataloaders[0])
+        else:
+            sample = next(iter(self.dataloaders[0]))
         return sample[:-1]
 
     def get_model_summary(self):
