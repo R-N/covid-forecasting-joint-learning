@@ -72,13 +72,14 @@ def single_batch(t):
 
 def __prepare_model(
     model,
-    teacher_forcing=True,
-    use_exo=True,
-    use_seed=True,
-    single=True
+    # teacher_forcing=True,
+    # use_exo=True,
+    # use_seed=True,
+    single=True,
+    **kwargs
 ):
-    if not (teacher_forcing and use_exo and use_seed):
-        model = wrap_params(model, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed)
+    # if not (teacher_forcing and use_exo and use_seed):
+    #     model = wrap_params(model, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed)
 
     model = wrap_sum(model)
     if single:
@@ -94,7 +95,7 @@ def __calc_weight(
     single=True,
     out_dim=3
 ):
-    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
+    batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=True)
     # batch = tuple(single_batch(t) for t in batch)
     if single:
         attr = postprocess_result(method.attribute(prepare_batch(batch)))
