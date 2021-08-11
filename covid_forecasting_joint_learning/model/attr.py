@@ -40,7 +40,10 @@ def detach_tuple(tup):
 
 def postprocess_result(tup):
     tup = detach_tuple(tup)
-    return tuple(torch.sum(t, dim=0) for t in tup)
+    print("before", tup[0].size())
+    ret = tuple(torch.sum(t, dim=0) for t in tup)
+    print("after", ret[0].size())
+    return ret
 
 def select_tuple(tup, indices=(0, 3)):
     if indices is None:
