@@ -38,6 +38,10 @@ def wrap_sum(model):
 def detach_tuple(tup):
     return tuple(x.detach() for x in tup)
 
+def postprocess_result(t):
+    t.detach()
+    return torch.sum(t, dim=0)
+
 def select_tuple(tup, indices=(0, 3)):
     if indices is None:
         return tup
@@ -70,8 +74,8 @@ def calc_input_weight(
     batch = filter_args(batch, tf=tf, exo=exo, seed=seed, none=False)
     labels = get_result_label(tf=tf, exo=exo, seed=seed, none=False)
     if single:
-        attr = detach_tuple(ig.attribute(prepare_batch(batch)))
+        attr = postprocess_result(ig.attribute(prepare_batch(batch)))
     else:
-        attr = [detach_tuple(ig.attribute(prepare_batch(batch), target=i)) for i in range(out_dim)]
+        attr = [postprocess_result(ig.attribute(prepare_batch(batch), target=i)) for i in range(out_dim)]
         attr = list(zip(*attr))
     return dict(zip(labels, attr))
