@@ -441,4 +441,10 @@ class SingleModel(nn.Module):
         self.summary_writer.close()
 
     def get_input_weight(self, batch, *args, **kwargs):
+        if "teacher_forcing" not in kwargs:
+            kwargs["teacher_forcing"] = self.teacher_forcing
+        if "use_exo" not in kwargs:
+            kwargs["use_exo"] = self.use_exo
+        if "use_seed" not in kwargs:
+            kwargs["use_seed"] = self.representation_future_model is not None
         return calc_input_weight(self, batch, *args, **kwargs)

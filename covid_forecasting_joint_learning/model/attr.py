@@ -1,14 +1,14 @@
 import torch
 from captum.attr import IntegratedGradients
 
-def filter_args(args, tf=True, exo=True, seed=True, none=True):
+def filter_args(args, teacher_forcing=True, use_exo=True, use_seed=True, none=True):
     i = iter(args)
     ret = (
         next(i),
-        next(i) if seed else None,
-        next(i) if exo and seed else None, 
-        next(i) if tf else None,
-        next(i) if exo else None
+        next(i) if use_seed else None,
+        next(i) if use_exo and use_seed else None, 
+        next(i) if teacher_forcing else None,
+        next(i) if use_exo else None
     )
     ret = ret if none else filter_none(ret)
     return ret
@@ -17,7 +17,7 @@ def filter_none(tup):
     return tuple(x for x in tup if x is not None)
 
 
-LABELS = ["past", "past_seed", "past_exo", "future", "future_exo"]
+LABELS = ["past", "past_use_seed", "past_exo", "future", "future_exo"]
 
 
 def get_result_label(*f_args, **f_kwargs):
@@ -63,23 +63,23 @@ def calc_input_weight(
     model,
     batch,
     method=IntegratedGradients,
-    tf=True,
-    exo=True,
-    seed=True,
+    teacher_forcing=True,
+    use_exo=True,
+    use_seed=True,
     single=True,
     out_dim=3
 ):
-    if not (tf and exo and seed):
-        model = wrap_params(model, tf=tf, exo=exo, seed=seed)
+    if not (teacher_forcing and use_exo and use_seed):
+        model = wrap_params(model, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed)
 
     model = wrap_sum(model)
     if single:
         model = wrap_sum(model)
     ig = method(model)
 
-    batch = filter_args(batch, tf=tf, exo=exo, seed=seed, none=False)
+    batch = filter_args(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     # batch = tuple(single_batch(t) for t in batch)
-    labels = get_result_label(tf=tf, exo=exo, seed=seed, none=False)
+    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     if single:
         attr = postprocess_result(ig.attribute(prepare_batch(batch)))
     else:
