@@ -38,9 +38,9 @@ def wrap_sum(model):
 def detach_tuple(tup):
     return tuple(x.detach() for x in tup)
 
-def postprocess_result(t):
-    t.detach()
-    return torch.sum(t, dim=0)
+def postprocess_result(tup):
+    tup = detach_tuple(tup)
+    return tuple(torch.sum(t, dim=0) for t in tup)
 
 def select_tuple(tup, indices=(0, 3)):
     if indices is None:
