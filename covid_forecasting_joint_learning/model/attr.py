@@ -62,7 +62,7 @@ def calc_input_importance(
         model = wrap_sum(model)
     ig = method(model)
 
-    batch = filter_args(batch, tf=tf, exo=exo, seed=seed)
+    batch = [x for x in filter_args(batch, tf=tf, exo=exo, seed=seed) if x is not None]
     labels = get_result_label(tf=tf, exo=exo, seed=seed)
     if single:
         attr = detach_tuple(ig.attribute(prepare_batch(batch)))
