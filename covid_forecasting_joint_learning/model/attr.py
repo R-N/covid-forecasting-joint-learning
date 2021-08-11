@@ -1,15 +1,20 @@
 import torch
 from captum.attr import IntegratedGradients
 
-def filter_args(args, tf=True, exo=True, seed=True):
+def filter_args(args, tf=True, exo=True, seed=True, none=True):
     i = iter(args)
-    return (
+    ret = (
         next(i),
         next(i) if seed else None,
         next(i) if exo and seed else None, 
         next(i) if tf else None,
         next(i) if exo else None
     )
+    ret = ret if none else filter_none(ret)
+    return ret
+
+def filter_none(tup):
+    return tuple(x for x in tup if x is not None)
 
 
 LABELS = ["past", "past_seed", "past_exo", "future", "future_exo"]
@@ -21,7 +26,7 @@ def get_result_label(*f_args, **f_kwargs):
 
 def wrap_params(model, *f_args, **f_kwargs):
     def model_param(*args):
-        return model(*filter_args(args, *f_args, **f_kwargs))
+        return model(*filter_args(args, *f_args, none=True, **f_kwargs))
     return model_param
 
 def wrap_sum(model):
@@ -62,8 +67,8 @@ def calc_input_importance(
         model = wrap_sum(model)
     ig = method(model)
 
-    batch = [x for x in filter_args(batch, tf=tf, exo=exo, seed=seed) if x is not None]
-    labels = get_result_label(tf=tf, exo=exo, seed=seed)
+    batch = filter_args(batch, tf=tf, exo=exo, seed=seed, none=False)
+    labels = get_result_label(tf=tf, exo=exo, seed=seed, none=False)
     if single:
         attr = detach_tuple(ig.attribute(prepare_batch(batch)))
     else:
