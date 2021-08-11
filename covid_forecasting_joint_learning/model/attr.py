@@ -133,7 +133,7 @@ def calc_input_weight(
         single=single,
         out_dim=3
     )
-    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=True)
+    labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     return dict(zip(labels, attr))
 
 
