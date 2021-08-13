@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-from .modules.main import SingleModel
 import contextlib
+from .loss import MSSELoss
 
 dummy_context = contextlib.nullcontext()
 
@@ -49,7 +49,7 @@ def train(
     target,
     optimizer,
     scheduler=None,
-    loss_fn=nn.MSELoss(),
+    loss_fn=MSSELoss(),
     source_weight=1.0,
     key=lambda k: k.dataloaders[0],
     clip_grad_norm=None,
@@ -108,7 +108,7 @@ def train(
 def test(
     sources,
     target,
-    loss_fn=nn.MSELoss(),
+    loss_fn=MSSELoss(),
     source_weight=1.0,
     key=lambda k: k.dataloaders[1]
 ):
