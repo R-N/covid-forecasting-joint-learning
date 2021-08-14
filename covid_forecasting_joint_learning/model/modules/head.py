@@ -37,11 +37,11 @@ class LILSTMCell2(LILSTMCell):
         *args,
         **kwargs
     ):
-        super(LILSTMCell2, self).__init__(*args, **kwargs)
+        self.cell = LILSTMCell(*args, **kwargs)
 
     def forward(self, *args, return_hx=True, return_cx=True, **kwargs):
 
-        hx, cx = super(LILSTMCell2, self)(*args, **kwargs)
+        hx, cx = self.cell(*args, **kwargs)
 
         if return_hx and return_cx:
             return hx, cx
