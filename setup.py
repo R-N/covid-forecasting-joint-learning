@@ -26,7 +26,7 @@ setuptools.setup(
         "imgaug<0.2.7,>=0.2.5",
         "requests~=2.23.0",
         "pandas~=1.1.0; python_version >= '3.0'",
-        "matplotlib",
+        "matplotlib==3.4.3",
         "mpld3",
         "seaborn",
         "statsmodels==0.12",
