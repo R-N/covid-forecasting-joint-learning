@@ -30,6 +30,29 @@ class LILSTMCell(nn.Module):
         return hx, cx
 
 
+class LILSTMCell2(LILSTMCell):
+
+    def __init__(
+        self,
+        *args,
+        **kwargs
+    ):
+        super(LILSTMCell2, self).__init__(*args, **kwargs)
+
+    def forward(self, *args, return_hx=True, return_cx=True, **kwargs):
+
+        hx, cx = super(LILSTMCell2, self)(*args, **kwargs)
+
+        if return_hx and return_cx:
+            return hx, cx
+        elif return_hx:
+            return hx
+        elif return_cx:
+            return cx
+        else:
+            raise ValueError("Either return_hx or return_cx has to be True")
+
+
 class PastHead(nn.Module):
     def __init__(
         self,
@@ -61,6 +84,7 @@ class FutureSingle:
     def __init__(self, code, obj):
         self.code = code
         self.obj = obj
+
 
 class FutureHead(nn.Module):
     PRE_FUTURE = 0

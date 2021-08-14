@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from .residual import ResidualFC
 from .representation import RepresentationBlock
-from .head import PastHead, LILSTMCell
+from .head import PastHead, LILSTMCell2
 from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
@@ -294,7 +294,7 @@ class SingleModel(nn.Module):
         self.use_shared_representation_future = use_shared_representation_future
 
         if isinstance(private_head_future_cell, dict):
-            private_head_future_cell = LILSTMCell(
+            private_head_future_cell = LILSTMCell2(
                 input_size_future if not use_representation_future else (hidden_size_future * (2 if use_shared_representation_future is not None else 1)),
                 private_state_size,
                 **private_head_future_cell
@@ -302,7 +302,7 @@ class SingleModel(nn.Module):
         self.private_head_future_cell = private_head_future_cell
 
         if isinstance(shared_head_future_cell, dict):
-            shared_head_future_cell = LILSTMCell(
+            shared_head_future_cell = LILSTMCell2(
                 input_size_future if not use_representation_future else hidden_size_future,
                 shared_state_size,
                 **shared_head_future_cell
@@ -376,6 +376,7 @@ class SingleModel(nn.Module):
 
         outputs = []
         cx_private, cx_shared, o, o_exo = None, None, None, None
+        last = self.future_length - 1
         for i in range(self.future_length):
             # print("for", "past_seed_full", past_seed_full.size())
             past_seed_full, x_private, x_shared = self.prepare_seed(
@@ -391,15 +392,28 @@ class SingleModel(nn.Module):
                 print(x_private.size(), hx_private.size())
             """
 
-            hx_private, cx_private = self.private_head_future_cell(
-                x_private,
-                hx_private, cx_private
-            )
-            if self.use_shared_head:
-                hx_shared, cx_shared = self.shared_head_future_cell(
-                    x_shared,
-                    hx_shared, cx_shared
+            if i < last:
+                hx_private, cx_private = self.private_head_future_cell(
+                    x_private,
+                    hx_private, cx_private
                 )
+                if self.use_shared_head:
+                    hx_shared, cx_shared = self.shared_head_future_cell(
+                        x_shared,
+                        hx_shared, cx_shared
+                    )
+            else:
+                cx_private = self.private_head_future_cell(
+                    x_private,
+                    hx_private, cx_private,
+                    return_hx=False
+                )
+                if self.use_shared_head:
+                    cx_shared = self.shared_head_future_cell(
+                        x_shared,
+                        hx_shared, cx_shared,
+                        return_hx=False
+                    )
 
             o = self.post_future_model(cx_private, cx_shared)
             outputs.append(o)
