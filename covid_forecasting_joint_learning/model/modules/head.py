@@ -37,6 +37,7 @@ class LILSTMCell2(LILSTMCell):
         *args,
         **kwargs
     ):
+        super(LILSTMCell2, self).__init__()
         self.cell = LILSTMCell(*args, **kwargs)
 
     def forward(self, *args, return_hx=True, return_cx=True, **kwargs):
