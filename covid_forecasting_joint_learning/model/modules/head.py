@@ -30,7 +30,7 @@ class LILSTMCell(nn.Module):
         return hx, cx
 
 
-class LILSTMCell2(LILSTMCell):
+class LILSTMCell2(nn.Module):
 
     def __init__(
         self,
