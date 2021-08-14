@@ -47,7 +47,7 @@ def wrap_sum(model):
     return sum_model
 
 def detach_tuple(tup):
-    return tuple(x.detach() for x in tup)
+    return tuple(x.detach().numpy() for x in tup)
 
 def postprocess_result(tup):
     ret = detach_tuple(tup)
