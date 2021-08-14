@@ -167,7 +167,15 @@ def generate_dataset(
         future_exo[i]
     ) for i in range(count)]
 
-    return ret
+    labels = [
+        df.columns,
+        label_cols,
+        future_exo_cols,
+        label_cols,
+        future_exo_cols
+    ]
+
+    return ret, labels
 
 
 def split_dataset(
@@ -182,7 +190,7 @@ def split_dataset(
     # if past_cols is not None:
     #     past_cols = list(set(past_cols + future_exo_cols + label_cols))
 
-    train_set = generate_dataset(
+    train_set, labels = generate_dataset(
         df[:val_start],
         future_start=None, future_end=val_start,
         past_size=past_size, future_size=future_size,
@@ -191,7 +199,7 @@ def split_dataset(
         label_cols=label_cols,
         future_exo_cols=future_exo_cols
     )
-    val_set = generate_dataset(
+    val_set, labels = generate_dataset(
         df[:test_start],
         future_start=val_start, future_end=test_start,
         past_size=past_size, future_size=future_size,
@@ -200,7 +208,7 @@ def split_dataset(
         label_cols=label_cols,
         future_exo_cols=future_exo_cols
     )
-    test_set = generate_dataset(
+    test_set, labels = generate_dataset(
         df,
         future_start=test_start, future_end=None,
         past_size=past_size, future_size=future_size,
@@ -209,7 +217,7 @@ def split_dataset(
         label_cols=label_cols,
         future_exo_cols=future_exo_cols
     )
-    return train_set, val_set, test_set
+    return train_set, val_set, test_set, labels
 
 
 # Differencing

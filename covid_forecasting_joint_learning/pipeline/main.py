@@ -330,13 +330,14 @@ def preprocessing_5(
         split_indices = [kabko.data.index.get_loc(s) for s in split_indices]
         val_start, test_start = split_indices
 
-        kabko.datasets = preprocessing.split_dataset(
+        kabko.datasets, kabko.dataset_labels = preprocessing.split_dataset(
             kabko.data,
             past_size=past_size, future_size=future_size,
             val_start=val_start, test_start=test_start,
             stride=1,
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols
         )
+
 
 def preprocessing_6(
     kabkos,
