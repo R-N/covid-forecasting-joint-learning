@@ -78,11 +78,11 @@ def str_dict(d):
 
 
 def filter_trials_undone(study):
-  return [t.number for t in study.trials if not (t.state == TrialState.COMPLETE or t.state == TrialState.PRUNED)]
+    return [t.number for t in study.trials if not (t.state == TrialState.COMPLETE or t.state == TrialState.PRUNED)]
 
 
 def count_trials_done(study):
-  return len(study.trials) - len(filter_trials_undone(study))
+    return len(study.trials) - len(filter_trials_undone(study))
 
 
 def smooth(scalars, weight):  # Weight between 0 and 1
@@ -98,3 +98,7 @@ def smooth(scalars, weight):  # Weight between 0 and 1
 
 def progressive_smooth(last, weight, point):
     return last * weight + (1 - weight) * point
+
+
+def union_lists(lists):
+    return sorted(list(set.union(*[set(x) for x in lists])))
