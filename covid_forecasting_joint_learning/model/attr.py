@@ -182,7 +182,8 @@ def __fill_label_values(k, v, labels_dict, full_label, fill=0):
 
 
 def label_input_attr(attr, labels, full_label=None):
-    full_label = full_label or union_lists(labels)
+    if full_label is None:
+        full_label = union_lists(labels)
     labels_dict = dict(zip(LABELS, labels))
     values_dict = {k: __fill_label_values(k, v, labels_dict, full_label) for k, v in attr.items()}
     return values_dict, full_label
