@@ -1,5 +1,9 @@
 import torch
 from captum.attr import Saliency, LayerGradCam
+import numpy as np
+import matplotlib.pyplot as plt
+from .util import multi_index_dict, union_lists
+from ..data.exploration import init_ipython, init_matplotlib
 
 def filter_args(args, teacher_forcing=True, use_exo=True, use_seed=True, none=True):
     i = iter(args)
@@ -157,7 +161,7 @@ def calc_layer_weight(
         single=single
     )
     method = method(model, layer)
-    return __calc_weight(
+    ret = __calc_weight(
         method,
         batch,
         teacher_forcing=teacher_forcing,
@@ -166,4 +170,44 @@ def calc_layer_weight(
         single=single,
         out_dim=3
     )
+    return ret
 
+
+def __fill_label_values(k, v, labels_dict, full_label, fill=0):
+    label = labels_dict[k]
+    empty_dict = {l: fill for l in full_label}
+    value_dict = dict(zip(label, v))
+    value_dict = {**empty_dict, **value_dict}
+    return multi_index_dict(value_dict, full_label)
+
+
+def label_input_attr(attr, labels, full_label=None):
+    full_label = full_label or union_lists(labels)
+    labels_dict = dict(zip(LABELS, labels))
+    values_dict = {k: __fill_label_values(k, v, labels_dict, full_label) for k, v in attr.items()}
+    return values_dict, full_label
+
+
+def plot_attr(labeled_attr, full_label, title="Input importance", y_label="Weight", width=0.5):
+    fig, ax = plt.subplots(1, 1)
+    x = np.arange(len(full_label))
+
+    prev = None
+    for k, v in labeled_attr.items():
+        p1 = ax.bar(x, v, width=width, bottom=prev, label=k)
+        texts = ax.bar_label(p1, label_type='center')
+        for t in texts:
+            if t.get_text().strip() == "0":
+                t.set_text("")
+        prev = v
+
+    ax.bar_label(p1)
+
+    ax.axhline(0, color='grey', linewidth=0.8)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    ax.set_xticks(x)
+    ax.set_xticklabels(full_label)
+    ax.legend(loc="best")
+
+    return fig

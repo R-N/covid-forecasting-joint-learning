@@ -102,3 +102,7 @@ def progressive_smooth(last, weight, point):
 
 def union_lists(lists):
     return sorted(list(set.union(*[set(x) for x in lists])))
+
+
+def multi_index_dict(d, index):
+    return [d[i] for i in index]
