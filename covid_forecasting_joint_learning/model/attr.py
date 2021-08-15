@@ -32,7 +32,7 @@ def filter_none(tup):
     return tuple(x for x in tup if x is not None)
 
 
-LABELS = ["past", "past_use_seed", "past_exo", "future", "future_exo"]
+LABELS = ["past", "past_seed", "past_exo", "future", "future_exo"]
 
 
 def get_result_label(*args, **kwargs):
