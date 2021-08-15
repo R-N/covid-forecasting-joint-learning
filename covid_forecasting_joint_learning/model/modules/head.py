@@ -93,7 +93,8 @@ class PastHead2(nn.Module):
 
         hx, cx = self.head(*args, **kwargs)
 
-        return hx, cx if return_cx else hx
+        print("PastHead2 Return cx")
+        return (hx, cx) if return_cx else hx
 
 
 class FutureSingle:
