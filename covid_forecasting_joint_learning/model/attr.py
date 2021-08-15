@@ -194,7 +194,7 @@ def label_input_attr(attr, labels, full_label=None):
     return values_dict, full_label
 
 
-def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.5, rotation=90, fmt="%.2g"):
+def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.6, rotation=90, fmt="%.2g"):
 
     if full_label is None:
         x = np.arange(len(next(iter(labeled_attr.values()))))
