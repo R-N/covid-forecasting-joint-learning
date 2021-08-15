@@ -54,6 +54,8 @@ def detach_tuple(tup):
     return tuple(x.detach() for x in tup)
 
 def postprocess_result(tup):
+    if not isinstance(tup, tuple):
+        tup = (tup,)
     ret = detach_tuple(tup)
     # ret = tuple(t[0] for t in ret)
     while ret[0].dim() > 1:
@@ -136,7 +138,7 @@ def calc_input_weight(
         use_exo=use_exo,
         use_seed=use_seed,
         single=single,
-        out_dim=3
+        out_dim=out_dim
     )
     labels = get_result_label(teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     return dict(zip(labels, attr))
@@ -151,7 +153,8 @@ def calc_layer_weight(
     use_exo=True,
     use_seed=True,
     single=True,
-    out_dim=3
+    out_dim=3,
+    labels=None
 ):
     model = __prepare_model(
         model,
@@ -161,16 +164,18 @@ def calc_layer_weight(
         single=single
     )
     method = method(model, layer)
-    ret = __calc_weight(
+    attr = __calc_weight(
         method,
         batch,
         teacher_forcing=teacher_forcing,
         use_exo=use_exo,
         use_seed=use_seed,
         single=single,
-        out_dim=3
+        out_dim=out_dim
     )
-    return ret
+    if labels is None:
+        labels = [str(i) for i in range(len(attr))]
+    return dict(zip(labels, attr))
 
 
 def __fill_label_values(k, v, labels_dict, full_label, fill=0):
