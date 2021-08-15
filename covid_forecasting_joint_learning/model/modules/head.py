@@ -40,12 +40,12 @@ class LILSTMCell2(nn.Module):
         super(LILSTMCell2, self).__init__()
         self.cell = LILSTMCell(*args, **kwargs)
 
-    def forward(self, *args, return_hx=True, return_cx=True, **kwargs):
+    def forward(self, *args, return_hx=True, return_cx=True, return_reversed=False, **kwargs):
 
         hx, cx = self.cell(*args, **kwargs)
 
         if return_hx and return_cx:
-            return hx, cx
+            return cx, hx if return_reversed else hx, cx
         elif return_hx:
             return hx
         elif return_cx:
@@ -79,6 +79,21 @@ class PastHead(nn.Module):
             hx, cx = self.cell(x[i], hx, cx)
 
         return hx, cx
+
+class PastHead2(nn.Module):
+    def __init__(
+        self,
+        *args,
+        **kwargs
+    ):
+        super(PastHead2, self).__init__()
+        self.head = PastHead(*args, **kwargs)
+
+    def forward(self, *args, return_cx=True, **kwargs):
+
+        hx, cx = self.head(*args, **kwargs)
+
+        return hx, cx if return_cx else hx
 
 
 class FutureSingle:
