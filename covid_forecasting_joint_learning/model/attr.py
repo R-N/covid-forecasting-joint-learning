@@ -189,7 +189,7 @@ def label_input_attr(attr, labels, full_label=None):
     return values_dict, full_label
 
 
-def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.5):
+def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.5, rotation=70):
 
     if full_label is None:
         x = np.arange(len(next(iter(labeled_attr.values()))))
@@ -202,19 +202,19 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     prev = None
     for k, v in labeled_attr.items():
         p1 = ax.bar(x, v, width=width, bottom=prev, label=k)
-        texts = ax.bar_label(p1, label_type='center')
+        texts = ax.bar_label(p1, label_type='center', rotation=rotation)
         for t in texts:
             if t.get_text().strip() == "0":
                 t.set_text("")
         prev = v
 
-    ax.bar_label(p1)
+    ax.bar_label(p1, rotation=rotation)
 
     ax.axhline(0, color='grey', linewidth=0.8)
     ax.set_ylabel(y_label)
     ax.set_title(title)
     ax.set_xticks(x)
-    ax.set_xticklabels(full_label)
+    ax.set_xticklabels(full_label, rotation=rotation)
     ax.legend(loc="best")
 
     return fig
