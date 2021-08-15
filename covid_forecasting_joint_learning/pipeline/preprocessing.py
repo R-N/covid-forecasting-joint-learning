@@ -217,7 +217,7 @@ def split_dataset(
         label_cols=label_cols,
         future_exo_cols=future_exo_cols
     )
-    return train_set, val_set, test_set, labels
+    return (train_set, val_set, test_set), labels
 
 
 # Differencing
