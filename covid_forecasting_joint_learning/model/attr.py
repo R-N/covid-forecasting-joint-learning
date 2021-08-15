@@ -214,7 +214,7 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     ax.set_ylabel(y_label)
     ax.set_title(title)
     ax.set_xticks(x)
-    ax.set_xticklabels(full_label, rotation=rotation)
+    ax.set_xticklabels(full_label, rotation=rotation, verticalalignment="top", horizontalalignment="center", y=-0.1)
     ax.legend(loc="best")
 
     return fig
