@@ -41,7 +41,6 @@ class LILSTMCell2(nn.Module):
         self.cell = LILSTMCell(*args, **kwargs)
 
     def forward(self, *args, return_hx=True, return_cx=True, return_reversed=False, **kwargs):
-        print([type(x) for x in args])
         hx, cx = self.cell(*args, **kwargs)
 
         if return_hx and return_cx:
