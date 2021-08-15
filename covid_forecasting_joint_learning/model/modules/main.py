@@ -164,7 +164,6 @@ class PastModel(nn.Module):
 
         # hx stays in sequential shape
         if return_cx:
-            print("PastModel Return cx")
             return hx_private[0], hx_private[1], hx_shared[0], hx_shared[1]
         else:
             return hx_private, hx_shared

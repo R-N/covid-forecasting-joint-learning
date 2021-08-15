@@ -45,7 +45,7 @@ class LILSTMCell2(nn.Module):
         hx, cx = self.cell(*args, **kwargs)
 
         if return_hx and return_cx:
-            return cx, hx if return_reversed else hx, cx
+            return (cx, hx) if return_reversed else (hx, cx)
         elif return_hx:
             return hx
         elif return_cx:
@@ -93,7 +93,6 @@ class PastHead2(nn.Module):
 
         hx, cx = self.head(*args, **kwargs)
 
-        print("PastHead2 Return cx")
         return (hx, cx) if return_cx else hx
 
 
