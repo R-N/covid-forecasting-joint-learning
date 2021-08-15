@@ -188,9 +188,15 @@ def label_input_attr(attr, labels, full_label=None):
     return values_dict, full_label
 
 
-def plot_attr(labeled_attr, full_label, title="Input importance", y_label="Weight", width=0.5):
+def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.5):
+
+    if full_label is None:
+        x = np.arange(len(next(iter(labeled_attr.values()))))
+        full_label = [str(i) for i in x]
+    else:
+        x = np.arange(len(full_label))
+
     fig, ax = plt.subplots(1, 1)
-    x = np.arange(len(full_label))
 
     prev = None
     for k, v in labeled_attr.items():
