@@ -144,7 +144,6 @@ def slice_dataset(
 
 
 def label_dataset_0(
-    df,
     past, future,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
@@ -189,7 +188,6 @@ def label_dataset_0(
 
 
 def label_dataset_1(
-    df,
     past, future,
     label_cols=DataCol.SIRD_VARS,
     **kwargs
@@ -210,7 +208,6 @@ def label_dataset_1(
     return ret, labels
 
 def label_dataset_2(
-    df,
     past, future,
     label_cols=DataCol.SIRD_VARS,
     final_cols=DataCol.SIRD,
