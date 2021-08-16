@@ -192,7 +192,7 @@ def label_input_attr(attr, labels, full_label=None):
 
 
 def aggregate_layer_attr(attrs):
-    aggregate_attr = {k: sum([sum(x) for x in v]) for k, v in attrs.items()}
+    aggregate_attr = {k: sum([sum(x) for x in v.values()]) for k, v in attrs.items()}
     return aggregate_attr
 
 
