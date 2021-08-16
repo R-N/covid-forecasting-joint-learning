@@ -58,6 +58,8 @@ def postprocess_result(tup):
         tup = (tup,)
     ret = detach_tuple(tup)
     # ret = tuple(t[0] for t in ret)
+    while ret[0].dim() > 2:
+        ret = tuple(torch.sum(t, dim=0) for t in ret)
     while ret[0].dim() > 1:
         ret = tuple(torch.sum(t, dim=0) / t.size(0) for t in ret)
     ret = tuple(x.detach().numpy() for x in ret)
