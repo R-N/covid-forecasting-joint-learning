@@ -483,22 +483,22 @@ class SingleModel(nn.Module):
     def get_aggregate_layer_attr(self, sample):
         layer_attrs = {}
         with suppress(KeyError, TypeError):
-            layer_attrs["past_model.private_representation"] = Attribution.get_layer_attr(self.past_model.representation_model.private_representation, sample)
+            layer_attrs["past_model.private_representation"] = self.get_layer_attr(self.past_model.representation_model.private_representation, sample)
         with suppress(KeyError, TypeError):
-            layer_attrs["past_model.shared_representation"] = Attribution.get_layer_attr(self.past_model.representation_model.shared_representation, sample)
+            layer_attrs["past_model.shared_representation"] = self.get_layer_attr(self.past_model.representation_model.shared_representation, sample)
         with suppress(KeyError, TypeError):
-            layer_attrs["past_model.private_head"] = Attribution.get_layer_attr(self.past_model.private_head, sample, labels=["hx", "cx"])
+            layer_attrs["past_model.private_head"] = self.get_layer_attr(self.past_model.private_head, sample, labels=["hx", "cx"])
         with suppress(KeyError, TypeError):
-            layer_attrs["past_model.shared_head"] = Attribution.get_layer_attr(self.past_model.shared_head, sample, labels=["hx", "cx"])
+            layer_attrs["past_model.shared_head"] = self.get_layer_attr(self.past_model.shared_head, sample, labels=["hx", "cx"])
         with suppress(KeyError, TypeError):
-            layer_attrs["past_model"] = Attribution.get_layer_attr(self.past_model, sample)
+            layer_attrs["past_model"] = self.get_layer_attr(self.past_model, sample)
         with suppress(KeyError, TypeError):
-            layer_attrs["future_model.private_representation"] = Attribution.get_layer_attr(self.representation_future_model.private_representation, sample)
+            layer_attrs["future_model.private_representation"] = self.get_layer_attr(self.representation_future_model.private_representation, sample)
         with suppress(KeyError, TypeError):
-            layer_attrs["future_model.shared_representation"] = Attribution.get_layer_attr(self.representation_future_model.shared_representation, sample)
+            layer_attrs["future_model.shared_representation"] = self.get_layer_attr(self.representation_future_model.shared_representation, sample)
         with suppress(KeyError, TypeError):
-            layer_attrs["future_model.private_head"] = Attribution.get_layer_attr(self.private_head_future_cell, sample, labels=["cx", "hx"])
+            layer_attrs["future_model.private_head"] = self.get_layer_attr(self.private_head_future_cell, sample, labels=["cx", "hx"])
         with suppress(KeyError, TypeError):
-            layer_attrs["future_model.shared_head"] = Attribution.get_layer_attr(self.shared_head_future_cell, sample, labels=["cx", "hx"])
+            layer_attrs["future_model.shared_head"] = self.get_layer_attr(self.shared_head_future_cell, sample, labels=["cx", "hx"])
         layer_attrs = Attribution.aggregate_layer_attr(layer_attrs)
         return layer_attrs
