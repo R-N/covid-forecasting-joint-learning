@@ -124,7 +124,8 @@ def generate_dataset(
     stride=1,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
-    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"]
+    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
+    final_cols=DataCol.IRD
 ):
     # if past_cols is not None:
     #     df = df[past_cols]
@@ -138,14 +139,17 @@ def generate_dataset(
 
     past_start_1, past_end_1 = future_start - past_size, future_start
     future_start_1, future_end_1 = future_start, future_start + future_size
-    past = [df.iloc[past_start_1+i:past_end_1+i] for i in ids]
-    future = [df.iloc[future_start_1+i:future_end_1+i] for i in ids]
+    past = [df.iloc[past_start_1 + i:past_end_1 + i] for i in ids]
+    future = [df.iloc[future_start_1 + i:future_end_1 + i] for i in ids]
+    final_seed = [x.iloc[-1] for x in past]
 
     past_seed = [x[label_cols].to_numpy() for x in past]
     past_exo = [x[future_exo_cols].to_numpy() for x in past]
     future_exo = [x[future_exo_cols].to_numpy() for x in future]
     if past_cols is not None:
         past = [x[past_cols] for x in past]
+    future_final = [x[final_cols].to_numpy() for x in future]
+    final_seed = [x[final_cols].to_numpy() for x in final_seed]
     past = [x.to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
@@ -164,7 +168,9 @@ def generate_dataset(
         past_seed[i],
         past_exo[i],
         future[i],
-        future_exo[i]
+        future_exo[i],
+        final_seed[i],
+        future_final[i]
     ) for i in range(count)]
 
     labels = [
@@ -172,7 +178,9 @@ def generate_dataset(
         label_cols,
         future_exo_cols,
         label_cols,
-        future_exo_cols
+        future_exo_cols,
+        final_cols,
+        final_cols
     ]
 
     return ret, labels

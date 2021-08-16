@@ -22,7 +22,7 @@ def __train(samples, loss_fn, optimizer, clip_grad_norm=None, grad_scaler=None):
     with context:
         for sample in samples:
             sample, kabko = sample[:-1], sample[-1]
-            pred = kabko.model(*sample)
+            pred = kabko.model(*sample[:5])
             loss_s = loss_fn(sample[3], pred)
             weight = kabko.weight
             loss += weight * loss_s
@@ -137,7 +137,7 @@ def test(
             weights = 0
             for sample in samples:
                 sample, kabko = sample[:-1], sample[-1]
-                pred = kabko.model(*sample)
+                pred = kabko.model(*sample[:5])
                 loss_s = loss_fn(sample[3], pred)
                 weight = kabko.weight
                 loss += weight * loss_s

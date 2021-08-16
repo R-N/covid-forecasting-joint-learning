@@ -129,7 +129,7 @@ class KabkoData:
             *_, sample = iter(self.dataloaders[0])
         else:
             sample = next(iter(self.dataloaders[0]))
-        return sample[:-1]
+        return sample[:5]
 
     def get_model_summary(self, sample_last=False):
         return self.model.get_summary(self.get_batch_sample(last=sample_last))

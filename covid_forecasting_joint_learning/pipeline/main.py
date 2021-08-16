@@ -341,7 +341,7 @@ def preprocessing_5(
 
 def preprocessing_6(
     kabkos,
-    batch_size=5,
+    batch_size=8,
     pin_memory=False
 ):
     for kabko in kabkos:
