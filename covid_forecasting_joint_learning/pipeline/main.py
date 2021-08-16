@@ -323,7 +323,10 @@ def preprocessing_5(
     stride=1,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
-    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"]
+    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
+    final_cols=DataCol.IRD,
+    # limit_past=True,
+    # val=True
 ):
     for kabko in kabkos:
         split_indices = kabko.split_indices[1], kabko.split_indices[3]
@@ -335,7 +338,21 @@ def preprocessing_5(
             past_size=past_size, future_size=future_size,
             val_start=val_start, test_start=test_start,
             stride=1,
-            past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols
+            past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
+            final_cols=final_cols,
+            limit_past=True,
+            val=True
+        )
+
+        kabko.datasets_2, _ = preprocessing.split_dataset(
+            kabko.data,
+            past_size=past_size, future_size=future_size,
+            val_start=val_start, test_start=test_start,
+            stride=1,
+            past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
+            final_cols=final_cols,
+            limit_past=False,
+            val=False
         )
 
 

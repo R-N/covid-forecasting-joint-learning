@@ -125,7 +125,8 @@ def generate_dataset(
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
-    final_cols=DataCol.IRD
+    final_cols=DataCol.IRD,
+    limit_past=True
 ):
     # if past_cols is not None:
     #     df = df[past_cols]
@@ -135,11 +136,14 @@ def generate_dataset(
 
     future_len = future_end - future_start
     count = (future_len - future_size + stride) // stride
-    ids = [i*stride for i in range(count)]
+    ids = [i * stride for i in range(count)]
 
     past_start_1, past_end_1 = future_start - past_size, future_start
     future_start_1, future_end_1 = future_start, future_start + future_size
-    past = [df.iloc[past_start_1 + i:past_end_1 + i] for i in ids]
+    if limit_past:
+        past = [df.iloc[past_start_1 + i:past_end_1 + i] for i in ids]
+    else:
+        past = [df.iloc[:past_end_1 + i] for i in ids]
     future = [df.iloc[future_start_1 + i:future_end_1 + i] for i in ids]
     final_seed = [x.iloc[-1] for x in past]
 
@@ -193,29 +197,14 @@ def split_dataset(
     stride=1,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
-    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"]
+    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
+    final_cols=DataCol.IRD,
+    limit_past=True,
+    val=True
 ):
     # if past_cols is not None:
     #     past_cols = list(set(past_cols + future_exo_cols + label_cols))
 
-    train_set, labels = generate_dataset(
-        df[:val_start],
-        future_start=None, future_end=val_start,
-        past_size=past_size, future_size=future_size,
-        stride=stride,
-        past_cols=past_cols,
-        label_cols=label_cols,
-        future_exo_cols=future_exo_cols
-    )
-    val_set, labels = generate_dataset(
-        df[:test_start],
-        future_start=val_start, future_end=test_start,
-        past_size=past_size, future_size=future_size,
-        stride=stride,
-        past_cols=past_cols,
-        label_cols=label_cols,
-        future_exo_cols=future_exo_cols
-    )
     test_set, labels = generate_dataset(
         df,
         future_start=test_start, future_end=None,
@@ -223,9 +212,47 @@ def split_dataset(
         stride=stride,
         past_cols=past_cols,
         label_cols=label_cols,
-        future_exo_cols=future_exo_cols
+        future_exo_cols=future_exo_cols,
+        final_cols=final_cols,
+        limit_past=limit_past
     )
-    return (train_set, val_set, test_set), labels
+    if val:
+        train_set, labels = generate_dataset(
+            df[:val_start],
+            future_start=None, future_end=val_start,
+            past_size=past_size, future_size=future_size,
+            stride=stride,
+            past_cols=past_cols,
+            label_cols=label_cols,
+            future_exo_cols=future_exo_cols,
+            final_cols=final_cols,
+            limit_past=limit_past
+        )
+        val_set, labels = generate_dataset(
+            df[:test_start],
+            future_start=val_start, future_end=test_start,
+            past_size=past_size, future_size=future_size,
+            stride=stride,
+            past_cols=past_cols,
+            label_cols=label_cols,
+            future_exo_cols=future_exo_cols,
+            final_cols=final_cols,
+            limit_past=limit_past
+        )
+        return (train_set, val_set, test_set), labels
+    else:
+        train_set, labels = generate_dataset(
+            df[:val_start],
+            future_start=None, future_end=test_start,
+            past_size=past_size, future_size=future_size,
+            stride=stride,
+            past_cols=past_cols,
+            label_cols=label_cols,
+            future_exo_cols=future_exo_cols,
+            final_cols=final_cols,
+            limit_past=limit_past
+        )
+        return (train_set, test_set), labels
 
 
 # Differencing
