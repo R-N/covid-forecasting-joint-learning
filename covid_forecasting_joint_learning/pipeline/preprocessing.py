@@ -299,7 +299,7 @@ def split_dataset(
     if val:
         return (train_set, val_set, test_set), labels
     else:
-        return (merge_dataset(train_set, val_set), test_set), labels
+        return (merge_dataset([train_set, val_set]), test_set), labels
 
 
 # Differencing
