@@ -474,6 +474,9 @@ class ObjectiveModel:
             "output_size": 3,
         }
 
+        self.sizes = sizes
+        self.model_kwargs = model_kwargs
+
         if debug:
             print(str_dict(sizes))
             print(str_dict(model_kwargs))
