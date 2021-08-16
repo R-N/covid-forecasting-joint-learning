@@ -129,16 +129,16 @@ class KabkoData:
             *_, sample = iter(self.dataloaders[0])
         else:
             sample = next(iter(self.dataloaders[0]))
-        return sample[:5]
+        return sample[:-1]
 
     def get_model_summary(self, sample_last=False):
-        return self.model.get_summary(self.get_batch_sample(last=sample_last))
+        return self.model.get_summary(self.get_batch_sample(last=sample_last)[:5])
 
     def write_model_graph(self, path, sample_last=False):
-        return self.model.write_graph(path, self.get_batch_sample(last=sample_last))
+        return self.model.write_graph(path, self.get_batch_sample(last=sample_last)[:5])
 
     def get_input_weight(self, *args, sample_last=False, **kwargs):
-        return self.model.get_input_weight(self.get_batch_sample(last=sample_last), *args, **kwargs)
+        return self.model.get_input_weight(self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)
 
     def get_layer_weight(self, layer, *args, sample_last=False, **kwargs):
-        return self.model.get_layer_weight(layer, self.get_batch_sample(last=sample_last), *args, **kwargs)
+        return self.model.get_layer_weight(layer, self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)

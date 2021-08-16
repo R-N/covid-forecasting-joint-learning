@@ -324,7 +324,7 @@ def preprocessing_5(
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
-    final_cols=DataCol.IRD,
+    final_cols=DataCol.SIRD,
     # limit_past=True,
     # val=True
 ):
@@ -341,10 +341,11 @@ def preprocessing_5(
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
             final_cols=final_cols,
             limit_past=True,
-            val=True
+            val=True,
+            labeling=preprocessing.label_dataset_0
         )
 
-        kabko.datasets_2, _ = preprocessing.split_dataset(
+        kabko.datasets_1, kabko.dataset_labels_1 = preprocessing.split_dataset(
             kabko.data,
             past_size=past_size, future_size=future_size,
             val_start=val_start, test_start=test_start,
@@ -352,7 +353,20 @@ def preprocessing_5(
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
             final_cols=final_cols,
             limit_past=False,
-            val=False
+            val=False,
+            labeling=preprocessing.label_dataset_1
+        )
+
+        kabko.datasets_2, kabko.dataset_labels_2 = preprocessing.split_dataset(
+            kabko.data,
+            past_size=past_size, future_size=future_size,
+            val_start=val_start, test_start=test_start,
+            stride=1,
+            past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
+            final_cols=final_cols,
+            limit_past=False,
+            val=False,
+            labeling=preprocessing.label_dataset_2
         )
 
 
@@ -364,14 +378,14 @@ def preprocessing_6(
     for kabko in kabkos:
         kabko.datasets_torch = [[
             tuple(
-                torch.Tensor(sample[i]) for i in range(5)
+                torch.Tensor(sample[i]) for i in range(7)
             ) for sample in dataset
         ] for dataset in kabko.datasets]
 
         def collate_fn(samples):
             samples_1 = tuple(torch.stack(
                 [sample[i] for sample in samples]
-            ).detach() for i in range(5))
+            ).detach() for i in range(7))
             samples_1 = samples_1 + (kabko,)
             return samples_1
 
