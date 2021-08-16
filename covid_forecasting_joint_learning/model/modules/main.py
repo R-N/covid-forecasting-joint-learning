@@ -7,7 +7,8 @@ from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
-from ..attr import calc_input_attr, calc_layer_attr
+from . import attr as Attribution
+from contextlib import suppress
 
 
 class RepresentationModel(nn.Module):
@@ -451,13 +452,13 @@ class SingleModel(nn.Module):
         self.private_head_future_cell.requires_grad_(not freeze)
         self.post_future_model.freeze_shared(freeze)
 
-    def get_summary(self, batch):
-        return summary(self, input_data=batch)
+    def get_summary(self, sample):
+        return summary(self, input_data=sample)
 
-    def write_graph(self, path, batch):
+    def write_graph(self, path, sample):
         self.summary_writer = SummaryWriter(path)
         self.eval()
-        self.summary_writer.add_graph(self, input_to_model=batch)
+        self.summary_writer.add_graph(self, input_to_model=sample)
         self.summary_writer.close()
 
     def __weight_kwargs_default(self, kwargs):
@@ -469,12 +470,35 @@ class SingleModel(nn.Module):
             kwargs["use_seed"] = self.representation_future_model is not None
         return kwargs
 
-    def get_input_attr(self, batch, *args, **kwargs):
+    def get_input_attr(self, sample, *args, **kwargs):
         kwargs = self.__weight_kwargs_default(kwargs)
-        return calc_input_attr(self, batch, *args, **kwargs)
+        return Attribution.calc_input_attr(self, sample, *args, **kwargs)
 
-    def get_layer_attr(self, layer, batch, *args, **kwargs):
+    def get_layer_attr(self, layer, sample, *args, **kwargs):
         if not layer:
             return None
         kwargs = self.__weight_kwargs_default(kwargs)
-        return calc_layer_attr(self, layer, batch, *args, **kwargs)
+        return Attribution.calc_layer_attr(self, layer, sample, *args, **kwargs)
+
+    def get_aggregate_layer_attr(self, sample):
+        layer_attrs = {}
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.private_representation"] = Attribution.get_layer_attr(self.past_model.representation_model.private_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.shared_representation"] = Attribution.get_layer_attr(self.past_model.representation_model.shared_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.private_head"] = Attribution.get_layer_attr(self.past_model.private_head, sample, labels=["hx", "cx"])
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.shared_head"] = Attribution.get_layer_attr(self.past_model.shared_head, sample, labels=["hx", "cx"])
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model"] = Attribution.get_layer_attr(self.past_model, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.private_representation"] = Attribution.get_layer_attr(self.representation_future_model.private_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.shared_representation"] = Attribution.get_layer_attr(self.representation_future_model.shared_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.private_head"] = Attribution.get_layer_attr(self.private_head_future_cell, sample, labels=["cx", "hx"])
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.shared_head"] = Attribution.get_layer_attr(self.shared_head_future_cell, sample, labels=["cx", "hx"])
+        layer_attrs = Attribution.aggregate_layer_attr(layer_attrs)
+        return layer_attrs

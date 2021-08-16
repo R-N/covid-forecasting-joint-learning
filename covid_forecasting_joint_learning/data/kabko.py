@@ -1,7 +1,5 @@
 from . import util as DataUtil
 from . import cols as DataCol
-from contextlib import suppress
-from ..model import Attribution
 
 
 class KabkoData:
@@ -153,26 +151,7 @@ class KabkoData:
         sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
         return self.model.get_layer_attr(layer, sample, *args, **kwargs)
 
-    def get_aggregate_layer_attr(self, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
+    def get_aggregate_layer_attr(self, sample=None, sample_last=False, sample_single=True):
         sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
-        layer_attrs = {}
-        with suppress(KeyError, TypeError):
-            layer_attrs["past_model.private_representation"] = self.get_layer_attr(self.model.past_model.representation_model.private_representation, sample)
-        with suppress(KeyError, TypeError):
-            layer_attrs["past_model.shared_representation"] = self.get_layer_attr(self.model.past_model.representation_model.shared_representation, sample)
-        with suppress(KeyError, TypeError):
-            layer_attrs["past_model.private_head"] = self.get_layer_attr(self.model.past_model.private_head, sample, labels=["hx", "cx"])
-        with suppress(KeyError, TypeError):
-            layer_attrs["past_model.shared_head"] = self.get_layer_attr(self.model.past_model.shared_head, sample, labels=["hx", "cx"])
-        with suppress(KeyError, TypeError):
-            layer_attrs["past_model"] = self.get_layer_attr(self.model.past_model, sample)
-        with suppress(KeyError, TypeError):
-            layer_attrs["future_model.private_representation"] = self.get_layer_attr(self.model.representation_future_model.private_representation, sample)
-        with suppress(KeyError, TypeError):
-            layer_attrs["future_model.shared_representation"] = self.get_layer_attr(self.model.representation_future_model.shared_representation, sample)
-        with suppress(KeyError, TypeError):
-            layer_attrs["future_model.private_head"] = self.get_layer_attr(self.model.private_head_future_cell, sample, labels=["cx", "hx"])
-        with suppress(KeyError, TypeError):
-            layer_attrs["future_model.shared_head"] = self.get_layer_attr(self.model.shared_head_future_cell, sample, labels=["cx", "hx"])
-        layer_attrs = Attribution.aggregate_layer_attr(layer_attrs)
+        layer_attrs = self.model.get_aggregate_layer_attr(sample)
         return layer_attrs
