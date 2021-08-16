@@ -158,7 +158,7 @@ def label_dataset_0(
     if past_cols is not None:
         past = [x[past_cols] for x in past]
     else:
-        past_cols = past.columns
+        past_cols = past[0].columns
     future_final = [x[final_cols].to_numpy() for x in future]
     final_seed = [x[final_cols].to_numpy() for x in final_seed]
     past = [x.to_numpy() for x in past]
