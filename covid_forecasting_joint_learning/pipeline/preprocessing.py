@@ -265,39 +265,39 @@ def split_dataset(
             df[:val_start],
             future_start=None, future_end=val_start,
             past_size=past_size, future_size=future_size,
-            stride=stride
+            stride=stride,
+            limit_past=limit_past
         ),
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
-        final_cols=final_cols,
-        limit_past=limit_past
+        final_cols=final_cols
     )
     val_set, labels = labeling(
         *slice_dataset(
             df[:test_start],
             future_start=val_start, future_end=test_start,
             past_size=past_size, future_size=future_size,
-            stride=stride
+            stride=stride,
+            limit_past=limit_past
         ),
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
-        final_cols=final_cols,
-        limit_past=limit_past
+        final_cols=final_cols
     )
     test_set, labels = labeling(
         *slice_dataset(
             df,
             future_start=test_start, future_end=None,
             past_size=past_size, future_size=future_size,
-            stride=stride
+            stride=stride,
+            limit_past=limit_past
         ),
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
-        final_cols=final_cols,
-        limit_past=limit_past
+        final_cols=final_cols
     )
     if val:
         return (train_set, val_set, test_set), labels
