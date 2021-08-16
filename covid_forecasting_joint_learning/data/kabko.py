@@ -1,6 +1,5 @@
 from . import util as DataUtil
 from . import cols as DataCol
-from ..model.util import single_batch
 from contextlib import suppress
 from ..model import Attribution
 
@@ -134,7 +133,7 @@ class KabkoData:
             sample = next(iter(self.dataloaders[0]))
         sample = sample[:-1]
         if single:
-            return single_batch(sample)
+            return DataUtil.single_batch(sample)
         else:
             return sample
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from . import cols as DataCol
+import torch
 
 
 def mkparent(path):
@@ -54,3 +55,6 @@ def right_slice(
 ):
     return left[right.first_valid_index():right.last_valid_index()]
 
+
+def single_batch(t):
+    return torch.stack([t[0]])
