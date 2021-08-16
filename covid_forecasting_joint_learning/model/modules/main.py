@@ -7,7 +7,7 @@ from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
-from ..attr import calc_input_weight, calc_layer_weight
+from ..attr import calc_input_attr, calc_layer_attr
 
 
 class RepresentationModel(nn.Module):
@@ -469,12 +469,12 @@ class SingleModel(nn.Module):
             kwargs["use_seed"] = self.representation_future_model is not None
         return kwargs
 
-    def get_input_weight(self, batch, *args, **kwargs):
+    def get_input_attr(self, batch, *args, **kwargs):
         kwargs = self.__weight_kwargs_default(kwargs)
-        return calc_input_weight(self, batch, *args, **kwargs)
+        return calc_input_attr(self, batch, *args, **kwargs)
 
-    def get_layer_weight(self, layer, batch, *args, **kwargs):
+    def get_layer_attr(self, layer, batch, *args, **kwargs):
         if not layer:
             return None
         kwargs = self.__weight_kwargs_default(kwargs)
-        return calc_layer_weight(self, layer, batch, *args, **kwargs)
+        return calc_layer_attr(self, layer, batch, *args, **kwargs)

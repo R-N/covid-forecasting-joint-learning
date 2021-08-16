@@ -97,7 +97,7 @@ def __prepare_model(
         model = wrap_sum(model)
     return model
 
-def __calc_weight(
+def __calc_attr(
     method,
     batch,
     teacher_forcing=True,
@@ -115,7 +115,7 @@ def __calc_weight(
         attr = list(zip(*attr))
     return attr
 
-def calc_input_weight(
+def calc_input_attr(
     model,
     batch,
     method=Saliency,
@@ -133,7 +133,7 @@ def calc_input_weight(
         single=single
     )
     method = method(model)
-    attr = __calc_weight(
+    attr = __calc_attr(
         method,
         batch,
         teacher_forcing=teacher_forcing,
@@ -146,7 +146,7 @@ def calc_input_weight(
     return dict(zip(labels, attr))
 
 
-def calc_layer_weight(
+def calc_layer_attr(
     model,
     layer,
     batch,
@@ -166,7 +166,7 @@ def calc_layer_weight(
         single=single
     )
     method = method(model, layer)
-    attr = __calc_weight(
+    attr = __calc_attr(
         method,
         batch,
         teacher_forcing=teacher_forcing,
@@ -196,7 +196,17 @@ def label_input_attr(attr, labels, full_label=None):
     return values_dict, full_label
 
 
+def aggregate_layer_attr(attrs, labels=None):
+    labels = sorted(attrs.keys()) if labels is None else labels
+    aggregate_attr = tuple(sum([sum(x) for x in attrs[k].values()]) for k in labels)
+    return aggregate_attr, labels
+
+
 def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.6, rotation=90, fmt="%.2g"):
+    legend = True
+    if not isinstance(labeled_attr, dict):
+        labeled_attr = {"Model": labeled_attr}
+        legend = False
 
     if full_label is None:
         x = np.arange(len(next(iter(labeled_attr.values()))))
@@ -207,7 +217,8 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     fig, ax = plt.subplots(1, 1)
 
     prev = None
-    for k, v in labeled_attr.items():
+    for k in sorted(labeled_attr.keys()):
+        v = labeled_attr[k]
         p1 = ax.bar(x, v, width=width, bottom=prev, label=k)
         texts = ax.bar_label(p1, fmt=fmt, label_type='center', rotation=rotation)
         for t in texts:
@@ -222,6 +233,7 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     ax.set_title(title)
     ax.set_xticks(x)
     ax.set_xticklabels(full_label, rotation=rotation, verticalalignment="top", horizontalalignment="center", y=-0.1)
-    ax.legend(loc="best")
+    if legend:
+        ax.legend(loc="best")
 
     return fig

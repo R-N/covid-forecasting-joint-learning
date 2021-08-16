@@ -137,8 +137,8 @@ class KabkoData:
     def write_model_graph(self, path, sample_last=False):
         return self.model.write_graph(path, self.get_batch_sample(last=sample_last)[:5])
 
-    def get_input_weight(self, *args, sample_last=False, **kwargs):
-        return self.model.get_input_weight(self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)
+    def get_input_attr(self, *args, sample_last=False, **kwargs):
+        return self.model.get_input_attr(self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)
 
-    def get_layer_weight(self, layer, *args, sample_last=False, **kwargs):
-        return self.model.get_layer_weight(layer, self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)
+    def get_layer_attr(self, layer, *args, sample_last=False, **kwargs):
+        return self.model.get_layer_attr(layer, self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)
