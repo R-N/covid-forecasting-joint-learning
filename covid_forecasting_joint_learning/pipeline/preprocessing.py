@@ -5,6 +5,7 @@ from . import sird
 # Only imported shamelessly
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from ..data import cols as DataCol
+import itertools
 
 
 # Zero handling
@@ -30,7 +31,7 @@ def fill_zero(
         *DataCol.VAC_ALL,
         DataCol.I_TOT_GLOBAL,
         DataCol.TEST
-    ], 
+    ],
     method="linear"
 ):
     df = df.copy()
@@ -238,7 +239,7 @@ def label_dataset_2(
 
 
 def merge_dataset(datasets):
-    return tuple(np.concatenate([dataset[i] for dataset in datasets]) for i in range(len(datasets[0])))
+    return list(itertools.chain.from_iterable(datasets))
 
 
 def split_dataset(
