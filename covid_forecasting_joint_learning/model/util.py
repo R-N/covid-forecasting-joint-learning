@@ -106,3 +106,7 @@ def union_lists(lists):
 
 def multi_index_dict(d, index):
     return [d[i] for i in index]
+
+
+def single_batch(t):
+    return torch.stack([t[0]])

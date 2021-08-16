@@ -1,5 +1,8 @@
 from . import util as DataUtil
 from . import cols as DataCol
+from ..model.util import single_batch
+from contextlib import suppress
+from ..model import Attribution
 
 
 class KabkoData:
@@ -124,21 +127,53 @@ class KabkoData:
 
         return df
 
-    def get_batch_sample(self, last=False):
+    def get_batch_sample(self, last=False, single=True):
         if last:
             *_, sample = iter(self.dataloaders[0])
         else:
             sample = next(iter(self.dataloaders[0]))
-        return sample[:-1]
+        sample = sample[:-1]
+        if single:
+            return single_batch(sample)
+        else:
+            return sample
 
-    def get_model_summary(self, sample_last=False):
-        return self.model.get_summary(self.get_batch_sample(last=sample_last)[:5])
+    def get_model_summary(self, sample=None, sample_last=False, sample_single=True):
+        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+        return self.model.get_summary(sample)
 
-    def write_model_graph(self, path, sample_last=False):
-        return self.model.write_graph(path, self.get_batch_sample(last=sample_last)[:5])
+    def write_model_graph(self, path, sample=None, sample_last=False, sample_single=True):
+        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+        return self.model.write_graph(path, sample)
 
-    def get_input_attr(self, *args, sample_last=False, **kwargs):
-        return self.model.get_input_attr(self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)
+    def get_input_attr(self, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
+        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+        return self.model.get_input_attr(sample, *args, **kwargs)
 
-    def get_layer_attr(self, layer, *args, sample_last=False, **kwargs):
-        return self.model.get_layer_attr(layer, self.get_batch_sample(last=sample_last)[:5], *args, **kwargs)
+    def get_layer_attr(self, layer, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
+        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+        return self.model.get_layer_attr(layer, sample, *args, **kwargs)
+
+    def get_aggregate_layer_attr(self, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
+        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+        layer_attrs = {}
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.private_representation"] = self.get_layer_attr(self.model.past_model.representation_model.private_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.shared_representation"] = self.get_layer_attr(self.model.past_model.representation_model.shared_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.private_head"] = self.get_layer_attr(self.model.past_model.private_head, sample, labels=["hx", "cx"])
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model.shared_head"] = self.get_layer_attr(self.model.past_model.shared_head, sample, labels=["hx", "cx"])
+        with suppress(KeyError, TypeError):
+            layer_attrs["past_model"] = self.get_layer_attr(self.model.past_model, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.private_representation"] = self.get_layer_attr(self.model.representation_future_model.private_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.shared_representation"] = self.get_layer_attr(self.model.representation_future_model.shared_representation, sample)
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.private_head"] = self.get_layer_attr(self.model.private_head_future_cell, sample, labels=["cx", "hx"])
+        with suppress(KeyError, TypeError):
+            layer_attrs["future_model.shared_head"] = self.get_layer_attr(self.model.shared_head_future_cell, sample, labels=["cx", "hx"])
+        layer_attrs = Attribution.aggregate_layer_attr(layer_attrs)
+        return layer_attrs

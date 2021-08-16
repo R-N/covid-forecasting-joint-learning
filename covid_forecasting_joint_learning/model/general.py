@@ -9,6 +9,7 @@ import datetime
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import OneCycleLR
 from torch.optim import AdamW
+from contextlib import suppress
 
 
 class SourcePick:
@@ -83,76 +84,46 @@ class ClusterModel:
         self.shared_model = SingleModel(**sizes, **model_kwargs)
 
         if self.shared_mode == SharedMode.SHARED:
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["past_model"]["representation_model"]["shared_representation"] =\
                     self.shared_model.past_model.representation_model.shared_representation
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["past_model"]["shared_head"] =\
                     self.shared_model.past_model.shared_head
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["representation_future_model"]["shared_representation"] =\
                     self.shared_model.representation_future_model.shared_representation
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["shared_head_future_cell"] =\
                     self.shared_model.shared_head_future_cell
-            except (KeyError, TypeError):
-                pass
-
         if self.private_mode == SharedMode.SHARED:
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["past_model"]["representation_model"]["private_representation"] =\
                     self.shared_model.past_model.representation_model.private_representation
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["past_model"]["representation_model"]["pre_shared_representation"] =\
                     self.shared_model.past_model.representation_model.pre_shared_representation
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["past_model"]["representation_model"]["combine_representation"] =\
                     self.shared_model.past_model.representation_model.combine_representation
-            except (KeyError, TypeError):
-                pass
-
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["past_model"]["private_head"] =\
                     self.shared_model.past_model.private_head
-            except (KeyError, TypeError):
-                pass
-
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["representation_future_model"]["private_representation"] =\
                     self.shared_model.representation_future_model.private_representation
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["representation_future_model"]["pre_shared_representation"] =\
                     self.shared_model.representation_future_model.pre_shared_representation
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["representation_future_model"]["combine_representation"] =\
                     self.shared_model.representation_future_model.combine_representation
-            except (KeyError, TypeError):
-                pass
-
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["private_head_future_cell"] =\
                     self.shared_model.private_head_future_cell
-            except (KeyError, TypeError):
-                pass
-            try:
+            with suppress(KeyError, TypeError):
                 model_kwargs["post_future_model"] =\
                     self.shared_model.post_future_model
-            except (KeyError, TypeError):
-                pass
 
         for k in self.members:
             k.model = SingleModel(**sizes, **model_kwargs)
@@ -232,6 +203,9 @@ class ClusterModel:
 
     def get_target_input_attr(self, *args, **kwargs):
         return self.target.get_input_attr(*args, **kwargs)
+
+    def get_target_aggregate_layer_attr(self, *args, **kwargs):
+        return self.target.get_aggregate_layer_attr(*args, **kwargs)
 
 
 class ObjectiveModel:
@@ -563,3 +537,6 @@ class ObjectiveModel:
 
     def get_target_input_attr(self, *args, **kwargs):
         return self.model.get_target_input_attr(*args, **kwargs)
+
+    def get_target_aggregate_layer_attr(self, *args, **kwargs):
+        return self.target.get_target_aggregate_layer_attr(*args, **kwargs)

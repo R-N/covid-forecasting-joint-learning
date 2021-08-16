@@ -58,10 +58,8 @@ def postprocess_result(tup):
         tup = (tup,)
     ret = detach_tuple(tup)
     # ret = tuple(t[0] for t in ret)
-    if ret[0].dim() == 3:
-        ret = tuple(torch.sum(t, dim=1) for t in ret)
-    if ret[0].dim() == 2:
-        ret = tuple(torch.sum(t, dim=0) / t.size(0) for t in ret)
+    while ret[0].dim() > 1:
+        ret = tuple(torch.sum(t, dim=0) for t in ret)
     ret = tuple(x.detach().numpy() for x in ret)
     return ret
 
@@ -77,9 +75,6 @@ def prepare_batch(batch):
         t.grad = None
         t.requires_grad_()
     return batch
-
-def single_batch(t):
-    return torch.stack([t[0]])
 
 def __prepare_model(
     model,
@@ -196,10 +191,15 @@ def label_input_attr(attr, labels, full_label=None):
     return values_dict, full_label
 
 
-def aggregate_layer_attr(attrs, labels=None):
+def aggregate_layer_attr(attrs):
+    aggregate_attr = {k: sum([sum(x) for x in v]) for k, v in attrs}
+    return aggregate_attr
+
+
+def label_layer_attr(attrs, labels=None):
     labels = sorted(attrs.keys()) if labels is None else labels
-    aggregate_attr = tuple(sum([sum(x) for x in attrs[k].values()]) for k in labels)
-    return aggregate_attr, labels
+    attrs = tuple(attrs[k] for k in labels)
+    return attrs, labels
 
 
 def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.6, rotation=90, fmt="%.2g"):
