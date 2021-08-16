@@ -389,11 +389,15 @@ def preprocessing_6(
             samples_1 = samples_1 + (kabko,)
             return samples_1
 
+        dataset_count = len(kabko.datasets_torch)
+        last = dataset_count - 1
+        test_size = len(kabko.datasets_torch[last])
+
         kabko.dataloaders = [DataLoader(
-            dataset,
-            batch_size=batch_size,
-            shuffle=True,
+            kabko.datasets_torch[i],
+            batch_size=batch_size if i != last else test_size,
+            shuffle=True if i != last else False,
             collate_fn=collate_fn,
             num_workers=0,
             pin_memory=pin_memory
-        ) for dataset in kabko.datasets_torch]
+        ) for i in range()]
