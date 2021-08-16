@@ -131,7 +131,7 @@ class KabkoData:
             sample = next(iter(self.dataloaders[0]))
         sample = sample[:-1]
         if single:
-            return DataUtil.single_batch(sample)
+            return tuple(DataUtil.single_batch(s) for s in sample)
         else:
             return sample
 
