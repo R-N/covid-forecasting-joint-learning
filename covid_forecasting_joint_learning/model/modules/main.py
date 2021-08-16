@@ -7,7 +7,7 @@ from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
-from . import attr as Attribution
+from .. import attr as Attribution
 from contextlib import suppress
 
 
