@@ -568,7 +568,7 @@ class ObjectiveModel:
         plt.close(input_fig)
 
         layer_attrs = self.model.target.get_aggregate_layer_attr()
-        layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs))
+        layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs), title="Layer importance")
         layer_fig.savefig(model_dir + "layer_attr.jpg", bbox_inches="tight")
         plt.close(layer_fig)
 
