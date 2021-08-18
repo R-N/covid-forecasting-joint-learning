@@ -4,12 +4,15 @@ from .modules.representation import check_conv_kwargs
 from .modules.main import SingleModel
 from .train import train, test
 from ..pipeline.main import preprocessing_5, preprocessing_6
-from .util import str_dict
 import datetime
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import OneCycleLR
 from torch.optim import AdamW
 from contextlib import suppress
+from pathlib import Path
+from . import attr as Attribution
+from . import util as ModelUtil
+from ..data import util as DataUtil
 
 
 class SourcePick:
@@ -262,6 +265,7 @@ class ObjectiveModel:
         grad_scaler=None,
         trial_id=None,
         log_dir=None,
+        model_dir=None,
         debug=False,
         min_epochs=50
     ):
@@ -452,8 +456,8 @@ class ObjectiveModel:
         self.model_kwargs = model_kwargs
 
         if debug:
-            print(str_dict(sizes))
-            print(str_dict(model_kwargs))
+            print(ModelUtil.str_dict(sizes))
+            print(ModelUtil.str_dict(model_kwargs))
 
         self.model = ClusterModel(
             cluster,
@@ -483,11 +487,19 @@ class ObjectiveModel:
             if not log_dir.endswith("/"):
                 log_dir = log_dir + "/"
             log_dir = log_dir + str(self.trial_id)
+            Path(self.log_dir).mkdir(parents=True, exist_ok=True)
         self.log_dir = log_dir
 
         if self.log_dir:
             self.train_summary_writer = SummaryWriter(self.log_dir + '/train')
             self.val_summary_writer = SummaryWriter(self.log_dir + '/val')
+
+        if isinstance(model_dir, str):
+            if not model_dir.endswith("/"):
+                model_dir = model_dir + "/"
+            model_dir = model_dir + f"{self.trial_id}/{self.cluster.group.id}/{self.cluster.id}/"
+            Path(self.model_dir).mkdir(parents=True, exist_ok=True)
+        self.model_dir = model_dir
 
         self.train_epoch = 0
         self.val_epoch = 0
@@ -540,3 +552,23 @@ class ObjectiveModel:
 
     def get_target_aggregate_layer_attr(self, *args, **kwargs):
         return self.target.get_target_aggregate_layer_attr(*args, **kwargs)
+
+    def save_model(self, model_dir=None):
+        model_dir = model_dir or self.model_dir
+        if not model_dir:
+            raise ValueError("Please provide or set model_dir")
+
+        torch.save(self.model.models.state_dict(), model_dir + "models.pt")
+        torch.save(self.model.target.model.state_dict(), model_dir + "target.pt")
+
+        input_attr = self.model.target.get_input_attr()
+        input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, self.model.target.dataset_labels))
+        input_fig.savefig(model_dir + "input_attr.png")
+
+        layer_attrs = self.model.target.get_aggregate_layer_attr()
+        layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs))
+        layer_fig.savefig(model_dir + "layer_attr.png")
+
+        DataUtil.write_string(str(self.get_target_model_summary()), model_dir + "target_model_summary.txt")
+        DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
+        DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
