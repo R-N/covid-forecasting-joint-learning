@@ -124,14 +124,14 @@ class KabkoData:
 
         return df
 
-    def get_batch_sample(self, last=False, single=True):
+    def get_batch_sample(self, last=False, single=True, tensor_count=7):
         if last:
             *_, sample = iter(self.dataloaders[0])
         else:
             sample = next(iter(self.dataloaders[0]))
         sample = sample[:-1]
         if single:
-            return tuple(DataUtil.single_batch(s) for s in sample)
+            return tuple(DataUtil.single_batch(sample[i]) if i < tensor_count else sample[i] for i in range(len(sample)))
         else:
             return sample
 
