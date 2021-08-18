@@ -563,11 +563,11 @@ class ObjectiveModel:
 
         input_attr = self.model.target.get_input_attr()
         input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, self.model.target.dataset_labels))
-        input_fig.savefig(model_dir + "input_attr.png")
+        input_fig.savefig(model_dir + "input_attr.jpg")
 
         layer_attrs = self.model.target.get_aggregate_layer_attr()
         layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs))
-        layer_fig.savefig(model_dir + "layer_attr.png")
+        layer_fig.savefig(model_dir + "layer_attr.jpg")
 
         DataUtil.write_string(str(self.get_target_model_summary()), model_dir + "target_model_summary.txt")
         DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
