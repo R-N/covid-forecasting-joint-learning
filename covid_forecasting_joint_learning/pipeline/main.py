@@ -374,7 +374,8 @@ def preprocessing_5(
 def preprocessing_6(
     kabkos,
     batch_size=8,
-    pin_memory=False
+    pin_memory=False,
+    shuffle=True
 ):
     for kabko in kabkos:
         kabko.datasets_torch = [[
@@ -397,7 +398,7 @@ def preprocessing_6(
         kabko.dataloaders = [DataLoader(
             kabko.datasets_torch[i],
             batch_size=batch_size if i != last else test_size,
-            shuffle=True if i != last else False,
+            shuffle=shuffle if i != last else False,
             collate_fn=collate_fn,
             num_workers=0,
             pin_memory=pin_memory
