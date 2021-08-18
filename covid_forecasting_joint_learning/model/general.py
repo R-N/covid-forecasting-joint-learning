@@ -487,7 +487,7 @@ class ObjectiveModel:
             if not log_dir.endswith("/"):
                 log_dir = log_dir + "/"
             log_dir = log_dir + str(self.trial_id)
-            Path(self.log_dir).mkdir(parents=True, exist_ok=True)
+            Path(log_dir).mkdir(parents=True, exist_ok=True)
         self.log_dir = log_dir
 
         if self.log_dir:
@@ -498,7 +498,7 @@ class ObjectiveModel:
             if not model_dir.endswith("/"):
                 model_dir = model_dir + "/"
             model_dir = model_dir + f"{self.trial_id}/{self.cluster.group.id}/{self.cluster.id}/"
-            Path(self.model_dir).mkdir(parents=True, exist_ok=True)
+            Path(model_dir).mkdir(parents=True, exist_ok=True)
         self.model_dir = model_dir
 
         self.train_epoch = 0
