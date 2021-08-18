@@ -11,10 +11,21 @@ import itertools
 # Zero handling
 def trim_zero(df, labels=DataCol.IRD):
     non_zero = df[labels] if labels is not None else df
-    non_zero = (non_zero != 0).any(1)
-    non_zero = df[non_zero]
+    non_zero = df[(non_zero != 0).any(1)]
     df = df[non_zero.first_valid_index():non_zero.last_valid_index()].copy()
     return df
+
+
+def trim_zero_crit(df, labels=DataCol.IRD, crit_labels=[DataCol.I]):
+    non_crit = [x for x in labels if x not in crit_labels]
+    non_crit = df[non_crit]
+    non_zero_non_crit = non_crit[(non_crit != 0).any(1)]
+    non_zero_non_crit = df[non_zero_non_crit.first_valid_index():non_zero_non_crit.last_valid_index()]
+
+    crit = non_zero_non_crit[crit_labels]
+    zero_crit = crit[(crit == 0).any(1)]
+    non_zero_crit = df[zero_crit.last_valid_index() + np.timedelta64(1, "D"):].copy()
+    return non_zero_crit
 
 
 def zero_to_nan(series):

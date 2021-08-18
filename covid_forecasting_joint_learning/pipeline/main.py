@@ -42,10 +42,20 @@ def preprocessing_0(
         ]
     )
     data_center.raw_global = sird.calc_s_global(data_center.raw_global, data_center.population_global)
+    data_center.raw_global = preprocessing.trim_zero_crit(
+        data_center.raw_global,
+        labels=[DataCol.I_TOT_GLOBAL],
+        crit_labels=[DataCol.S_GLOBAL_PEOPLE, DataCol.S_GLOBAL_FULL]
+    )
     data_center.raw_global.dropna(inplace=True)
     df_shifted = data_center.raw_global.shift()
     delta = data_center.raw_global.copy()
     delta = sird.calc_delta_global(delta, df_shifted)
+    delta = preprocessing.trim_zero_crit(
+        delta,
+        labels=[DataCol.I_TOT_GLOBAL],
+        crit_labels=[DataCol.DELTA_TEST]
+    )
     data_center.data_global = delta
     data_center.data_global = sird.calc_vars_global(data_center.data_global, df_shifted)
     data_center.data_global.dropna(inplace=True)
@@ -67,6 +77,7 @@ def __preprocessing_1(
         DataCol.I_TOT_GLOBAL,
         DataCol.TEST
     ],
+    crit_labels=[DataCol.I],
     interpolation_method="linear"
 ):
     k.raw = k.covid.copy()
@@ -76,6 +87,11 @@ def __preprocessing_1(
         trim_labels=trim_labels,
         fill_labels=fill_labels,
         interpolation_method=interpolation_method
+    )
+    k.raw = preprocessing.trim_zero_crit(
+        k.raw,
+        labels=trim_labels,
+        crit_labels=crit_labels
     )
     k.raw = sird.calc_s(k.raw, k.population)
     k.raw.dropna(inplace=True)
