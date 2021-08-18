@@ -24,8 +24,9 @@ def trim_zero_crit(df, labels=DataCol.IRD, crit_labels=[DataCol.I]):
 
     crit = non_zero_non_crit[crit_labels]
     zero_crit = crit[(crit == 0).any(1)]
-    non_zero_crit = df[zero_crit.last_valid_index() + np.timedelta64(1, "D"):].copy()
-    return non_zero_crit
+    if len(zero_crit > 0):
+        df = df[zero_crit.last_valid_index() + np.timedelta64(1, "D"):].copy()
+    return df
 
 
 def zero_to_nan(series):
