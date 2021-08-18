@@ -149,7 +149,8 @@ def label_dataset_0(
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
-    final_cols=DataCol.SIRD
+    final_seed_cols=DataCol.SIRD,
+    final_cols=DataCol.IRD
 ):
     final_seed = [x.iloc[-1] for x in past]
 
@@ -161,7 +162,7 @@ def label_dataset_0(
     else:
         past_cols = past[0].columns
     future_final = [x[final_cols].to_numpy() for x in future]
-    final_seed = [x[final_cols].to_numpy() for x in final_seed]
+    final_seed = [x[final_seed_cols].to_numpy() for x in final_seed]
     past = [x.to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
@@ -181,7 +182,7 @@ def label_dataset_0(
         future_exo_cols,
         label_cols,
         future_exo_cols,
-        final_cols,
+        final_seed_cols,
         final_cols
     ]
 
@@ -190,7 +191,7 @@ def label_dataset_0(
 
 def label_dataset_1(
     past, future,
-    label_cols=DataCol.SIRD_VARS,
+    label_cols=DataCol.SIRD,
     **kwargs
 ):
     past = [x[label_cols].to_numpy() for x in past]
@@ -211,13 +212,14 @@ def label_dataset_1(
 def label_dataset_2(
     past, future,
     label_cols=DataCol.SIRD_VARS,
-    final_cols=DataCol.SIRD,
+    final_seed_cols=DataCol.SIRD,
+    final_cols=DataCol.IRD,
     **kwargs
 ):
     final_seed = [x.iloc[-1] for x in past]
 
+    final_seed = [x[final_seed_cols].to_numpy() for x in final_seed]
     future_final = [x[final_cols].to_numpy() for x in future]
-    final_seed = [x[final_cols].to_numpy() for x in final_seed]
     past = [x[label_cols].to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
@@ -231,7 +233,7 @@ def label_dataset_2(
     labels = [
         label_cols,
         label_cols,
-        final_cols,
+        final_seed_cols,
         final_cols
     ]
 
@@ -250,7 +252,8 @@ def split_dataset(
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
-    final_cols=DataCol.SIRD,
+    final_seed_cols=DataCol.SIRD,
+    final_cols=DataCol.IRD,
     limit_past=True,
     val=True,
     labeling=label_dataset_0
@@ -269,7 +272,7 @@ def split_dataset(
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
-        final_cols=final_cols
+        final_seed_cols=final_seed_cols, final_cols=final_cols
     )
     val_set, labels = labeling(
         *slice_dataset(
@@ -282,7 +285,7 @@ def split_dataset(
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
-        final_cols=final_cols
+        final_seed_cols=final_seed_cols, final_cols=final_cols
     )
     test_set, labels = labeling(
         *slice_dataset(
@@ -295,7 +298,7 @@ def split_dataset(
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
-        final_cols=final_cols
+        final_seed_cols=final_seed_cols, final_cols=final_cols
     )
     if val:
         return (train_set, val_set, test_set), labels

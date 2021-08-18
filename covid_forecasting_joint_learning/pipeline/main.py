@@ -324,7 +324,8 @@ def preprocessing_5(
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
-    final_cols=DataCol.SIRD,
+    final_seed_cols=DataCol.SIRD,
+    final_cols=DataCol.IRD,
     # limit_past=True,
     # val=True
 ):
@@ -339,7 +340,7 @@ def preprocessing_5(
             val_start=val_start, test_start=test_start,
             stride=1,
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
-            final_cols=final_cols,
+            final_seed_cols=final_seed_cols, final_cols=final_cols,
             limit_past=True,
             val=True,
             labeling=preprocessing.label_dataset_0
@@ -351,7 +352,7 @@ def preprocessing_5(
             val_start=val_start, test_start=test_start,
             stride=1,
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
-            final_cols=final_cols,
+            final_seed_cols=final_seed_cols, final_cols=final_cols,
             limit_past=False,
             val=False,
             labeling=preprocessing.label_dataset_1
@@ -363,7 +364,7 @@ def preprocessing_5(
             val_start=val_start, test_start=test_start,
             stride=1,
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
-            final_cols=final_cols,
+            final_seed_cols=final_seed_cols, final_cols=final_cols,
             limit_past=False,
             val=False,
             labeling=preprocessing.label_dataset_2
