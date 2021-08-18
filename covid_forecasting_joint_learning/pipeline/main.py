@@ -387,7 +387,7 @@ def preprocessing_6(
             samples_1 = tuple(torch.stack(
                 [sample[i] for sample in samples]
             ).detach() for i in range(7))
-            samples_1 = samples_1 + (kabko,)
+            samples_1 = samples_1 + (kabko.population, kabko,)
             return samples_1
 
         dataset_count = len(kabko.datasets_torch)
