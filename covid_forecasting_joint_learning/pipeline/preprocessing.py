@@ -153,6 +153,7 @@ def label_dataset_0(
     final_cols=DataCol.IRD
 ):
     final_seed = [x.iloc[-1] for x in past]
+    indices = [x.index for x in future]
 
     past_seed = [x[label_cols].to_numpy() for x in past]
     past_exo = [x[future_exo_cols].to_numpy() for x in past]
@@ -173,7 +174,8 @@ def label_dataset_0(
         future[i],
         future_exo[i],
         final_seed[i],
-        future_final[i]
+        future_final[i],
+        indices[i]
     ) for i in range(len(past))]
 
     labels = [
@@ -183,7 +185,8 @@ def label_dataset_0(
         label_cols,
         future_exo_cols,
         final_seed_cols,
-        final_cols
+        final_cols,
+        "index"
     ]
 
     return ret, labels
@@ -194,17 +197,21 @@ def label_dataset_1(
     label_cols=DataCol.SIRD,
     **kwargs
 ):
+    indices = [x.index for x in future]
+
     past = [x[label_cols].to_numpy() for x in past]
     future = [x[label_cols].to_numpy() for x in future]
 
     ret = [(
         past[i],
         future[i],
+        indices[i]
     ) for i in range(len(past))]
 
     labels = [
         label_cols,
         label_cols,
+        "index"
     ]
 
     return ret, labels
@@ -217,6 +224,7 @@ def label_dataset_2(
     **kwargs
 ):
     final_seed = [x.iloc[-1] for x in past]
+    indices = [x.index for x in future]
 
     final_seed = [x[final_seed_cols].to_numpy() for x in final_seed]
     future_final = [x[final_cols].to_numpy() for x in future]
@@ -227,14 +235,16 @@ def label_dataset_2(
         past[i],
         future[i],
         final_seed[i],
-        future_final[i]
+        future_final[i],
+        indices[i]
     ) for i in range(len(past))]
 
     labels = [
         label_cols,
         label_cols,
         final_seed_cols,
-        final_cols
+        final_cols,
+        "index"
     ]
 
     return ret, labels

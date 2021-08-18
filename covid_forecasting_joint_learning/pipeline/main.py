@@ -375,19 +375,19 @@ def preprocessing_6(
     kabkos,
     batch_size=8,
     pin_memory=False,
-    shuffle=True
+    shuffle=True,
+    tensor_count=7
 ):
     for kabko in kabkos:
         kabko.datasets_torch = [[
             tuple(
-                torch.Tensor(sample[i]) for i in range(7)
+                torch.Tensor(sample[i]) if i < tensor_count else sample[i] for i in range(8)
             ) for sample in dataset
         ] for dataset in kabko.datasets]
 
         def collate_fn(samples):
-            samples_1 = tuple(torch.stack(
-                [sample[i] for sample in samples]
-            ).detach() for i in range(7))
+            samples_1 = tuple([sample[i] for sample in samples] for i in range(8))
+            samples_1 = tuple(torch.stack(samples_1[i]).detach() if i < tensor_count else samples_1[i] for i in range(len(samples_1)))
             samples_1 = samples_1 + (kabko.population, kabko,)
             return samples_1
 
