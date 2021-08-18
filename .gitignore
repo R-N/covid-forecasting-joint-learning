@@ -138,3 +138,5 @@ staticfiles
 .env
 db.sqlite3
 getting-started/*
+
+project.sublime-workspace
