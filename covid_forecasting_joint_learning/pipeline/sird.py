@@ -47,9 +47,9 @@ def calc_delta(df, df_shifted=None):
 
 def calc_vars(df, n, df_shifted=None):
     df_shifted = df.shift() if df_shifted is None else df_shifted
-    df[DataCol.BETA] = n * (
+    df[DataCol.BETA] = (n / df_shifted[DataCol.S]) * (
         df[DataCol.DELTA_I] + df[DataCol.DELTA_R] + df[DataCol.DELTA_D]
-    ) / (df_shifted[DataCol.S] * df_shifted[DataCol.I])
+    ) / df_shifted[DataCol.I]
     df[DataCol.GAMMA] = df[DataCol.DELTA_R] / df_shifted[DataCol.I]
     df[DataCol.DELTA] = df[DataCol.DELTA_D] / df_shifted[DataCol.I]
 
