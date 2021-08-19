@@ -68,7 +68,7 @@ def rebuild(sird_vars, prev, n, index=None):
 
         delta_r = gamma * i
         delta_d = delta * i
-        delta_i_in = beta * s * i / n
+        delta_i_in = beta * i * (s / n)
         delta_s = -delta_i_in
         delta_i = delta_i_in - (delta_r + delta_d)
 
