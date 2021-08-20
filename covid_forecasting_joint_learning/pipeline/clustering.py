@@ -7,6 +7,10 @@ import numpy as np
 from . import util as PipelineUtil
 
 
+def shortest(x):
+    return (-len(x.data), x.data.last_valid_index(), x.data.first_valid_index())
+
+
 class Cluster:
     def __init__(
         self,
@@ -26,7 +30,7 @@ class Cluster:
 
     @property
     def source_longest(self):
-        return max(self.sources, key=lambda x: len(x))
+        return min(self.sources, key=lambda x: shortest(x))
 
     @property
     def source_closest(self):

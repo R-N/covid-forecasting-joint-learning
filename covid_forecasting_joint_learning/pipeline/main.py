@@ -268,7 +268,7 @@ def clustering_1(
         clusters = [c for c in clusters if len(c.sources) > 1]
 
     for c in clusters:
-        target = max(c.sources, key=lambda x: (-len(x.data), x.data.last_valid_index(), x.data.first_valid_index()))
+        target = max(c.sources, key=lambda x: clustering.shortest(x))
         c.sources.remove(target)
         c.target = target
         # Remove outliers if they're not target
