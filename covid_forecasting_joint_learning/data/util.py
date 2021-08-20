@@ -4,7 +4,7 @@ from . import cols as DataCol
 import torch
 
 
-DEFAULT_DTYPE = np.float64
+DEFAULT_DTYPE = np.float32
 
 
 def mkparent(path):
