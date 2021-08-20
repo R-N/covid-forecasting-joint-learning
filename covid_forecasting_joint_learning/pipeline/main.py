@@ -187,7 +187,8 @@ def preprocessing_3(
     kabkos,
     cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler,
-    limit_split=True
+    limit_split=True,
+    scale=False
 ):
     scaler = __preprocessing_3(
         kabkos,
@@ -199,7 +200,8 @@ def preprocessing_3(
         kabko.scaler = scaler
         # This produces warnings for whatever reason idk
         # I've used loc everywhere
-        kabko.data.loc[:, cols] = scaler.transform(kabko.data.loc[:, cols])
+        if scale:
+            kabko.data.loc[:, cols] = scaler.transform(kabko.data.loc[:, cols])
     return kabkos
 
 
@@ -216,11 +218,13 @@ def clustering_1(
     good_clustering_non_single=2,
     min_silhouette_percentile=0.75,
     max_silhouette_diff=0.1,
+    scale=True,
     **kwargs
 ):
     for k in group.members:
-        # k.data_clustering = k.scaler.transform(k.data_train_val[cols])
         k.data_clustering = k.data.loc[:k.split_indices[2], cols]
+        if scale:
+            k.data_clustering = k.scaler.transform(k.data_clustering)
 
     clustering_members = list(group.members)
     outliers = []
