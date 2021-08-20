@@ -316,7 +316,8 @@ def clustering_consistency(
 def preprocessing_4(
     cluster,
     cols=DataCol.SIRD_VARS,
-    Scaler=preprocessing.MinMaxScaler
+    Scaler=preprocessing.MinMaxScaler,
+    scale=True
 ):
     kabkos = cluster.members
     target_split_indices = cluster.target.split_indices
@@ -333,7 +334,8 @@ def preprocessing_4(
     )
     for kabko in kabkos:
         kabko.scaler_2 = scaler
-        kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
+        if scale:
+            kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
     return cluster
 
 
