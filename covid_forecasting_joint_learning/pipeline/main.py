@@ -222,7 +222,7 @@ def clustering_1(
     **kwargs
 ):
     for k in group.members:
-        k.data_clustering = k.data.loc[:k.split_indices[2], cols]
+        k.data_clustering = k.data.loc[:k.split_indices[2], cols].copy()
         if scale:
             k.data_clustering = k.scaler.transform(k.data_clustering)
 
@@ -325,7 +325,7 @@ def preprocessing_4(
     target_last_index = cluster.target.data.last_valid_index()
     for kabko in kabkos:
         assert target_last_index >= kabko.data.last_valid_index()
-        kabko.data = kabko.parent.data[:target_last_index]
+        kabko.data = kabko.parent.data[:target_last_index].copy()
         kabko.split_indices = target_split_indices
     scaler = __preprocessing_3(
         kabkos,
