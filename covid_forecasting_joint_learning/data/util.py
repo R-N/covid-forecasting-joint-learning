@@ -4,6 +4,9 @@ from . import cols as DataCol
 import torch
 
 
+DEFAULT_DTYPE = np.float64
+
+
 def mkparent(path):
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -23,7 +26,7 @@ def write_string(s, path):
 
 def add_dates(df, ranges, name):
     ranges = ranges.itertuples(index=False) if isinstance(ranges, pd.DataFrame) else ranges
-    df.loc[:, name] = pd.Series(0.0, index=df.index, dtype=np.float32)
+    df.loc[:, name] = pd.Series(0.0, index=df.index, dtype=DEFAULT_DTYPE)
     for start, end, value in ranges:
         # start, end = pd.to_datetime((start, end))
         df.loc[start:end, name] = value
@@ -39,7 +42,7 @@ def prepare_dates(
     df.loc[:, start_col] = pd.to_datetime(df.loc[:, start_col])
     df.loc[:, end_col] = pd.to_datetime(df.loc[:, end_col])
     if val_col not in df.columns:
-        df[val_col] = pd.Series(np.array(len(df) * [1.0]), dtype=np.float32)
+        df[val_col] = pd.Series(np.array(len(df) * [1.0]), dtype=DEFAULT_DTYPE)
     df.rename(columns={
         name_col: DataCol.NAME,
         start_col: DataCol.START,
