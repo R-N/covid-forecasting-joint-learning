@@ -280,7 +280,7 @@ def clustering_1(
     return clusters
 
 
-DEFAULT_GROUPS_N_CLUSTERS = (4, 2, 2, 3)
+DEFAULT_GROUPS_N_CLUSTERS = (4, 3, 2, 2)
 
 
 def clustering_consistency(
