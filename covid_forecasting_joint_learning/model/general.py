@@ -690,7 +690,7 @@ def make_objective(
                     debug=1,
                     log_dir=model.log_dir,
                     label=model.label,
-                    interval_mode=trial.suggest_int("early_stopping_interval_mode", *early_stopping_interval_mode),
+                    interval_mode=trial.suggest_categorical("early_stopping_interval_mode", early_stopping_interval_mode),
                     max_epoch=trial.suggest_int("max_epoch", *max_epoch)
                 )
 
