@@ -1,6 +1,7 @@
 import torch
 import json
 from torch import nn
+import numpy as np
 
 
 CUDA = False
@@ -110,3 +111,8 @@ def multi_index_dict(d, index):
 
 def single_batch(t):
     return torch.stack([t[0]])
+
+
+def global_random_seed(seed=257):
+    torch.manual_seed(seed)
+    np.random.seed(seed)

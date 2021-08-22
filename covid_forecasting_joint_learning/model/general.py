@@ -14,6 +14,8 @@ from . import attr as Attribution
 from . import util as ModelUtil
 from ..data import util as DataUtil
 from matplotlib import pyplot as plt
+from .early_stopping import EarlyStopping
+import gc
 
 
 class SourcePick:
@@ -396,30 +398,18 @@ class ObjectiveModel:
             "teacher_forcing": teacher_forcing
         }
 
-        try:
+        with suppress(KeyError, TypeError):
             check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["private_representation"]["conv_kwargs"], past_length)
-        except (KeyError, TypeError):
-            pass
-        try:
+        with suppress(KeyError, TypeError):
             check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["pre_shared_representation"]["conv_kwargs"], past_length)
-        except (KeyError, TypeError):
-            pass
-        try:
+        with suppress(KeyError, TypeError):
             check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["shared_representation"]["conv_kwargs"], past_length)
-        except (KeyError, TypeError):
-            pass
-        try:
+        with suppress(KeyError, TypeError):
             check_conv_kwargs(model_kwargs["representation_future_model"]["private_representation"]["conv_kwargs"], future_length)
-        except (KeyError, TypeError):
-            pass
-        try:
+        with suppress(KeyError, TypeError):
             check_conv_kwargs(model_kwargs["representation_future_model"]["pre_shared_representation"]["conv_kwargs"], future_length)
-        except (KeyError, TypeError):
-            pass
-        try:
+        with suppress(KeyError, TypeError):
             check_conv_kwargs(model_kwargs["representation_future_model"]["shared_representation"]["conv_kwargs"], future_length)
-        except (KeyError, TypeError):
-            pass
 
         members = cluster.members
         preprocessing_5(
@@ -575,3 +565,156 @@ class ObjectiveModel:
         DataUtil.write_string(str(self.get_target_model_summary()), model_dir + "target_model_summary.txt")
         DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
         DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
+
+
+def make_objective(
+    groups,
+    log_dir=None,
+    model_dir=None,
+    drive=None,
+    log_dir_id=None,
+    model_dir_id=None,
+    device="cpu",
+    write_graph=False,
+    early_stopping_interval_mode=(2,),
+    max_epoch=(100, 100),
+    teacher_forcing=(True,),
+    activations={
+        "ReLU": nn.ReLU,
+        "LeakyReLU": nn.LeakyReLU,
+        "Sigmoid": nn.Sigmoid,
+        "Tanh": nn.Tanh,
+        "SELU": nn.SELU
+    },
+    hidden_sizes=(3, 50),
+    normal_conv_depths=(1, 20),
+    pre_conv_depths=(0, 5),
+    normal_fc_depths=(1, 20),
+    pre_fc_depths=(0, 5),
+    past_kernel_sizes=(3, 14),
+    past_strides=(1, 1),
+    past_dilations=(1, 1),
+    future_kernel_sizes=(3, 7),
+    future_strides=(1, 1),
+    future_dilations=(1, 1),
+    w0_means=(0.0, 1.0),
+    w0_stds=(0.0, 0.5),
+    booleans=(0, 1),
+    lrs=(1e-5, 1e-2),
+    source_weights=(0.5, 1.0),
+    batch_sizes=(0, 5),
+    additional_past_lengths=(0, 4),
+    seed_lengths=(30, 30),
+    past_cols=[None],
+    future_exo_cols=[["psbb", "ppkm", "ppkm_mikro"]],
+    process_per_model=4
+):
+    activation_keys = [x for x in activations.keys()]
+
+    def objective(
+        trial
+    ):
+        ModelUtil.global_random_seed()
+
+        params = {
+            "hidden_size_past": trial.suggest_int("hidden_size_past", *hidden_sizes),
+            "hidden_size_future": trial.suggest_int("hidden_size_future", *hidden_sizes),
+            "shared_state_size": trial.suggest_int("shared_state_size", *hidden_sizes),
+            "private_state_size": trial.suggest_int("private_state_size", *hidden_sizes),
+            "representation_past_private_depth": trial.suggest_int("representation_past_private_depth", *normal_conv_depths),
+            "representation_past_private_kernel_size": trial.suggest_int("representation_past_private_kernel_size", *past_kernel_sizes),
+            "representation_past_private_stride": trial.suggest_int("representation_past_private_stride", *past_strides),
+            "representation_past_private_dilation": trial.suggest_int("representation_past_private_dilation", *past_dilations),
+            "representation_past_shared_depth": trial.suggest_int("representation_past_shared_depth", *normal_conv_depths),
+            "representation_past_shared_kernel_size": trial.suggest_int("representation_past_shared_kernel_size", *past_kernel_sizes),
+            "representation_past_shared_stride": trial.suggest_int("representation_past_shared_stride", *past_strides),
+            "representation_past_shared_dilation": trial.suggest_int("representation_past_shared_dilation", *past_dilations),
+            "representation_past_pre_shared_depth": trial.suggest_int("representation_past_pre_shared_depth", *pre_conv_depths),
+            "combine_representation_past_w0_mean": trial.suggest_float("combine_representation_past_w0_mean", *w0_means),
+            "combine_representation_past_w0_std": trial.suggest_float("combine_representation_past_w0_std", *w0_stds),
+            "representation_future_private_depth": trial.suggest_int("representation_future_private_depth", *normal_conv_depths),
+            "representation_future_private_kernel_size": trial.suggest_int("representation_future_private_kernel_size", *future_kernel_sizes),
+            "representation_future_private_stride": trial.suggest_int("representation_future_private_stride", *future_strides),
+            "representation_future_private_dilation": trial.suggest_int("representation_future_private_dilation", *future_dilations),
+            "representation_future_shared_depth": trial.suggest_int("representation_future_shared_depth", *normal_conv_depths),
+            "representation_future_shared_kernel_size": trial.suggest_int("representation_future_shared_kernel_size", *future_kernel_sizes),
+            "representation_future_shared_stride": trial.suggest_int("representation_future_shared_stride", *future_strides),
+            "representation_future_shared_dilation": trial.suggest_int("representation_future_shared_dilation", *future_dilations),
+            "representation_future_pre_shared_depth": trial.suggest_int("representation_future_pre_shared_depth", *pre_conv_depths),
+            "combine_representation_future_w0_mean": trial.suggest_float("combine_representation_future_w0_mean", *w0_means),
+            "combine_representation_future_w0_std": trial.suggest_float("combine_representation_future_w0_std", *w0_stds),
+            "combine_head_w0_mean": trial.suggest_float("combine_head_w0_mean", *w0_means),
+            "combine_head_w0_std": trial.suggest_float("combine_head_w0_std", *w0_stds),
+            "precombine_head_depth": trial.suggest_int("precombine_head_depth", *pre_fc_depths),
+            "combine_head_depth": trial.suggest_int("combine_head_depth", *normal_fc_depths),
+            "conv_activation": activations[trial.suggest_categorical("conv_activation", activation_keys)],
+            "fc_activation": activations[trial.suggest_categorical("fc_activation", activation_keys)],
+            "residual_activation": activations[trial.suggest_categorical("residual_activation", activation_keys)],
+            "lr": trial.suggest_float("lr", *lrs),
+            "source_weight": trial.suggest_float("source_weight", *source_weights),
+            "batch_size": 16 * (2**trial.suggest_int("batch_size", *batch_sizes)),
+            "additional_past_length": trial.suggest_int("additional_past_length", *additional_past_lengths),
+            "seed_length": trial.suggest_int("seed_length", *seed_lengths),
+            "use_last_past": trial.suggest_int("use_last_past", *booleans),
+            "past_cols": past_cols[trial.suggest_int("past_cols", 0, len(past_cols) - 1)],
+            "future_exo_cols": future_exo_cols[trial.suggest_int("future_exo_cols", 0, len(future_exo_cols) - 1)],
+            "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
+        }
+
+        use_exo = bool(params["future_exo_cols"])
+
+        sum_val_loss_target = 0
+
+        for group in groups:
+            for cluster in group.clusters:
+
+                grad_scaler = None  # GradScaler(init_scale=8192)
+
+                model = ObjectiveModel(
+                    cluster,
+                    trial_id=trial.number,
+                    log_dir=log_dir,  # "%s/%s/%s" % (log_dir, group.id, cluster.id),
+                    model_dir=model_dir,
+                    grad_scaler=grad_scaler,
+                    **params
+                )
+                model.to(device)
+
+                print(f"Model for {group.id}.{cluster.id}")
+
+                if write_graph and group.id == 0 and cluster.id == 0:
+                    model.write_graph()
+
+                early_stopping = EarlyStopping(
+                    model.model.models,
+                    debug=1,
+                    log_dir=model.log_dir,
+                    label=model.label,
+                    interval_mode=trial.suggest_int("early_stopping_interval_mode", *early_stopping_interval_mode),
+                    max_epoch=trial.suggest_int("max_epoch", *max_epoch)
+                )
+
+                while not early_stopping.stopped:
+                    train_loss, train_loss_target = model.train()
+                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+                    val_loss, val_loss_target = model.val()
+                    val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+                    early_stopping(train_loss_target, val_loss_target)
+
+                sum_val_loss_target += val_loss_target
+
+                if model_dir:
+                    model.save_model()
+
+                if drive:
+                    if log_dir and log_dir_id:
+                        drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
+                    if model_dir and model_dir_id:
+                        drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
+
+                torch.cuda.empty_cache()
+                gc.collect()
+
+        return sum_val_loss_target
+
+    return objective
