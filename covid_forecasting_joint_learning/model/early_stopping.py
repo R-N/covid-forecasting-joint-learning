@@ -79,8 +79,8 @@ class EarlyStopping:
         self.epoch = 0
         self.active = False
 
-        if self.log_dir is not None or self.label is not None:
-            assert self.log_dir is not None and self.label is not None
+        if self.log_dir is not None:
+            assert self.label is not None
 
             self.min_percent_high_writer = SummaryWriter(log_dir + "/min_percent_high")
             self.min_percent_low_writer = SummaryWriter(log_dir + "/min_percent_low")
@@ -126,7 +126,7 @@ class EarlyStopping:
     def log_stop(
         self,
         label, epoch,
-        loss, 
+        loss,
         min_delta, min_delta_percent,
         best_loss, best_loss_2=None
     ):
@@ -180,18 +180,19 @@ class EarlyStopping:
         min_delta_val = max(self.min_delta_val, min_delta_val_percent)
         min_delta_train = max(self.min_delta_train, min_delta_train_percent)
 
-        self.log_stop(
-            label="val_stop", epoch=epoch,
-            loss=val_loss,
-            min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
-            best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
-        )
-        self.log_stop(
-            label="train_stop", epoch=epoch,
-            loss=train_loss,
-            min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
-            best_loss=self.best_train_loss
-        )
+        if self.log_dir:
+            self.log_stop(
+                label="val_stop", epoch=epoch,
+                loss=val_loss,
+                min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
+                best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
+            )
+            self.log_stop(
+                label="train_stop", epoch=epoch,
+                loss=train_loss,
+                min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
+                best_loss=self.best_train_loss
+            )
 
         delta_val_loss = val_loss - self.best_val_loss
         delta_train_loss = train_loss - self.best_train_loss
@@ -225,11 +226,13 @@ class EarlyStopping:
 
         still_percent = self.still_counter / self.still_patience
         rise_percent = self.rise_counter / self.rise_patience
-        self.still_writer.add_scalar(self.label + "patience", still_percent, global_step=epoch)
-        self.rise_writer.add_scalar(self.label + "patience", rise_percent, global_step=epoch)
 
-        self.still_writer.flush()
-        self.rise_writer.flush()
+        if self.log_dir:
+            self.still_writer.add_scalar(self.label + "patience", still_percent, global_step=epoch)
+            self.rise_writer.add_scalar(self.label + "patience", rise_percent, global_step=epoch)
+
+            self.still_writer.flush()
+            self.rise_writer.flush()
 
         # stilling = still_percent >= (1.0 - self.still_forgiveness)
         # rising = rise_percent >= (1.0 - self.rise_forgiveness)
