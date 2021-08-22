@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 from .early_stopping import EarlyStopping
 import gc
 from ..pipeline.main import preprocessing_5, preprocessing_6
+from copy import deepcopy
 
 
 class SourcePick:
@@ -444,7 +445,7 @@ class ObjectiveModel:
         }
 
         self.sizes = sizes
-        self.model_kwargs = model_kwargs
+        self.model_kwargs = deepcopy(model_kwargs)
 
         if debug:
             print(ModelUtil.str_dict(sizes))
