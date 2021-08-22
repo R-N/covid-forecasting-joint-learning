@@ -545,6 +545,7 @@ class ObjectiveModel:
         return self.target.get_target_aggregate_layer_attr(*args, **kwargs)
 
     def pretrain_save_model(self, model_dir=None):
+        model_dir = model_dir or self.model_dir
         if not model_dir:
             raise ValueError("Please provide or set model_dir")
 
