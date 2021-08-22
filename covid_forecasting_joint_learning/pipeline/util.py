@@ -1,5 +1,4 @@
 from ..data.util import right_slice, full_combinations
-from ..model.util import global_random_seed
 
 
 def set_tuple(a):

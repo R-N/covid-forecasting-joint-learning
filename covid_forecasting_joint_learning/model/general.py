@@ -3,7 +3,6 @@ from torch import nn
 from .modules.representation import check_conv_kwargs
 from .modules.main import SingleModel
 from .train import train, test
-from ..pipeline.main import preprocessing_5, preprocessing_6
 import datetime
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import OneCycleLR
@@ -16,6 +15,7 @@ from ..data import util as DataUtil
 from matplotlib import pyplot as plt
 from .early_stopping import EarlyStopping
 import gc
+from ..pipeline.main import preprocessing_5, preprocessing_6
 
 
 class SourcePick:
