@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from . import cols as DataCol
 import torch
+from itertools import combinations, chain
 
 
 DEFAULT_DTYPE = np.float32
@@ -61,3 +62,14 @@ def right_slice(
 
 def single_batch(t):
     return torch.stack([t[0]])
+
+
+def full_combinations(src, include_empty=True):
+    src = list(src)
+    n_src = len(src)
+    combs = [list(combinations(src, x)) for x in range(0 if include_empty else 1, n_src + 1)]
+    return list(chain.from_iterable(combs))
+
+
+def label_combinations(combs):
+    return {" + ".join(c): c for c in combs}
