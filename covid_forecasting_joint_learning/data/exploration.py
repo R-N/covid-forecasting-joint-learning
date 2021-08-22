@@ -255,13 +255,13 @@ def corr_lag_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall
 
 
 def corr_lag_best_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall", y_as_cols=True):
-    corr = np.array([[corr_lag(
+    corr = np.array([[max(corr_lag(
         df[x_col],
         df[y_col],
         method=method,
         lag_start=lag_start,
         lag_end=lag_end
-    ) for y_col in y_cols] for x_col in x_cols])
+    ), key=lambda x: abs(x)) for y_col in y_cols] for x_col in x_cols])
     corr = pd.DataFrame(corr, columns=y_cols, index=x_cols)
     return corr if y_as_cols else corr.T
 
