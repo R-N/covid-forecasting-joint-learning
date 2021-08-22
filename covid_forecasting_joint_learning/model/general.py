@@ -544,7 +544,15 @@ class ObjectiveModel:
     def get_target_aggregate_layer_attr(self, *args, **kwargs):
         return self.target.get_target_aggregate_layer_attr(*args, **kwargs)
 
-    def save_model(self, model_dir=None):
+    def pretrain_save_model(self, model_dir=None):
+        if not model_dir:
+            raise ValueError("Please provide or set model_dir")
+
+        DataUtil.write_string(str(self.get_target_model_summary()), model_dir + "target_model_summary.txt")
+        DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
+        DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
+
+    def posttrain_save_model(self, model_dir=None):
         model_dir = model_dir or self.model_dir
         if not model_dir:
             raise ValueError("Please provide or set model_dir")
@@ -562,9 +570,6 @@ class ObjectiveModel:
         layer_fig.savefig(model_dir + "layer_attr.jpg", bbox_inches="tight")
         plt.close(layer_fig)
 
-        DataUtil.write_string(str(self.get_target_model_summary()), model_dir + "target_model_summary.txt")
-        DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
-        DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
 
 
 def make_objective(
@@ -668,6 +673,8 @@ def make_objective(
         for group in groups:
             for cluster in group.clusters:
 
+                print(f"Model for {group.id}.{cluster.id}")
+
                 grad_scaler = None  # GradScaler(init_scale=8192)
 
                 model = ObjectiveModel(
@@ -680,10 +687,17 @@ def make_objective(
                 )
                 model.to(device)
 
-                print(f"Model for {group.id}.{cluster.id}")
-
                 if write_graph and group.id == 0 and cluster.id == 0:
                     model.write_graph()
+
+                if model_dir:
+                    model.pretrain_save_model()
+
+                if drive:
+                    if log_dir and log_dir_id:
+                        drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
+                    if model_dir and model_dir_id:
+                        drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
 
                 early_stopping = EarlyStopping(
                     model.model.models,
@@ -704,7 +718,7 @@ def make_objective(
                 sum_val_loss_target += val_loss_target
 
                 if model_dir:
-                    model.save_model()
+                    model.posttrain_save_model()
 
                 if drive:
                     if log_dir and log_dir_id:
