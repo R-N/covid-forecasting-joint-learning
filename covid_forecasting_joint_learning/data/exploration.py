@@ -326,9 +326,6 @@ def explore_date_corr(
         mean=True
     )
 
-    print(single_dates)
-    print(y_cols)
-    print(labeled_dates)
     print(corrs)
 
     del df
