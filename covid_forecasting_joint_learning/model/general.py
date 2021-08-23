@@ -665,7 +665,7 @@ def make_objective(
             "use_last_past": trial.suggest_int("use_last_past", *booleans),
             "past_cols": past_cols[trial.suggest_int("past_cols", 0, len(past_cols) - 1)],
             "future_exo_cols": future_exo_cols[trial.suggest_int("future_exo_cols", 0, len(future_exo_cols) - 1)],
-            # "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
+            "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
         }
 
         use_exo = bool(params["future_exo_cols"])
@@ -685,7 +685,7 @@ def make_objective(
                     log_dir=log_dir,  # "%s/%s/%s" % (log_dir, group.id, cluster.id),
                     model_dir=model_dir,
                     grad_scaler=grad_scaler,
-                    teacher_forcing=True,
+                    # teacher_forcing=True,
                     **params
                 )
                 model.to(device)
@@ -696,12 +696,16 @@ def make_objective(
                 if model_dir:
                     model.pretrain_save_model()
 
+                if model_dir:
+                    model.posttrain_save_model()
+
                 if drive:
                     if log_dir and log_dir_id:
                         drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
                     if model_dir and model_dir_id:
                         drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
 
+                """
                 early_stopping = EarlyStopping(
                     model.model.models,
                     debug=1,
@@ -720,14 +724,12 @@ def make_objective(
 
                 sum_val_loss_target += val_loss_target
 
-                if model_dir:
-                    model.posttrain_save_model()
-
                 if drive:
                     if log_dir and log_dir_id:
                         drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
                     if model_dir and model_dir_id:
                         drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
+                """
 
                 torch.cuda.empty_cache()
                 gc.collect()
