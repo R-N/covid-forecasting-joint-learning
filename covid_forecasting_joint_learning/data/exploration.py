@@ -305,7 +305,7 @@ def explore_date_corr(
     return_corr=True
 ):
     labeled_dates = labeled_dates or {x: [x] for x in single_dates}
-    date_set = date_set or set([set(x) for x in labeled_dates.values()])
+    date_set = date_set or set([tuple(sorted(x)) for x in labeled_dates.values()])
 
     df = kabko.add_dates(
         kabko.data,
@@ -331,7 +331,7 @@ def explore_date_corr(
         x_col = corr["x_col"]
         date = labeled_dates[x_col]
         new_dates = [date + x for x in single_dates if x not in date]
-        new_dates = [x for x in new_dates if set(x) not in date_set]
+        new_dates = [x for x in new_dates if tuple(sorted(x)) not in date_set]
         date_set.update(new_dates)
         ret_i = explore_date_corr(
             kabko,
