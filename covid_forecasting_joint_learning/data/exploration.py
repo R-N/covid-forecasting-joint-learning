@@ -303,6 +303,7 @@ def explore_date_corr(
     lag_start=0,
     lag_end=-14,
     min_corr=0.1,
+    min_corr_diff=1e-5,
     date_set=None,
     return_corr=True
 ):
@@ -322,7 +323,7 @@ def explore_date_corr(
         lag_end=lag_end,
         min_corr_percentile=0,
         max_corr_diff=1,
-        min_corr=min_corr,
+        min_corr=min_corr + min_corr_diff,
         mean=True
     )
 
