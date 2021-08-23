@@ -334,7 +334,7 @@ def explore_date_corr(
     for corr in corrs:
         x_col = corr["x_col"]
         date = labeled_dates[x_col]
-        new_dates = [sorted(date + (x,)) for x in single_dates if x not in date]
+        new_dates = [tuple(sorted(date + (x,))) for x in single_dates if x not in date]
         new_dates = [x for x in new_dates if x not in date_set]
         date_set.update(new_dates)
         ret_i = explore_date_corr(
