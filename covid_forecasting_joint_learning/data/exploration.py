@@ -300,6 +300,8 @@ def explore_date_corr(
     single_dates,
     y_cols,
     labeled_dates=None,
+    lag_start=0,
+    lag_end=-14,
     min_corr=0.1,
     date_set=None,
     return_corr=True
@@ -316,13 +318,18 @@ def explore_date_corr(
         df,
         x_cols=list(labeled_dates.keys()),
         y_cols=y_cols,
-        lag_start=0,
-        lag_end=-14,
+        lag_start=lag_start,
+        lag_end=lag_end,
         min_corr_percentile=0,
         max_corr_diff=1,
         min_corr=min_corr,
         mean=True
     )
+
+    print(single_dates)
+    print(y_cols)
+    print(labeled_dates)
+    print(corrs)
 
     del df
 
@@ -348,7 +355,6 @@ def explore_date_corr(
             ret[x_col] = corr
         else:
             ret[x_col] = date
-    print(ret)
     return ret
 
 
