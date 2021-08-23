@@ -84,6 +84,7 @@ def __prepare_model(
     single=True,
     **kwargs
 ):
+    model.train()
     if not (teacher_forcing and use_exo and use_seed):
         model = wrap_params(model, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed)
 
