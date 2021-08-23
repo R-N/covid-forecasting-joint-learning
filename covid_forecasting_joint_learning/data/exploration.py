@@ -348,6 +348,7 @@ def explore_date_corr(
             ret[x_col] = corr
         else:
             ret[x_col] = date
+    print(ret)
     return ret
 
 
