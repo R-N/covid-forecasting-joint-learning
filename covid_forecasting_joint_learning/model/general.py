@@ -696,9 +696,6 @@ def make_objective(
                 if model_dir:
                     model.pretrain_save_model()
 
-                if model_dir:
-                    model.posttrain_save_model()
-
                 if drive:
                     if log_dir and log_dir_id:
                         drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
@@ -722,6 +719,9 @@ def make_objective(
                     early_stopping(train_loss_target, val_loss_target)
 
                 sum_val_loss_target += val_loss_target
+
+                if model_dir:
+                    model.posttrain_save_model()
 
                 if drive:
                     if log_dir and log_dir_id:
