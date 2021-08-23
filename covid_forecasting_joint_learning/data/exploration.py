@@ -326,8 +326,6 @@ def explore_date_corr(
         mean=True
     )
 
-    print(corrs)
-
     del df
 
     ret = {}
@@ -341,7 +339,7 @@ def explore_date_corr(
             kabko,
             single_dates,
             y_cols,
-            labeled_dates=DataUtil.label_combination(new_dates),
+            labeled_dates=DataUtil.label_combinations(new_dates),
             min_corr=abs(corr["corr"]),
             date_set=date_set
         )
