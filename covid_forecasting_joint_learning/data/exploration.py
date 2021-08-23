@@ -305,7 +305,7 @@ def explore_date_corr(
     return_corr=True
 ):
     labeled_dates = labeled_dates or {x: [x] for x in single_dates}
-    date_set = date_set or set(labeled_dates.values())
+    date_set = date_set or set([set(x) for x in labeled_dates.values()])
 
     df = kabko.add_dates(
         kabko.data,
