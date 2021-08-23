@@ -342,6 +342,7 @@ def explore_date_corr(
             y_cols,
             labeled_dates=DataUtil.label_combinations(new_dates),
             min_corr=abs(corr["corr"]),
+            min_corr_diff=min_corr_diff,
             date_set=date_set
         )
         if len(ret_i) > 0:
