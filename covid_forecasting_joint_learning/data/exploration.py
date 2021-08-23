@@ -11,6 +11,7 @@ from statsmodels.stats.diagnostic import kstest_normal as ks_test
 # Functionalities only imported shamelessly
 from statsmodels.tsa.stattools import adfuller as adf, acf, pacf
 from scipy.stats import pearsonr, spearmanr, kendalltau
+from . import util as DataUtil
 # from matplotlib import rcParams
 # import itertools
 
@@ -293,3 +294,60 @@ def corr_lag_sort_multi(
         "corr": corr
     } for x_col, y_col, x_lag, corr in corrs]
     return corrs
+
+def explore_date_corr(
+    kabko,
+    single_dates,
+    y_cols,
+    labeled_dates=None,
+    min_corr=0.1,
+    date_set=None,
+    return_corr=True
+):
+    labeled_dates = labeled_dates or {x: [x] for x in single_dates}
+    date_set = date_set or set(labeled_dates.values())
+
+    df = kabko.add_dates(
+        kabko.data,
+        dates=labeled_dates
+    )
+
+    corrs = corr_lag_sort_multi(
+        df,
+        x_cols=list(labeled_dates.keys()),
+        y_cols=y_cols,
+        lag_start=0,
+        lag_end=-14,
+        min_corr_percentile=0,
+        max_corr_diff=1,
+        min_corr=min_corr,
+        mean=True
+    )
+
+    del df
+
+    ret = {}
+    for corr in corrs:
+        x_col = corr["x_col"]
+        date = labeled_dates[x_col]
+        new_dates = [date + x for x in single_dates if x not in date]
+        new_dates = [x for x in new_dates if set(x) not in date_set]
+        date_set.update(new_dates)
+        ret_i = explore_date_corr(
+            kabko,
+            single_dates,
+            y_cols,
+            labeled_dates=DataUtil.label_combination(new_dates),
+            min_corr=abs(corr["corr"]),
+            date_set=date_set
+        )
+        if len(ret_i) > 0:
+            ret.update(ret_i)
+        elif return_corr:
+            corr["date"] = date
+            ret[x_col] = corr
+        else:
+            ret[x_col] = date
+    return ret
+
+
