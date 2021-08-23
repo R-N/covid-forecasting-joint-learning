@@ -311,7 +311,7 @@ def explore_date_corr(
 
     df = kabko.add_dates(
         kabko.data,
-        dates=labeled_dates
+        dates={k: list(v) for k, v in labeled_dates.items()}
     )
 
     corrs = corr_lag_sort_multi(
