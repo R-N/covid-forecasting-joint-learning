@@ -665,7 +665,7 @@ def make_objective(
             "use_last_past": trial.suggest_int("use_last_past", *booleans),
             "past_cols": past_cols[trial.suggest_int("past_cols", 0, len(past_cols) - 1)],
             "future_exo_cols": future_exo_cols[trial.suggest_int("future_exo_cols", 0, len(future_exo_cols) - 1)],
-            "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
+            # "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
         }
 
         use_exo = bool(params["future_exo_cols"])
@@ -685,6 +685,7 @@ def make_objective(
                     log_dir=log_dir,  # "%s/%s/%s" % (log_dir, group.id, cluster.id),
                     model_dir=model_dir,
                     grad_scaler=grad_scaler,
+                    teacher_forcing=True,
                     **params
                 )
                 model.to(device)
