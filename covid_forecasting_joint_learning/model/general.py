@@ -705,7 +705,6 @@ def make_objective(
                     if model_dir and model_dir_id:
                         drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
 
-                """
                 early_stopping = EarlyStopping(
                     model.model.models,
                     debug=1,
@@ -729,7 +728,6 @@ def make_objective(
                         drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
                     if model_dir and model_dir_id:
                         drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
-                """
 
                 torch.cuda.empty_cache()
                 gc.collect()
