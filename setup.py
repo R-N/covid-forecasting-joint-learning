@@ -37,6 +37,7 @@ setuptools.setup(
         "torchinfo",
         "scipy",
         "pydrive",
-        "captum"
+        "captum",
+        "google-colab"
     ]
 )
