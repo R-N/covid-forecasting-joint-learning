@@ -21,7 +21,7 @@ setuptools.setup(
     ],
     install_requires=[
         "numpy~=1.19.2",
-        "six~=1.15.0",
+        "six",
         "folium==0.2.1",
         "imgaug<0.2.7,>=0.2.5",
         "requests~=2.23.0",
