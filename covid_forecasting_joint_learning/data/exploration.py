@@ -13,6 +13,7 @@ from statsmodels.tsa.stattools import adfuller as adf, acf, pacf
 from scipy.stats import pearsonr, spearmanr, kendalltau
 from . import util as DataUtil
 from collections import deque
+import gc
 # from matplotlib import rcParams
 # import itertools
 
@@ -306,7 +307,8 @@ def explore_date_corr(
     min_corr=0.1,
     min_corr_diff=1e-5,
     date_set=None,
-    return_corr=True
+    return_corr=False,
+    collect=False
 ):
     labeled_dates = labeled_dates or {x: (x,) for x in single_dates}
     date_set = date_set or set([tuple(sorted(x)) for x in labeled_dates.values()])
@@ -349,6 +351,8 @@ def explore_date_corr(
             del corrs
         else:
             ret[x_col] = obj
+        if collect:
+            gc.collect()
     return ret
 
 
