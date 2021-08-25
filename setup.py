@@ -34,6 +34,7 @@ setuptools.setup(
         "torchinfo",
         "scipy",
         "pydrive",
-        "captum"
+        "captum",
+        "openpyxl"
     ]
 )
