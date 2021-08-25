@@ -17,6 +17,7 @@ class DataCenter:
         self.__date_names_global = np.array([])
         self.__date_names_local = np.array([])
         self.__population_global = None
+        self.__covid_local = None
         self.raw_global = None
         self.data_global = None
 
