@@ -1,9 +1,13 @@
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
-from google.colab import auth
 from oauth2client.client import GoogleCredentials
 from pathlib import Path
 from . import util as DataUtil
+
+try:
+    from google.colab import auth
+except ModuleNotFoundError:
+    auth = None
 
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
@@ -15,11 +19,14 @@ class Drive:
         self.client = self.auth(creds_path=creds_path)
 
     def auth(self, creds_path="drive_creds.json"):
-        auth.authenticate_user()
         gauth = GoogleAuth()
         gauth.LoadCredentialsFile(creds_path)
         if gauth.credentials is None:
-            gauth.credentials = GoogleCredentials.get_application_default()
+            if auth:
+                auth.authenticate_user()
+                gauth.credentials = GoogleCredentials.get_application_default()
+            else:
+                gauth.LocalWebserverAuth()
         elif gauth.access_token_expired:
             gauth.Refresh()
         else:
