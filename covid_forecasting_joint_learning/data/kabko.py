@@ -115,6 +115,7 @@ class KabkoData:
             "ppkm_mikro": "ppkm_mikro"
         }
     ):
+        df = df.copy()
         for k, v in dates.items():
             if isinstance(v, list):
                 date = self.dates[self.dates[DataCol.NAME].isin(v)][DataCol.DATE_COLS]
@@ -122,7 +123,9 @@ class KabkoData:
                 date = self.dates[self.dates[DataCol.NAME] == v][DataCol.DATE_COLS]
             DataUtil.add_dates(df, date, k)
 
-        return df
+        ret = df.copy()
+        del df
+        return ret
 
     def get_batch_sample(self, last=False, single=True, tensor_count=7):
         if last:
