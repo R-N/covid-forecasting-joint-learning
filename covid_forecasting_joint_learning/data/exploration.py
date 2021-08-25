@@ -311,7 +311,7 @@ def explore_date_corr(
     labeled_dates = labeled_dates or {x: (x,) for x in single_dates}
     date_set = date_set or set([tuple(sorted(x)) for x in labeled_dates.values()])
 
-    stack = deque((labeled_dates, min_corr, None))
+    stack = deque([(labeled_dates, min_corr, None)])
     ret = {}
     while stack:
         labeled_dates, min_corr, obj = stack.pop()
