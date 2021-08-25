@@ -12,7 +12,7 @@ from statsmodels.stats.diagnostic import kstest_normal as ks_test
 from statsmodels.tsa.stattools import adfuller as adf, acf, pacf
 from scipy.stats import pearsonr, spearmanr, kendalltau
 from . import util as DataUtil
-from Collections import deque
+from collections import deque
 # from matplotlib import rcParams
 # import itertools
 
