@@ -263,7 +263,7 @@ def corr_lag_best_multi(
     lag_start=0, lag_end=-14,
     method="kendall",
     reduction=None,
-    abs=False,
+    abs_corr=False,
     as_dict=False,
     y_as_cols=True
 ):
@@ -275,7 +275,7 @@ def corr_lag_best_multi(
         lag_end=lag_end
     ), key=lambda x: abs(x)) for y_col in y_cols] for x_col in x_cols])
     if reduction:
-        if abs:
+        if abs_corr:
             corr = np.abs(corr)
         if reduction == "sum":
             corr = np.sum(corr, axis=1)
@@ -364,7 +364,7 @@ def explore_date_corr(
             lag_end=lag_end,
             method=method,
             reduction="max",
-            abs=False,
+            abs_corr=False,
             as_dict=True
         )
 
@@ -435,7 +435,7 @@ def make_date_corr_objective(
                 lag_end=lag_end,
                 method=method,
                 reduction="max",
-                abs=True,
+                abs_corr=True,
                 as_dict=True
             )
             del df
@@ -475,7 +475,7 @@ def filter_date_corr(
             lag_end=lag_end,
             method=method,
             reduction="max",
-            abs=True,
+            abs_corr=True,
             as_dict=True
         )
         del df
