@@ -360,7 +360,7 @@ def label_date_grouping(grouping, penalty=True):
     grouping_1 = {i: [] for i in grouping.values()}
     for date, group in grouping.items():
         grouping_1[group].append(date)
-    if penalty:
+    if penalty and 0 in grouping_1:
         del grouping_1[0]
     grouping_2 = [x for x in grouping_1.values() if x]
     labeled_dates = DataUtil.label_combinations(grouping_2)
