@@ -486,6 +486,7 @@ def filter_date_corr(
         else:
             corrs_0 = corrs
         del corrs
+        print(corrs_0)
 
     scale = len(kabkos)
     corrs_0 = {k: v / scale for k, v in corrs_0.items()}
