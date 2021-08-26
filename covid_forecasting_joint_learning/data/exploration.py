@@ -273,16 +273,16 @@ def corr_lag_best_multi(
         method=method,
         lag_start=lag_start,
         lag_end=lag_end
-    ), key=lambda x: abs(x)) for y_col in y_cols] for x_col in x_cols])
+    ), key=lambda x: abs(x) if not np.isnan(x) else 0) for y_col in y_cols] for x_col in x_cols])
     if reduction:
         if abs_corr:
             corr = np.abs(corr)
         if reduction == "sum":
-            corr = np.sum(corr, axis=1)
+            corr = np.sum(corr, axis=1, skipna=True)
         elif reduction == "max":
-            corr = np.array([max(row, key=lambda x: abs(x)) for row in corr])
+            corr = np.array([max(row, key=lambda x: abs(x) if not np.isnan(x) else 0) for row in corr])
         elif reduction == "avg" or reduction == "mean":
-            corr = np.mean(corr, axis=1)
+            corr = np.mean(corr, axis=1, skipna=True)
         else:
             raise ValueError(f"Invalid reduction '{reduction}'")
         if as_dict:
