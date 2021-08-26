@@ -140,6 +140,21 @@ def __preprocessing_2(
     return kabko
 
 
+def _preprocessing_2(
+    kabko_dfs,
+    val_portion=0.25,
+    test_portion=0.25,
+    past_size=30
+):
+    return [__preprocessing_2(
+        kabko,
+        df,
+        val_portion=val_portion,
+        test_portion=test_portion,
+        past_size=past_size
+    ) for kabko, df in kabko_dfs]
+
+
 def preprocessing_2(
     kabkos,
     limit_length=[90, 180, 366],
@@ -155,13 +170,12 @@ def preprocessing_2(
         limit_date=limit_date
     )
     for g in groups:
-        g.members = [__preprocessing_2(
-            kabko,
-            df,
+        g.members = _preprocessing_2(
+            g.members,
             val_portion=val_portion,
             test_portion=test_portion,
             past_size=past_size
-        ) for kabko, df in g.members]
+        )
         for k in g.members:
             k.group = g
     return groups
