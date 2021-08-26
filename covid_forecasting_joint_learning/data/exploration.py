@@ -356,3 +356,54 @@ def explore_date_corr(
     return ret
 
 
+def label_date_grouping(grouping):
+    grouping_1 = {i: [] for i in grouping.values()}
+    for date, group in grouping:
+        grouping_1[group].append(date)
+    grouping_2 = [x for x in grouping_1.values() if x]
+    labeled_dates = DataUtil.label_combinations(grouping_2)
+    return labeled_dates
+
+
+def make_objective_date_corr(
+    kabkos,
+    single_dates,
+    y_cols,
+    lag_start=0,
+    lag_end=-14,
+    min_corr=0.1,
+    collect=False
+):
+    count = len(single_dates)
+    groups = list(range(count))
+    def objective(trial):
+        grouping = {single_dates[i]: trial.suggest_categorical(str(single_dates[i]), groups) for i in groups}
+        labeled_dates = label_date_grouping(grouping)
+
+        ret = 0
+        for kabko in kabkos:
+            df = kabko.add_dates(
+                kabko.data,
+                dates={k: list(v) for k, v in labeled_dates.items()}
+            )
+
+            corrs = corr_lag_sort_multi(
+                df,
+                x_cols=list(labeled_dates.keys()),
+                y_cols=y_cols,
+                lag_start=lag_start,
+                lag_end=lag_end,
+                min_corr_percentile=0,
+                max_corr_diff=1,
+                min_corr=min_corr,
+                mean=False
+            )
+            del df
+            ret += sum([abs(corr["corr"]) for corr in corrs])
+            del corrs
+            if collect:
+                gc.collect()
+        return ret
+
+    return objective
+
