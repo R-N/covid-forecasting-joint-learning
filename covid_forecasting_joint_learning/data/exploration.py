@@ -356,7 +356,7 @@ def explore_date_corr(
     return ret
 
 
-def label_date_grouping(grouping, penalty=True):
+def label_date_grouping(grouping, penalty=False):
     grouping_1 = {i: [] for i in grouping.values()}
     for date, group in grouping.items():
         grouping_1[group].append(date)
@@ -375,7 +375,7 @@ def make_date_corr_objective(
     lag_end=-14,
     min_corr=0.1,
     collect=False,
-    penalty=True
+    penalty=False
 ):
     count = len(single_dates)
     groups = list(range((count + 1) if penalty else count))
