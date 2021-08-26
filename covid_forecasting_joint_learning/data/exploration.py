@@ -274,8 +274,6 @@ def corr_lag_best_multi(
         lag_start=lag_start,
         lag_end=lag_end
     ), key=lambda x: abs(x)) for y_col in y_cols] for x_col in x_cols])
-    print(df[x_cols + y_cols].isnull().sum())
-    print(corr)
     if reduction:
         if abs_corr:
             corr = np.abs(corr)
