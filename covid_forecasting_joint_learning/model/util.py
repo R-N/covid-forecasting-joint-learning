@@ -2,6 +2,7 @@ import torch
 import json
 from torch import nn
 import numpy as np
+from optuna.trial import TrialState
 
 
 CUDA = False
