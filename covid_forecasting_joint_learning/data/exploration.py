@@ -365,7 +365,7 @@ def label_date_grouping(grouping):
     return labeled_dates
 
 
-def make_objective_date_corr(
+def make_date_corr_objective(
     kabkos,
     single_dates,
     y_cols,
