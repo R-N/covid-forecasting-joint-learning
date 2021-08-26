@@ -273,11 +273,17 @@ def corr_lag_sort_multi(
     x_cols, y_cols,
     lag_start=0, lag_end=-14,
     method="kendall",
-    min_corr_percentile=0.50, max_corr_diff=0.5, min_corr=0.25, mean=True
+    min_corr_percentile=0.50, max_corr_diff=0.5, min_corr=0.1, mean=True
 ):
     x_lags = np.array(list(lag_range(lag_start, lag_end)))
     # make x_cols combinations first
-    corrs = [(x_col, y_col, corr_lag(df[x_col], df[y_col])) for x_col in x_cols for y_col in y_cols]
+    corrs = [(x_col, y_col, corr_lag(
+        df[x_col],
+        df[y_col],
+        method=method,
+        lag_start=lag_start,
+        lag_end=lag_end
+    )) for x_col in x_cols for y_col in y_cols]
     corrs = [(x_col, y_col, zip(x_lags, corr)) for x_col, y_col, corr in corrs]
     corrs = [(x_col, y_col) + max(corr, key=lambda x: x[-1]) for x_col, y_col, corr in corrs]
 
@@ -304,6 +310,7 @@ def explore_date_corr(
     labeled_dates=None,
     lag_start=0,
     lag_end=-14,
+    method="kendall",
     min_corr=0.1,
     min_corr_diff=1e-5,
     date_set=None,
@@ -329,6 +336,7 @@ def explore_date_corr(
             y_cols=y_cols,
             lag_start=lag_start,
             lag_end=lag_end,
+            method=method,
             min_corr_percentile=0,
             max_corr_diff=1,
             min_corr=min_corr + min_corr_diff,
@@ -373,6 +381,7 @@ def make_date_corr_objective(
     y_cols,
     lag_start=0,
     lag_end=-14,
+    method="kendall",
     min_corr=0.1,
     collect=False,
     penalty=False
@@ -396,6 +405,7 @@ def make_date_corr_objective(
                 y_cols=y_cols,
                 lag_start=lag_start,
                 lag_end=lag_end,
+                method=method,
                 min_corr_percentile=0,
                 max_corr_diff=1,
                 min_corr=0 if penalty else min_corr,
@@ -407,8 +417,46 @@ def make_date_corr_objective(
             del corrs
             if collect:
                 gc.collect()
-        ret /= len(kabkos)
+        ret /= len(kabkos) * len(y_cols)
         return ret
 
     return objective
 
+
+def filter_date_corr(
+    kabkos,
+    labeled_dates,
+    y_cols,
+    lag_start=0, lag_end=-14,
+    method="kendall",
+    min_corr=0.1
+):
+    corrs_0 = {}
+    for kabko in kabkos:
+        df = kabko.add_dates(
+            kabko.data,
+            dates={k: list(v) for k, v in labeled_dates.items()}
+        )
+
+        corrs = corr_lag_sort_multi(
+            df,
+            x_cols=list(labeled_dates.keys()),
+            y_cols=y_cols,
+            lag_start=lag_start,
+            lag_end=lag_end,
+            method=method,
+            min_corr_percentile=0,
+            max_corr_diff=1,
+            min_corr=0,
+            mean=False
+        )
+
+        for corr in corrs:
+            corrs_0[corr["x_col"]] += abs(corr["corr"])
+
+        del df
+        del corrs
+    scale = len(kabkos) * len(y_cols)
+    corrs_0 = {k: v / scale for k, v in corrs_0.items()}
+    dates = [k for k, v in corrs_0.items() if v > min_corr]
+    return {k: labeled_dates[k] for k in dates}
