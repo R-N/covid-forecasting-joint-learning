@@ -489,5 +489,5 @@ def filter_date_corr(
 
     scale = len(kabkos)
     corrs_0 = {k: v / scale for k, v in corrs_0.items()}
-    dates = [k for k, v in corrs_0.items() if v > min_corr]
+    dates = [k for k, v in corrs_0.items() if v >= min_corr]
     return {k: labeled_dates[k] for k in dates}
