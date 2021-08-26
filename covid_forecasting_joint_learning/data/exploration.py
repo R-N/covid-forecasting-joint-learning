@@ -380,7 +380,7 @@ def make_date_corr_objective(
     count = len(single_dates)
     groups = list(range((count + 1) if penalty else count))
     def objective(trial):
-        grouping = {single_dates[i]: trial.suggest_categorical(str(single_dates[i]), groups) for i in range(single_dates)}
+        grouping = {single_dates[i]: trial.suggest_categorical(str(single_dates[i]), groups) for i in range(count)}
         labeled_dates = label_date_grouping(grouping, penalty=penalty)
 
         ret = 0
