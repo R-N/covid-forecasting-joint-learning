@@ -356,10 +356,12 @@ def explore_date_corr(
     return ret
 
 
-def label_date_grouping(grouping):
+def label_date_grouping(grouping, penalty=True):
     grouping_1 = {i: [] for i in grouping.values()}
     for date, group in grouping.items():
         grouping_1[group].append(date)
+    if penalty:
+        del grouping[0]
     grouping_2 = [x for x in grouping_1.values() if x]
     labeled_dates = DataUtil.label_combinations(grouping_2)
     return labeled_dates
@@ -372,13 +374,14 @@ def make_date_corr_objective(
     lag_start=0,
     lag_end=-14,
     min_corr=0.1,
-    collect=False
+    collect=False,
+    penalty=True
 ):
     count = len(single_dates)
-    groups = list(range(count))
+    groups = list(range((count + 1) if penalty else count))
     def objective(trial):
         grouping = {single_dates[i]: trial.suggest_categorical(str(single_dates[i]), groups) for i in groups}
-        labeled_dates = label_date_grouping(grouping)
+        labeled_dates = label_date_grouping(grouping, penalty=penalty)
 
         ret = 0
         for kabko in kabkos:
@@ -395,11 +398,12 @@ def make_date_corr_objective(
                 lag_end=lag_end,
                 min_corr_percentile=0,
                 max_corr_diff=1,
-                min_corr=min_corr,
+                min_corr=0 if penalty else min_corr,
                 mean=False
             )
             del df
-            ret += sum([abs(corr["corr"]) for corr in corrs])
+            p = min_corr if penalty else 0
+            ret += sum([(abs(corr["corr"]) - p) for corr in corrs])
             del corrs
             if collect:
                 gc.collect()
