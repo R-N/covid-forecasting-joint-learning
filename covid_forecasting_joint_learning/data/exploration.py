@@ -403,6 +403,7 @@ def make_objective_date_corr(
             del corrs
             if collect:
                 gc.collect()
+        ret /= len(kabkos)
         return ret
 
     return objective
