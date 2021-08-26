@@ -63,7 +63,7 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df, lines=[], fills=[], title="", figsize=None):
+def plot_fill(df, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1)):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     max_val = df[lines].max().max()
     min_val = df[lines].min().min()
@@ -84,7 +84,7 @@ def plot_fill(df, lines=[], fills=[], title="", figsize=None):
     for line in lines:
         ax.plot(df[line], label=line)
     ax.set_title(title)
-    ax.legend(bbox_to_anchor=(0, -0.1), loc="upper left")
+    ax.legend(bbox_to_anchor=bbox, loc="upper left")
     return fig
 
 
