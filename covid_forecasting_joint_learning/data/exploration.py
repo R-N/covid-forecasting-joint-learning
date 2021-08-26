@@ -280,7 +280,7 @@ def corr_lag_best_multi(
         if reduction == "sum":
             corr = np.sum(corr, axis=1)
         elif reduction == "max":
-            corr = np.array([sum(row, key=lambda x: abs(x)) for row in corr])
+            corr = np.array([max(row, key=lambda x: abs(x)) for row in corr])
         elif reduction == "avg" or reduction == "mean":
             corr = np.mean(corr, axis=1)
         else:
