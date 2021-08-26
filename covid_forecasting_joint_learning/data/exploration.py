@@ -358,7 +358,7 @@ def explore_date_corr(
 
 def label_date_grouping(grouping):
     grouping_1 = {i: [] for i in grouping.values()}
-    for date, group in grouping:
+    for date, group in grouping.items():
         grouping_1[group].append(date)
     grouping_2 = [x for x in grouping_1.values() if x]
     labeled_dates = DataUtil.label_combinations(grouping_2)
