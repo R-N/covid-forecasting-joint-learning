@@ -257,7 +257,16 @@ def corr_lag_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall
     return corr if lag_as_col else corr.T
 
 
-def corr_lag_best_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="kendall", y_as_cols=True):
+def corr_lag_best_multi(
+    df,
+    x_cols, y_cols,
+    lag_start=0, lag_end=-14,
+    method="kendall",
+    reduction=None,
+    abs=False,
+    as_dict=False,
+    y_as_cols=True
+):
     corr = np.array([[max(corr_lag(
         df[x_col],
         df[y_col],
@@ -265,8 +274,25 @@ def corr_lag_best_multi(df, x_cols, y_cols, lag_start=0, lag_end=-14, method="ke
         lag_start=lag_start,
         lag_end=lag_end
     ), key=lambda x: abs(x)) for y_col in y_cols] for x_col in x_cols])
-    corr = pd.DataFrame(corr, columns=y_cols, index=x_cols)
-    return corr if y_as_cols else corr.T
+    if reduction:
+        if abs:
+            corr = np.abs(corr)
+        if reduction == "sum":
+            corr = np.sum(corr, axis=1)
+        elif reduction == "max":
+            corr = np.array([sum(row, key=lambda x: abs(x)) for row in corr])
+        elif reduction == "avg" or reduction == "mean":
+            corr = np.mean(corr, axis=1)
+        else:
+            raise ValueError(f"Invalid reduction '{reduction}'")
+        if as_dict:
+            return dict(zip(x_cols, corr))
+        df = pd.DataFrame(corr, columns=["corr"], index=x_cols)
+        return df
+    else:
+        df = pd.DataFrame(corr, columns=y_cols, index=x_cols)
+        return df if y_as_cols else df.T
+
 
 def corr_lag_sort_multi(
     df,
@@ -330,31 +356,33 @@ def explore_date_corr(
             dates={k: list(v) for k, v in labeled_dates.items()}
         )
 
-        corrs = corr_lag_sort_multi(
+        corrs = corr_lag_best_multi(
             df,
             x_cols=list(labeled_dates.keys()),
             y_cols=y_cols,
             lag_start=lag_start,
             lag_end=lag_end,
             method=method,
-            min_corr_percentile=0,
-            max_corr_diff=1,
-            min_corr=min_corr + min_corr_diff,
-            mean=False
+            reduction="max",
+            abs=False,
+            as_dict=True
         )
 
         del df
 
         if corrs:
-            for corr in corrs:
-                x_col = corr["x_col"]
+            for x_col, corr in corrs.items():
                 date = labeled_dates[x_col]
                 new_dates = [tuple(sorted(date + (x,))) for x in single_dates if x not in date]
                 new_dates = [x for x in new_dates if x not in date_set]
                 stack.append((
                     DataUtil.label_combinations(new_dates),
-                    abs(corr["corr"]),
-                    corr if return_corr else date
+                    abs(corr),
+                    {
+                        "x_col": x_col,
+                        "corr": corr,
+                        "date": date
+                    } if return_corr else date
                 ))
             del corrs
         else:
@@ -399,25 +427,26 @@ def make_date_corr_objective(
                 dates={k: list(v) for k, v in labeled_dates.items()}
             )
 
-            corrs = corr_lag_sort_multi(
+            corrs = corr_lag_best_multi(
                 df,
                 x_cols=list(labeled_dates.keys()),
                 y_cols=y_cols,
                 lag_start=lag_start,
                 lag_end=lag_end,
                 method=method,
-                min_corr_percentile=0,
-                max_corr_diff=1,
-                min_corr=0 if penalty else min_corr,
-                mean=False
+                reduction="max",
+                abs=True,
+                as_dict=True
             )
             del df
-            p = min_corr if penalty else 0
-            ret += sum([(abs(corr["corr"]) - p) for corr in corrs])
+            if penalty:
+                ret += sum([corr - min_corr for corr in corrs.values()])
+            else:
+                ret += sum([corr for corr in corrs.values() if corr >= min_corr])
             del corrs
             if collect:
                 gc.collect()
-        ret /= len(kabkos) * len(y_cols)
+        ret /= len(kabkos)
         return ret
 
     return objective
@@ -431,32 +460,34 @@ def filter_date_corr(
     method="kendall",
     min_corr=0.1
 ):
-    corrs_0 = {}
+    corrs_0 = None
     for kabko in kabkos:
         df = kabko.add_dates(
             kabko.data,
             dates={k: list(v) for k, v in labeled_dates.items()}
         )
 
-        corrs = corr_lag_sort_multi(
+        corrs = corr_lag_best_multi(
             df,
             x_cols=list(labeled_dates.keys()),
             y_cols=y_cols,
             lag_start=lag_start,
             lag_end=lag_end,
             method=method,
-            min_corr_percentile=0,
-            max_corr_diff=1,
-            min_corr=0,
-            mean=False
+            reduction="max",
+            abs=True,
+            as_dict=True
         )
-
-        for corr in corrs:
-            corrs_0[corr["x_col"]] += abs(corr["corr"])
-
         del df
+
+        if corrs_0:
+            for x_col, corr in corrs.items():
+                corrs_0[x_col] += corr
+        else:
+            corrs_0 = corrs
         del corrs
-    scale = len(kabkos) * len(y_cols)
+
+    scale = len(kabkos)
     corrs_0 = {k: v / scale for k, v in corrs_0.items()}
     dates = [k for k, v in corrs_0.items() if v > min_corr]
     return {k: labeled_dates[k] for k in dates}
