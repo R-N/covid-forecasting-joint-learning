@@ -274,6 +274,7 @@ def corr_lag_best_multi(
         lag_start=lag_start,
         lag_end=lag_end
     ), key=lambda x: abs(x)) for y_col in y_cols] for x_col in x_cols])
+    print(corr)
     if reduction:
         if abs_corr:
             corr = np.abs(corr)
@@ -285,6 +286,7 @@ def corr_lag_best_multi(
             corr = np.mean(corr, axis=1)
         else:
             raise ValueError(f"Invalid reduction '{reduction}'")
+        print(corr)
         if as_dict:
             return dict(zip(x_cols, corr))
         df = pd.DataFrame(corr, columns=["corr"], index=x_cols)
@@ -486,7 +488,6 @@ def filter_date_corr(
         else:
             corrs_0 = corrs
         del corrs
-        print(corrs_0)
 
     scale = len(kabkos)
     corrs_0 = {k: v / scale for k, v in corrs_0.items()}
