@@ -84,7 +84,7 @@ def plot_fill(df, lines=[], fills=[], title="", figsize=None):
     for line in lines:
         ax.plot(df[line], label=line)
     ax.set_title(title)
-    ax.legend(bbox_to_anchor=(1.04, 0), loc="upper left")
+    ax.legend(bbox_to_anchor=(0, -0.1), loc="upper left")
     return fig
 
 
