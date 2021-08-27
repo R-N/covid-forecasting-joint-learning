@@ -23,6 +23,7 @@ class SourcePick:
     ALL = 0
     CLOSEST = 1
     LONGEST = 2
+    NONE = 3
 
 
 class SharedMode:
@@ -79,6 +80,8 @@ class ClusterModel:
             self.sources = [cluster.source_closest]
         elif source_pick == SourcePick.LONGEST:
             self.sources = [cluster.source_longest]
+        elif self.source_pick == SourcePick.NONE:
+            self.sources = []
         else:
             raise Exception("Invalid source_pick: %s" % (source_pick,))
 
