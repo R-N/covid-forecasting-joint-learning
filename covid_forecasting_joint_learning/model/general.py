@@ -589,8 +589,8 @@ def make_objective(
     model_dir_id=None,
     device="cpu",
     write_graph=False,
-    early_stopping_interval_mode=(2,),
-    max_epoch=(100, 100),
+    early_stopping_interval_mode=2,
+    max_epoch=100,
     teacher_forcing=(True,),
     activations={
         "ReLU": nn.ReLU,
@@ -660,20 +660,26 @@ def make_objective(
             "combine_head_w0_std": trial.suggest_float("combine_head_w0_std", *w0_stds),
             "precombine_head_depth": trial.suggest_int("precombine_head_depth", *pre_fc_depths),
             "combine_head_depth": trial.suggest_int("combine_head_depth", *normal_fc_depths),
-            "conv_activation": activations[trial.suggest_categorical("conv_activation", activation_keys)],
-            "fc_activation": activations[trial.suggest_categorical("fc_activation", activation_keys)],
-            "residual_activation": activations[trial.suggest_categorical("residual_activation", activation_keys)],
+            "conv_activation": trial.suggest_categorical("conv_activation", activation_keys),
+            "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
+            "residual_activation": trial.suggest_categorical("residual_activation", activation_keys),
             "lr": trial.suggest_float("lr", *lrs),
             "source_weight": trial.suggest_float("source_weight", *source_weights),
-            "batch_size": 16 * (2**trial.suggest_int("batch_size", *batch_sizes)),
+            "batch_size": trial.suggest_int("batch_size", *batch_sizes),
             "additional_past_length": trial.suggest_int("additional_past_length", *additional_past_lengths),
             "seed_length": trial.suggest_int("seed_length", *seed_lengths),
             "use_last_past": trial.suggest_int("use_last_past", *booleans),
-            "past_cols": past_cols[trial.suggest_int("past_cols", 0, len(past_cols) - 1)],
-            "future_exo_cols": future_exo_cols[trial.suggest_int("future_exo_cols", 0, len(future_exo_cols) - 1)],
+            "past_cols": trial.suggest_int("past_cols", 0, len(past_cols) - 1),
+            "future_exo_cols": trial.suggest_int("future_exo_cols", 0, len(future_exo_cols) - 1),
             "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
         }
 
+        params["conv_activation"]: activations[params["conv_activation"]],
+        params["fc_activation"]: activations[params["fc_activation"]],
+        params["residual_activation"]: activations[params["residual_activation"]],
+        params["batch_size"] = 16 * (2**params["batch_size"])
+        params["past_cols"] = past_cols[params["past_cols"]]
+        params["future_exo_cols"] = future_exo_cols[params["future_exo_cols"]]
         use_exo = bool(params["future_exo_cols"])
 
         sum_val_loss_target = 0
@@ -713,8 +719,8 @@ def make_objective(
                     debug=1,
                     log_dir=model.log_dir,
                     label=model.label,
-                    interval_mode=trial.suggest_categorical("early_stopping_interval_mode", early_stopping_interval_mode),
-                    max_epoch=trial.suggest_int("max_epoch", *max_epoch)
+                    interval_mode=early_stopping_interval_mode,
+                    max_epoch=max_epoch
                 )
 
                 while not early_stopping.stopped:
