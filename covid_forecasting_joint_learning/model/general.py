@@ -71,7 +71,8 @@ class ClusterModel:
         optimizer_kwargs={},
         train_kwargs={},
         grad_scaler=None,
-        min_epochs=50
+        min_epochs=50,
+        shared_model=None
     ):
         self.cluster = cluster
         if source_pick == SourcePick.ALL:
@@ -91,7 +92,7 @@ class ClusterModel:
         self.private_mode = private_mode
         self.shared_mode = shared_mode
 
-        self.shared_model = SingleModel(**sizes, **model_kwargs)
+        self.shared_model = shared_model or SingleModel(**sizes, **model_kwargs)
 
         if self.shared_mode == SharedMode.SHARED:
             with suppress(KeyError, TypeError):
@@ -274,7 +275,8 @@ class ObjectiveModel:
         log_dir=None,
         model_dir=None,
         debug=False,
-        min_epochs=50
+        min_epochs=50,
+        shared_model=None
     ):
         self.cluster = cluster
 
@@ -470,7 +472,8 @@ class ObjectiveModel:
             train_kwargs={
                 "loss_fn": loss_fn,
                 "source_weight": source_weight
-            }
+            },
+            shared_model=shared_model
         )
 
         if debug:
