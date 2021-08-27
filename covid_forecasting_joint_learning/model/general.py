@@ -579,6 +579,31 @@ class ObjectiveModel:
         plt.close(layer_fig)
 
 
+DEFAULT_ACTIVATIONS = {
+    "ReLU": nn.ReLU,
+    "LeakyReLU": nn.LeakyReLU,
+    "Sigmoid": nn.Sigmoid,
+    "Tanh": nn.Tanh,
+    "SELU": nn.SELU
+}
+DEFAULT_PAST_COLS = [None]
+DEFAULT_FUTURE_EXO_COLS = [["psbb", "ppkm", "ppkm_mikro"]]
+
+
+def prepare_params(
+    params,
+    activations=DEFAULT_ACTIVATIONS,
+    past_cols=DEFAULT_PAST_COLS,
+    future_exo_cols=DEFAULT_FUTURE_EXO_COLS
+):
+    params["conv_activation"]: activations[params["conv_activation"]]
+    params["fc_activation"]: activations[params["fc_activation"]]
+    params["residual_activation"]: activations[params["residual_activation"]]
+    params["batch_size"] = 16 * (2**params["batch_size"])
+    params["past_cols"] = past_cols[params["past_cols"]]
+    params["future_exo_cols"] = future_exo_cols[params["future_exo_cols"]]
+    return params
+
 
 def make_objective(
     groups,
@@ -592,13 +617,7 @@ def make_objective(
     early_stopping_interval_mode=2,
     max_epoch=100,
     teacher_forcing=(True,),
-    activations={
-        "ReLU": nn.ReLU,
-        "LeakyReLU": nn.LeakyReLU,
-        "Sigmoid": nn.Sigmoid,
-        "Tanh": nn.Tanh,
-        "SELU": nn.SELU
-    },
+    activations=DEFAULT_ACTIVATIONS,
     hidden_sizes=(3, 50),
     normal_conv_depths=(1, 20),
     pre_conv_depths=(0, 5),
@@ -618,8 +637,8 @@ def make_objective(
     batch_sizes=(0, 5),
     additional_past_lengths=(0, 4),
     seed_lengths=(30, 30),
-    past_cols=[None],
-    future_exo_cols=[["psbb", "ppkm", "ppkm_mikro"]],
+    past_cols=DEFAULT_PAST_COLS,
+    future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
     process_per_model=4
 ):
     activation_keys = [x for x in activations.keys()]
@@ -674,12 +693,7 @@ def make_objective(
             "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
         }
 
-        params["conv_activation"]: activations[params["conv_activation"]],
-        params["fc_activation"]: activations[params["fc_activation"]],
-        params["residual_activation"]: activations[params["residual_activation"]],
-        params["batch_size"] = 16 * (2**params["batch_size"])
-        params["past_cols"] = past_cols[params["past_cols"]]
-        params["future_exo_cols"] = future_exo_cols[params["future_exo_cols"]]
+        params = prepare_params(params, activations, past_cols, future_exo_cols)
         use_exo = bool(params["future_exo_cols"])
 
         sum_val_loss_target = 0
