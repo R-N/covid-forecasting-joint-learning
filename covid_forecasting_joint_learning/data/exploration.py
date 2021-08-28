@@ -533,4 +533,4 @@ def filter_date_corr(
         kabko_reduction=kabko_reduction,
         y_reduction=y_reduction
     )
-    return {k: v for k, v in corrs.items() if v >= min_corr}
+    return {k: labeled_dates[k] for k, v in corrs.items() if v >= min_corr}
