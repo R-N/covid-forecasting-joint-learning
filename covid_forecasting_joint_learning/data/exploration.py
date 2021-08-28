@@ -281,7 +281,7 @@ def corr_lag_best_multi(
             corr = np.sum(corr, axis=1, skipna=True)
         elif reduction == "max":
             corr = np.array([max(row, key=lambda x: abs(x) if not np.isnan(x) else 0) for row in corr])
-        elif reduction == "avg" or reduction == "mean":
+        elif reduction in ("avg", "mean"):
             corr = np.mean(corr, axis=1, skipna=True)
         else:
             raise ValueError(f"Invalid reduction '{reduction}'")
@@ -403,62 +403,14 @@ def label_date_grouping(grouping, penalty=False):
     return labeled_dates
 
 
-def make_date_corr_objective(
-    kabkos,
-    single_dates,
-    y_cols,
-    lag_start=0,
-    lag_end=-14,
-    method="kendall",
-    min_corr=0.1,
-    collect=False,
-    penalty=False
-):
-    count = len(single_dates)
-    groups = list(range((count + 1) if penalty else count))
-    def objective(trial):
-        grouping = {single_dates[i]: trial.suggest_categorical(str(single_dates[i]), groups) for i in range(count)}
-        labeled_dates = label_date_grouping(grouping, penalty=penalty)
-
-        ret = 0
-        for kabko in kabkos:
-            df = kabko.add_dates(
-                kabko.data,
-                dates={k: list(v) for k, v in labeled_dates.items()}
-            )
-
-            corrs = corr_lag_best_multi(
-                df,
-                x_cols=list(labeled_dates.keys()),
-                y_cols=y_cols,
-                lag_start=lag_start,
-                lag_end=lag_end,
-                method=method,
-                reduction="max",
-                abs_corr=True,
-                as_dict=True
-            )
-            del df
-            if penalty:
-                ret += sum([corr - min_corr for corr in corrs.values()])
-            else:
-                ret += sum([corr for corr in corrs.values() if corr >= min_corr])
-            del corrs
-            if collect:
-                gc.collect()
-        ret /= len(kabkos)
-        return ret
-
-    return objective
-
-
-def filter_date_corr(
+def corr_lag_best_multi_kabko(
     kabkos,
     labeled_dates,
     y_cols,
     lag_start=0, lag_end=-14,
     method="kendall",
-    min_corr=0.1
+    kabko_reduction="max",
+    y_reduction="max"
 ):
     corrs_0 = None
     for kabko in kabkos:
@@ -474,20 +426,111 @@ def filter_date_corr(
             lag_start=lag_start,
             lag_end=lag_end,
             method=method,
-            reduction="max",
+            reduction=y_reduction,
             abs_corr=True,
             as_dict=True
         )
         del df
 
         if corrs_0:
-            for x_col, corr in corrs.items():
-                corrs_0[x_col] += corr
+            if kabko_reduction in ("avg", "mean", "sum"):
+                for x_col, corr in corrs.items():
+                    corrs_0[x_col] += corr
+            elif kabko_reduction == "max":
+                for x_col, corr in corrs.items():
+                    corrs_0[x_col] = max((corr, corrs_0[x_col]))
+            else:
+                raise ValueError(f"Invalid kabko_reduction '{kabko_reduction}'")
         else:
             corrs_0 = corrs
         del corrs
 
-    scale = len(kabkos)
-    corrs_0 = {k: v / scale for k, v in corrs_0.items()}
-    dates = [k for k, v in corrs_0.items() if v >= min_corr]
-    return {k: labeled_dates[k] for k in dates}
+    if kabko_reduction in ("avg", "mean"):
+        scale = len(kabkos)
+        corrs_0 = {k: v / scale for k, v in corrs_0.items()}
+
+    return corrs_0
+
+
+def score_labeled_dates(
+    kabkos,
+    labeled_dates,
+    y_cols,
+    lag_start=0, lag_end=-14,
+    method="kendall",
+    kabko_reduction="max",
+    y_reduction="max",
+    min_corr=0.1,
+    penalty=False
+):
+    corrs = corr_lag_best_multi_kabko(
+        kabkos,
+        labeled_dates,
+        y_cols,
+        lag_start=lag_start,
+        lag_end=lag_end,
+        method=method,
+        kabko_reduction=kabko_reduction,
+        y_reduction=y_reduction
+    )
+    if penalty:
+        return sum([corr - min_corr for corr in corrs.values()])
+    else:
+        return sum([corr for corr in corrs.values() if corr >= min_corr])
+
+
+def make_date_corr_objective(
+    kabkos,
+    single_dates,
+    y_cols,
+    lag_start=0,
+    lag_end=-14,
+    method="kendall",
+    kabko_reduction="max",
+    y_reduction="max",
+    min_corr=0.1,
+    penalty=False
+):
+    count = len(single_dates)
+    groups = list(range((count + 1) if penalty else count))
+    def objective(trial):
+        grouping = {single_dates[i]: trial.suggest_categorical(str(single_dates[i]), groups) for i in range(count)}
+        labeled_dates = label_date_grouping(grouping, penalty=penalty)
+
+        return score_labeled_dates(
+            kabkos,
+            labeled_dates,
+            y_cols,
+            lag_start=lag_start,
+            lag_end=lag_end,
+            method=method,
+            kabko_reduction=kabko_reduction,
+            y_reduction=y_reduction,
+            min_corr=min_corr,
+            penalty=penalty
+        )
+
+    return objective
+
+
+def filter_date_corr(
+    kabkos,
+    labeled_dates,
+    y_cols,
+    lag_start=0, lag_end=-14,
+    method="kendall",
+    min_corr=0.1,
+    kabko_reduction="max",
+    y_reduction="max"
+):
+    corrs = corr_lag_best_multi_kabko(
+        kabkos,
+        labeled_dates,
+        y_cols,
+        lag_start=lag_start,
+        lag_end=lag_end,
+        method=method,
+        kabko_reduction=kabko_reduction,
+        y_reduction=y_reduction
+    )
+    return {k: v for k, v in corrs.items() if v >= min_corr}
