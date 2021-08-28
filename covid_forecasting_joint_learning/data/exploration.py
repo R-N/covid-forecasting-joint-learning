@@ -502,6 +502,7 @@ def make_date_corr_objective(
 
 
 def filter_date_corr(
+    labeled_dates,
     corrs,
     min_corr=0.1,
 ):
