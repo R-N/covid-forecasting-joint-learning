@@ -5,7 +5,7 @@ from tslearn.metrics import dtw
 from collections import Counter
 import numpy as np
 from . import util as PipelineUtil
-
+import itertools
 
 def shortest(x):
     return (-len(x.data), x.data.last_valid_index(), x.data.first_valid_index())
@@ -17,16 +17,46 @@ class Cluster:
         id,
         group,
         sources=None,
-        target=None
+        target=None,
+        targets=None
     ):
         self.id = id
         self.group = group
         self.sources = sources
-        self.target = target
+        self.__target = None
+        self.__targets = None
+
+        if target and targets:
+            self.__target = target
+            self.__targets = targets
+        else:
+            self.target = target
+            self.targets = targets
+
+    @property
+    def target(self):
+        return self.__target
+
+    @target.setter
+    def target(self, value):
+        self.__target = value
+        if (not self.__targets) and value:
+            self.__targets = [value]
+
+    @proeprty
+    def targets(self):
+        return self.__targets
+
+    @targets.setter
+    def targets(self, value):
+        assert value is None or isinstance(value, list)
+        self.__targets = value
+        if (not self.__target) and value:
+            self.__target = max(value, key=lambda x: shortest(x))
 
     @property
     def members(self):
-        return [*self.sources, self.target]
+        return self.sources + self.targets
 
     @property
     def source_longest(self):
@@ -35,6 +65,16 @@ class Cluster:
     @property
     def source_closest(self):
         return min(self.sources, key=lambda x: dtw(self.target, x))
+
+
+def merge_clusters(group):
+    return Cluster(
+        -1,
+        group,
+        sources=group.sources,
+        targets=group.targets
+    )
+
 
 
 def cluster(

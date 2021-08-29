@@ -87,6 +87,7 @@ class ClusterModel:
             raise Exception("Invalid source_pick: %s" % (source_pick,))
 
         self.target = cluster.target
+        self.targets = cluster.targets
 
         self.source_pick = source_pick
         self.private_mode = private_mode
@@ -175,7 +176,7 @@ class ClusterModel:
         # optimizer = self.create_optimizer()
         return train(
             self.sources,
-            self.target,
+            self.targets,
             self.optimizer,
             self.scheduler,
             key=lambda k: k.dataloaders[0],
@@ -187,7 +188,7 @@ class ClusterModel:
     def val(self):
         return test(
             self.sources,
-            self.target,
+            self.targets,
             key=lambda k: k.dataloaders[1],
             **self.train_kwargs
         )
@@ -195,7 +196,7 @@ class ClusterModel:
     def test(self):
         return test(
             self.sources,
-            self.target,
+            self.targets,
             key=lambda k: k.dataloaders[2],
             **self.train_kwargs
         )
@@ -502,15 +503,23 @@ class ObjectiveModel:
         self.train_epoch = 0
         self.val_epoch = 0
 
-        self.label = f"G{self.cluster.group.id}.C{self.cluster.id}/"
+        self.label = f"G{self.cluster.group.id}.C{self.cluster.id}"
+
+
+    def _log_scalar(self, writer, loss, epoch):
+        writer.add_scalar(f"{self.label}/avg_loss", loss[0].item(), global_step=epoch)
+        writer.add_scalar(f"{self.label}/target_loss", loss[1].item(), global_step=epoch)
+        losses = loss[2]
+        for i in range(len(losses)):
+            writer.add_scalar(f"{self.label}/target_loss_{i}_{self.targets[i].name}", losses[i].item(), global_step=epoch)
+        writer.flush()
+
 
     def train(self, epoch=None):
         loss = self.model.train()
         epoch = epoch if epoch is not None else self.train_epoch
         if self.log_dir:
-            self.train_summary_writer.add_scalar(self.label + "avg_loss", loss[0].item(), global_step=epoch)
-            self.train_summary_writer.add_scalar(self.label + "target_loss", loss[1].item(), global_step=epoch)
-            self.train_summary_writer.flush()
+            self._log_scalar(self.train_summary_writer, loss, epoch)
         self.train_epoch = epoch + 1
         return loss
 
@@ -518,9 +527,7 @@ class ObjectiveModel:
         loss = self.model.val()
         epoch = epoch if epoch is not None else self.val_epoch
         if self.log_dir:
-            self.val_summary_writer.add_scalar(self.label + "avg_loss", loss[0].item(), global_step=epoch)
-            self.val_summary_writer.add_scalar(self.label + "target_loss", loss[1].item(), global_step=epoch)
-            self.val_summary_writer.flush()
+            self._log_scalar(self.val_summary_writer, loss, epoch)
         self.val_epoch = epoch + 1
         return loss
 
@@ -565,18 +572,21 @@ class ObjectiveModel:
         if not model_dir:
             raise ValueError("Please provide or set model_dir")
 
-        torch.save(self.model.models.state_dict(), model_dir + "models.pt")
-        torch.save(self.model.target.model.state_dict(), model_dir + "target.pt")
+        torch.save(self.model.models.state_dict(), f"{model_dir}models.pt")
+        for i in range(len(self.model.targets)):
+            target = self.model.targets[i]
+            suffix = f"_{i}_{target.name}"
+            torch.save(target.model.state_dict(), f"{model_dir}target{suffix}.pt")
 
-        input_attr = self.model.target.get_input_attr()
-        input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, self.model.target.dataset_labels))
-        input_fig.savefig(model_dir + "input_attr.jpg", bbox_inches="tight")
-        plt.close(input_fig)
+            input_attr = target.get_input_attr()
+            input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, target.dataset_labels))
+            input_fig.savefig(f"{model_dir}input_attr{suffix}.jpg", bbox_inches="tight")
+            plt.close(input_fig)
 
-        layer_attrs = self.model.target.get_aggregate_layer_attr()
-        layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs), title="Layer importance")
-        layer_fig.savefig(model_dir + "layer_attr.jpg", bbox_inches="tight")
-        plt.close(layer_fig)
+            layer_attrs = target.get_aggregate_layer_attr()
+            layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs), title="Layer importance")
+            layer_fig.savefig(f"{model_dir}layer_attr{suffix}.jpg", bbox_inches="tight")
+            plt.close(layer_fig)
 
 
 DEFAULT_ACTIVATIONS = {
@@ -738,8 +748,8 @@ def make_objective(
                 )
 
                 while not early_stopping.stopped:
-                    train_loss, train_loss_target = model.train()
-                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+                    train_loss, train_loss_target, train_loss_targets = model.train()
+                    train_loss, train_loss_target, train_loss_targets = train_loss.item(), train_loss_target.item()
                     val_loss, val_loss_target = model.val()
                     val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
                     early_stopping(train_loss_target, val_loss_target)

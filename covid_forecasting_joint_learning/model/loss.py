@@ -13,7 +13,7 @@ def msse(past, future, pred):
 def rmsse(past, future, pred):
     return torch.sqrt(msse(past, future, pred))
 
-def reduce(loss, reduction="mean"):
+def reduce(loss, reduction="sum"):
     while loss.dim > 1:
         loss = torch.sum(loss, dim=-1)
     if reduction == "mean":
@@ -24,7 +24,7 @@ def reduce(loss, reduction="mean"):
         raise ValueError(f"Invalid reduction {reduction}")
 
 class MSSELoss(nn.Module):
-    def __init__(self, reduction="mean"):
+    def __init__(self, reduction="sum"):
         super().__init__()
         self.reduction = reduction
 
@@ -32,7 +32,7 @@ class MSSELoss(nn.Module):
         return reduce(msse(past, future, pred), reduction=self.reduction)
 
 class RMSSELoss(nn.Module):
-    def __init__(self, reduction="mean"):
+    def __init__(self, reduction="sum"):
         super().__init__()
         self.reduction = reduction
 

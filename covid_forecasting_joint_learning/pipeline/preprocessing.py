@@ -79,8 +79,20 @@ class Group:
     def __init__(self, id, members, clusters=None, clustering_info=None):
         self.id = id
         self.members = members
-        self.clusters = clusters
+        self.clusters = clusters or []
         self.clustering_info = clustering_info
+
+    @property
+    def sources(self):
+        return list(itertools.chain.from_iterable([c.sources for c in self.clusters]))
+
+    @property
+    def targets(self):
+        return [c.target for c in self.clusters]
+
+    @property
+    def target(self):
+        return max(self.targets, key=lambda x: shortest(x))
 
 
 # Note that slicing with date index includes the second part as opposed to integer index
