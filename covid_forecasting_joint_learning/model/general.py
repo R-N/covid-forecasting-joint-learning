@@ -511,7 +511,7 @@ class ObjectiveModel:
         writer.add_scalar(f"{self.label}/target_loss", loss[1].item(), global_step=epoch)
         losses = loss[2]
         for i in range(len(losses)):
-            writer.add_scalar(f"{self.label}/target_loss_{i}_{self.targets[i].name}", losses[i].item(), global_step=epoch)
+            writer.add_scalar(f"{self.label}/target_loss_{i}_{self.model.targets[i].name}", losses[i].item(), global_step=epoch)
         writer.flush()
 
 
