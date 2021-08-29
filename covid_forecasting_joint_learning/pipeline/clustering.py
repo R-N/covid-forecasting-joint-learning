@@ -43,7 +43,7 @@ class Cluster:
         if (not self.__targets) and value:
             self.__targets = [value]
 
-    @proeprty
+    @property
     def targets(self):
         return self.__targets
 
