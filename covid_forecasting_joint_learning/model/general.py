@@ -177,8 +177,8 @@ class ClusterModel:
         return train(
             self.sources,
             self.targets,
-            self.optimizer,
-            self.scheduler,
+            optimizer=self.optimizer,
+            scheduler=self.scheduler,
             key=lambda k: k.dataloaders[0],
             clip_grad_norm=self.clip_grad_norm,
             grad_scaler=grad_scaler,
