@@ -723,6 +723,9 @@ def make_objective(
         for group in groups:
             for cluster in group.clusters:
 
+                if group.id != 0 and cluster.id != 0:
+                    continue
+
                 print(f"Model for {group.id}.{cluster.id}")
 
                 grad_scaler = None  # GradScaler(init_scale=8192)
@@ -738,7 +741,7 @@ def make_objective(
                 )
                 model.to(device)
 
-                if write_graph and group.id == 0 and cluster.id == 0:
+                if write_graph and group.id == 0 and cluster.id <= 0:
                     model.write_graph()
 
                 if model_dir:
