@@ -40,7 +40,7 @@ def __eval(
                 target_losses[kabko.is_target] = loss_s
 
         loss /= weights
-        target_loss =/ target_weights
+        target_loss /= target_weights
 
     if train:
         if grad_scaler:
