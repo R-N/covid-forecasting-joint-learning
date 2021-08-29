@@ -723,7 +723,7 @@ def make_objective(
         for group in groups:
             for cluster in group.clusters:
 
-                if group.id != 0 and cluster.id != 0:
+                if group.id > 0 or cluster.id > 1:
                     continue
 
                 print(f"Model for {group.id}.{cluster.id}")
