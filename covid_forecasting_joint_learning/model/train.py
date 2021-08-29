@@ -2,12 +2,14 @@ import torch
 from torch import nn
 import contextlib
 from .loss import MSSELoss
+from .util import LINE_PROFILER
 
 dummy_context = contextlib.nullcontext()
 
 def dummy():
     pass
 
+@LINE_PROFILER
 def __eval(
     samples,
     loss_fn,
@@ -55,7 +57,7 @@ def __eval(
     target_losses = [target_losses[i+1].detach().item() for i in range(len(target_losses))]
     return loss, target_loss, target_losses
 
-
+@LINE_PROFILER
 def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
     weights = 0
     target_weights = 0
@@ -83,7 +85,7 @@ def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
 
     return weights, target_weights
 
-
+@LINE_PROFILER
 def eval(
     sources,
     targets,

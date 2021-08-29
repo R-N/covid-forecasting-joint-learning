@@ -18,6 +18,8 @@ import gc
 from ..pipeline.main import preprocessing_5, preprocessing_6
 from copy import deepcopy
 
+from .util import LINE_PROFILER
+
 
 class SourcePick:
     ALL = 0
@@ -37,6 +39,7 @@ def check_key(dict, key):
 
 
 class ClusterModel:
+    @LINE_PROFILER
     def __init__(
         self,
         cluster,
@@ -171,6 +174,7 @@ class ClusterModel:
         for k in self.members:
             self.k.model.freeze_private(freeze)
 
+    @LINE_PROFILER
     def train(self, grad_scaler=None):
         grad_scaler = grad_scaler or self.grad_scaler
         # optimizer = self.create_optimizer()
@@ -185,6 +189,7 @@ class ClusterModel:
             **self.train_kwargs
         )
 
+    @LINE_PROFILER
     def val(self):
         return test(
             self.sources,
@@ -221,6 +226,7 @@ class ClusterModel:
 
 
 class ObjectiveModel:
+    @LINE_PROFILER
     def __init__(
         self,
         cluster,
@@ -506,6 +512,7 @@ class ObjectiveModel:
         self.label = f"G{self.cluster.group.id}.C{self.cluster.id}"
 
 
+    @LINE_PROFILER
     def _log_scalar(self, writer, loss, epoch):
         writer.add_scalar(f"{self.label}/avg_loss", loss[0].item(), global_step=epoch)
         writer.add_scalar(f"{self.label}/target_loss", loss[1].item(), global_step=epoch)
@@ -515,6 +522,7 @@ class ObjectiveModel:
         writer.flush()
 
 
+    @LINE_PROFILER
     def train(self, epoch=None):
         loss = self.model.train()
         epoch = epoch if epoch is not None else self.train_epoch
@@ -523,6 +531,7 @@ class ObjectiveModel:
         self.train_epoch = epoch + 1
         return loss
 
+    @LINE_PROFILER
     def val(self, epoch=None):
         loss = self.model.val()
         epoch = epoch if epoch is not None else self.val_epoch
@@ -558,6 +567,7 @@ class ObjectiveModel:
     def get_target_aggregate_layer_attr(self, *args, **kwargs):
         return self.target.get_target_aggregate_layer_attr(*args, **kwargs)
 
+    @LINE_PROFILER
     def pretrain_save_model(self, model_dir=None):
         model_dir = model_dir or self.model_dir
         if not model_dir:
@@ -567,6 +577,7 @@ class ObjectiveModel:
         DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
         DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
 
+    @LINE_PROFILER
     def posttrain_save_model(self, model_dir=None):
         model_dir = model_dir or self.model_dir
         if not model_dir:
@@ -653,6 +664,7 @@ def make_objective(
 ):
     activation_keys = [x for x in activations.keys()]
 
+    @LINE_PROFILER
     def objective(
         trial
     ):

@@ -35,6 +35,7 @@ setuptools.setup(
         "scipy",
         "pydrive",
         "captum",
-        "openpyxl"
+        "openpyxl",
+        "line_profiler"
     ]
 )

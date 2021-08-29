@@ -3,6 +3,10 @@ import json
 from torch import nn
 import numpy as np
 from optuna.trial import TrialState
+import line_profiler
+
+
+LINE_PROFILER = line_profiler.LineProfiler()
 
 
 CUDA = False
