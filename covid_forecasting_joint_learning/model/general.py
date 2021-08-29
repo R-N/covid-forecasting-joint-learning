@@ -749,7 +749,7 @@ def make_objective(
 
                 while not early_stopping.stopped:
                     train_loss, train_loss_target, train_loss_targets = model.train()
-                    train_loss, train_loss_target, train_loss_targets = train_loss.item(), train_loss_target.item()
+                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
                     val_loss, val_loss_target = model.val()
                     val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
                     early_stopping(train_loss_target, val_loss_target)
