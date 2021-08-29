@@ -606,9 +606,9 @@ def prepare_params(
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS
 ):
-    params["conv_activation"]: activations[params["conv_activation"]]
-    params["fc_activation"]: activations[params["fc_activation"]]
-    params["residual_activation"]: activations[params["residual_activation"]]
+    params["conv_activation"] = activations[params["conv_activation"]]
+    params["fc_activation"] = activations[params["fc_activation"]]
+    params["residual_activation"] = activations[params["residual_activation"]]
     params["batch_size"] = 16 * (2**params["batch_size"])
     params["past_cols"] = past_cols[params["past_cols"]]
     params["future_exo_cols"] = future_exo_cols[params["future_exo_cols"]]
