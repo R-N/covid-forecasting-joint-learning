@@ -509,7 +509,7 @@ class ObjectiveModel:
         self.train_epoch = 0
         self.val_epoch = 0
 
-        self.label = f"G{self.cluster.group.id}.C{self.cluster.id}"
+        self.label = f"G{self.cluster.group.id}.C{self.cluster.id}/"
 
 
     @LINE_PROFILER
