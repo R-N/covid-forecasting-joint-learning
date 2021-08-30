@@ -184,7 +184,7 @@ def label_dataset_0(
     assert seed_size <= past_size
 
     past_seed = [x[label_cols].iloc[-seed_size:].to_numpy() for x in past]
-    past_exo = [x[future_exo_cols].to_numpy() for x in past]
+    past_exo = [x[future_exo_cols].iloc[-seed_size:].to_numpy() for x in past]
     future_exo = [x[future_exo_cols].to_numpy() for x in future]
     if past_cols is not None:
         past = [x[past_cols] for x in past]
