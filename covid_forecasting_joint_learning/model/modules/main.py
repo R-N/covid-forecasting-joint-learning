@@ -322,7 +322,6 @@ class SingleModel(nn.Module):
         if shared_state_size\
             or shared_head_future_cell is not None\
             or self.past_model.use_shared_head:
-            print(shared_state_size, shared_head_future_cell, self.past_model.use_shared_head)
             assert shared_state_size\
                 and shared_head_future_cell is not None\
                 and self.past_model.use_shared_head
