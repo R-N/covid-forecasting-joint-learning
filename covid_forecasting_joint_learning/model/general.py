@@ -407,7 +407,7 @@ class ObjectiveModel:
                 "combiner": {
                     "w0_mean": combine_head_w0_mean,
                     "w0_std": combine_head_w0_std
-                } if representation_future_shared_depth else None,
+                } if representation_future_shared_depth or use_shared else None,
                 "precombine": {
                     "depth": precombine_head_depth,
                     "fc_activation": fc_activation,
