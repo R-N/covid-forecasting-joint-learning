@@ -98,44 +98,44 @@ class ClusterModel:
         self.shared_model = shared_model or SingleModel(**sizes, **model_kwargs)
 
         if self.shared_mode == SharedMode.SHARED:
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["past_model"]["representation_model"]["shared_representation"] =\
                     self.shared_model.past_model.representation_model.shared_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["past_model"]["shared_head"] =\
                     self.shared_model.past_model.shared_head
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["representation_future_model"]["shared_representation"] =\
                     self.shared_model.representation_future_model.shared_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["shared_head_future_cell"] =\
                     self.shared_model.shared_head_future_cell
         if self.private_mode == SharedMode.SHARED:
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["past_model"]["representation_model"]["private_representation"] =\
                     self.shared_model.past_model.representation_model.private_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["past_model"]["representation_model"]["pre_shared_representation"] =\
                     self.shared_model.past_model.representation_model.pre_shared_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["past_model"]["representation_model"]["combine_representation"] =\
                     self.shared_model.past_model.representation_model.combine_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["past_model"]["private_head"] =\
                     self.shared_model.past_model.private_head
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["representation_future_model"]["private_representation"] =\
                     self.shared_model.representation_future_model.private_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["representation_future_model"]["pre_shared_representation"] =\
                     self.shared_model.representation_future_model.pre_shared_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["representation_future_model"]["combine_representation"] =\
                     self.shared_model.representation_future_model.combine_representation
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["private_head_future_cell"] =\
                     self.shared_model.private_head_future_cell
-            with suppress(KeyError, TypeError):
+            with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["post_future_model"] =\
                     self.shared_model.post_future_model
 
@@ -423,17 +423,17 @@ class ObjectiveModel:
             "teacher_forcing": teacher_forcing
         }
 
-        with suppress(KeyError, TypeError):
+        with suppress(KeyError, TypeError, AttributeError):
             check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["private_representation"]["conv_kwargs"], past_length)
-        with suppress(KeyError, TypeError):
+        with suppress(KeyError, TypeError, AttributeError):
             check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["pre_shared_representation"]["conv_kwargs"], past_length)
-        with suppress(KeyError, TypeError):
+        with suppress(KeyError, TypeError, AttributeError):
             check_conv_kwargs(model_kwargs["past_model"]["representation_model"]["shared_representation"]["conv_kwargs"], past_length)
-        with suppress(KeyError, TypeError):
+        with suppress(KeyError, TypeError, AttributeError):
             check_conv_kwargs(model_kwargs["representation_future_model"]["private_representation"]["conv_kwargs"], future_length)
-        with suppress(KeyError, TypeError):
+        with suppress(KeyError, TypeError, AttributeError):
             check_conv_kwargs(model_kwargs["representation_future_model"]["pre_shared_representation"]["conv_kwargs"], future_length)
-        with suppress(KeyError, TypeError):
+        with suppress(KeyError, TypeError, AttributeError):
             check_conv_kwargs(model_kwargs["representation_future_model"]["shared_representation"]["conv_kwargs"], future_length)
 
         members = cluster.members
