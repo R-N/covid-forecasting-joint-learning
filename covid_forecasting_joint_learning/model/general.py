@@ -300,8 +300,6 @@ class ObjectiveModel:
         past_length = 30 + additional_past_length
         future_length = 14
 
-        print(precombine_head_depth)
-
         model_kwargs = {
             "past_model": {
                 "representation_model": {

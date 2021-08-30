@@ -48,7 +48,6 @@ class CombineHead(nn.Module):
         """
         if precombine is not None\
             or shared_size:
-            print(precombine, shared_size)
             assert precombine is not None\
                 and shared_size
             use_shared_head = True

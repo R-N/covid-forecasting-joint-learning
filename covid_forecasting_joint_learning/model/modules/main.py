@@ -273,7 +273,6 @@ class SingleModel(nn.Module):
     ):
         super(SingleModel, self).__init__()
 
-        print(hidden_size_future, representation_future_model)
         use_representation_future = False
         if hidden_size_future\
             or representation_future_model is not None:
