@@ -44,7 +44,7 @@ class CombineHead(nn.Module):
     ):
         super(CombineHead, self).__init__()
 
-        use_shared_head = False
+        use_shared_head = False  # bool(shared_size)
         if precombine is not None\
             or shared_size:
             print(precombine, shared_size)

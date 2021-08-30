@@ -429,7 +429,7 @@ class ObjectiveModel:
                     "depth": precombine_head_depth,
                     "fc_activation": fc_activation,
                     "residual_activation": residual_activation
-                } if representation_future_shared_depth else None,
+                } if representation_future_shared_depth or precombine_head_depth else None,
                 "reducer": {
                     "depth": combine_head_depth,
                     "fc_activation": fc_activation,
