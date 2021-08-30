@@ -57,7 +57,6 @@ def __eval(
     target_losses = [target_losses[i+1].detach().item() for i in range(len(target_losses))]
     return loss, target_loss, target_losses
 
-@LINE_PROFILER
 def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
     weights = 0
     target_weights = 0
@@ -85,7 +84,6 @@ def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
 
     return weights, target_weights
 
-@LINE_PROFILER
 def eval(
     sources,
     targets,

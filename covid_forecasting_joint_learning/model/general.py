@@ -39,7 +39,6 @@ def check_key(dict, key):
 
 
 class ClusterModel:
-    @LINE_PROFILER
     def __init__(
         self,
         cluster,
@@ -174,7 +173,6 @@ class ClusterModel:
         for k in self.members:
             self.k.model.freeze_private(freeze)
 
-    @LINE_PROFILER
     def train(self, grad_scaler=None):
         grad_scaler = grad_scaler or self.grad_scaler
         # optimizer = self.create_optimizer()
@@ -189,7 +187,6 @@ class ClusterModel:
             **self.train_kwargs
         )
 
-    @LINE_PROFILER
     def val(self):
         return test(
             self.sources,
@@ -226,7 +223,6 @@ class ClusterModel:
 
 
 class ObjectiveModel:
-    @LINE_PROFILER
     def __init__(
         self,
         cluster,
@@ -512,7 +508,6 @@ class ObjectiveModel:
         self.label = f"G{self.cluster.group.id}.C{self.cluster.id}/"
 
 
-    @LINE_PROFILER
     def _log_scalar(self, writer, loss, epoch):
         writer.add_scalar(f"{self.label}/avg_loss", loss[0].item(), global_step=epoch)
         writer.add_scalar(f"{self.label}/target_loss", loss[1].item(), global_step=epoch)
@@ -522,7 +517,6 @@ class ObjectiveModel:
         writer.flush()
 
 
-    @LINE_PROFILER
     def train(self, epoch=None):
         loss = self.model.train()
         epoch = epoch if epoch is not None else self.train_epoch
@@ -531,7 +525,6 @@ class ObjectiveModel:
         self.train_epoch = epoch + 1
         return loss
 
-    @LINE_PROFILER
     def val(self, epoch=None):
         loss = self.model.val()
         epoch = epoch if epoch is not None else self.val_epoch
@@ -567,7 +560,6 @@ class ObjectiveModel:
     def get_target_aggregate_layer_attr(self, *args, **kwargs):
         return self.target.get_target_aggregate_layer_attr(*args, **kwargs)
 
-    @LINE_PROFILER
     def pretrain_save_model(self, model_dir=None):
         model_dir = model_dir or self.model_dir
         if not model_dir:
@@ -577,7 +569,6 @@ class ObjectiveModel:
         DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
         DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
 
-    @LINE_PROFILER
     def posttrain_save_model(self, model_dir=None):
         model_dir = model_dir or self.model_dir
         if not model_dir:
@@ -626,6 +617,23 @@ def prepare_params(
     return params
 
 
+def upload_logs(drive, trial_id, log_dir, log_dir_id, model_dir, model_dir_id):
+    if log_dir and log_dir_id:
+        drive.upload_folder(
+            log_dir + str(trial_id),
+            parent_id=log_dir_id,
+            only_contents=False,
+            replace=False
+        )
+    if model_dir and model_dir_id:
+        drive.upload_folder(
+            model_dir + str(trial_id),
+            parent_id=model_dir_id,
+            only_contents=False,
+            replace=False
+        )
+
+
 def make_objective(
     groups,
     log_dir=None,
@@ -660,7 +668,8 @@ def make_objective(
     seed_lengths=(30, 30),
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
-    process_per_model=4
+    process_per_model=4,
+    pretrain_upload=False
 ):
     activation_keys = [x for x in activations.keys()]
 
@@ -747,11 +756,8 @@ def make_objective(
                 if model_dir:
                     model.pretrain_save_model()
 
-                if drive:
-                    if log_dir and log_dir_id:
-                        drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
-                    if model_dir and model_dir_id:
-                        drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
+                if drive and pretrain_upload:
+                    upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
                 early_stopping = EarlyStopping(
                     model.model.models,
@@ -775,10 +781,7 @@ def make_objective(
                     model.posttrain_save_model()
 
                 if drive:
-                    if log_dir and log_dir_id:
-                        drive.upload_folder(log_dir + str(model.trial_id), parent_id=log_dir_id, only_contents=False)
-                    if model_dir and model_dir_id:
-                        drive.upload_folder(model_dir + str(model.trial_id), parent_id=model_dir_id, only_contents=False)
+                    upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
                 torch.cuda.empty_cache()
                 gc.collect()

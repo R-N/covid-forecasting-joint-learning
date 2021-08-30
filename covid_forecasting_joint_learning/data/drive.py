@@ -109,7 +109,7 @@ class Drive:
         return files
 
 
-    def upload_folder(self, folder_path, parent_id, only_contents=False, update=True):
+    def upload_folder(self, folder_path, parent_id, only_contents=False, replace=True, merge=True):
         folder = Path(folder_path)
         folders, files = DataUtil.get_sub_folders_files(folder)
 
@@ -124,11 +124,12 @@ class Drive:
         )
         for f in files:
             file_path = f"{folder_path}/{str(f.name)}"
-            if update and f.name in existing_files:
-                self.update_file(
-                    file_path,
-                    file_id=existing_files[f.name]["id"]
-                )
+            if f.name in existing_files:
+                if replace:
+                    self.update_file(
+                        file_path,
+                        file_id=existing_files[f.name]["id"]
+                    )
             else:
                 self.upload_file(
                     file_path,
@@ -140,12 +141,13 @@ class Drive:
             files=existing
         )
         for f in folders:
-            if update and f in existing_folders:
-                self.upload_folder(
-                    f"{folder_path}/{f.name}",
-                    parent_id=existing_folders[f.name]["id"],
-                    only_contents=True
-                )
+            if f in existing_folders:
+                if merge:
+                    self.upload_folder(
+                        f"{folder_path}/{f.name}",
+                        parent_id=existing_folders[f.name]["id"],
+                        only_contents=True
+                    )
             else:
                 self.upload_folder(
                     f"{folder_path}/{f.name}",

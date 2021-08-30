@@ -9,6 +9,7 @@ from torchinfo import summary
 from torch.utils.tensorboard import SummaryWriter
 from .. import attr as Attribution
 from contextlib import suppress
+from ..util import LINE_PROFILER
 
 
 class RepresentationModel(nn.Module):
@@ -64,6 +65,7 @@ class RepresentationModel(nn.Module):
             )
         self.combine_representation = combine_representation
 
+    @LINE_PROFILER
     def forward(self, x):
         # Input is of linear shape (Batch, Length, Channel)
         x = ModelUtil.linear_to_conv1d_tensor(x)
@@ -149,6 +151,7 @@ class PastModel(nn.Module):
             )
         self.shared_head = shared_head
 
+    @LINE_PROFILER
     def forward(self, x, return_cx=True):
         if self.use_representation:
             x_private, x_shared = self.representation_model(x)
@@ -359,6 +362,7 @@ class SingleModel(nn.Module):
             x_private, x_shared = past_seed_full, past_seed_full
         return past_seed_full, x_private[-1], x_shared[-1]
 
+    @LINE_PROFILER
     def forward(self, past, past_seed, past_exo=None, future=None, future_exo=None):
         # if self.use_exo:
         #     x_past = torch.cat(x_past, input["past_exo"])
