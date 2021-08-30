@@ -221,25 +221,6 @@ class ClusterModel:
     def get_target_aggregate_layer_attr(self, *args, **kwargs):
         return self.target.get_aggregate_layer_attr(*args, **kwargs)
 
-    hidden_sizes=(3, 50),
-    normal_conv_depths=(1, 20),
-    pre_conv_depths=(0, 5),
-    normal_fc_depths=(1, 20),
-    pre_fc_depths=(0, 5),
-    past_kernel_sizes=(3, 14),
-    past_strides=(1, 7),
-    past_dilations=(1, 7),
-    future_kernel_sizes=(3, 7),
-    future_strides=(1, 7),
-    future_dilations=(1, 7),
-    w0_means=(0.0, 1.0),
-    w0_stds=(0.0, 0.5),
-    booleans=(0, 1),
-    lrs=(1e-5, 1e-2),
-    source_weights=(0.5, 1.0),
-    batch_sizes=(0, 5),
-    additional_past_lengths=(0, 4),
-
 DEFAULT_ACTIVATIONS = {
     "ReLU": nn.ReLU,
     "LeakyReLU": nn.LeakyReLU,
@@ -318,6 +299,8 @@ class ObjectiveModel:
 
         past_length = 30 + additional_past_length
         future_length = 14
+
+        print(precombine_head_depth)
 
         model_kwargs = {
             "past_model": {
