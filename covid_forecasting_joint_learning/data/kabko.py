@@ -148,6 +148,7 @@ class KabkoData:
 
     def get_input_attr(self, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
         sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+        print(sample)
         return self.model.get_input_attr(sample, *args, **kwargs)
 
     def get_layer_attr(self, layer, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
