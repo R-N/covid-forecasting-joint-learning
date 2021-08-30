@@ -369,7 +369,7 @@ class ObjectiveModel:
                     "residual_kwargs": {
                         "activation": residual_activation
                     }
-                },
+                } if representation_future_private_depth,
                 "pre_shared_representation": {
                     "depth": representation_future_pre_shared_depth,
                     "data_length": future_length,
@@ -400,7 +400,7 @@ class ObjectiveModel:
                     "w0_mean": combine_representation_future_w0_mean,
                     "w0_std": combine_representation_future_w0_std,
                 } if representation_future_shared_depth else None
-            },
+            } if representation_future_private_depth else None,
             "private_head_future_cell": {},
             "shared_head_future_cell": {} if representation_future_shared_depth or use_shared else None,
             "post_future_model": {
