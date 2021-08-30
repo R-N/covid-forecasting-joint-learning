@@ -308,7 +308,8 @@ class ObjectiveModel:
         model_dir=None,
         debug=False,
         min_epochs=50,
-        shared_model=None
+        shared_model=None,
+        use_shared=True
     ):
         self.cluster = cluster
 
@@ -370,7 +371,7 @@ class ObjectiveModel:
                 },
                 "shared_head": {
                     "use_last_past": use_last_past
-                } if representation_past_shared_depth else None
+                } if representation_past_shared_depth or use_shared else None
             },
             "representation_future_model": {
                 "private_representation": {
@@ -418,7 +419,7 @@ class ObjectiveModel:
                 } if representation_future_shared_depth else None
             },
             "private_head_future_cell": {},
-            "shared_head_future_cell": {} if representation_future_shared_depth else None,
+            "shared_head_future_cell": {} if representation_future_shared_depth or use_shared else None,
             "post_future_model": {
                 "combiner": {
                     "w0_mean": combine_head_w0_mean,
@@ -830,6 +831,7 @@ def make_objective(
                     grad_scaler=grad_scaler,
                     # teacher_forcing=True,
                     min_epochs=min_epochs,
+                    use_shared=use_shared,
                     **params
                 )
                 model.to(device)
