@@ -356,6 +356,7 @@ def preprocessing_4(
 def preprocessing_5(
     kabkos,
     past_size=30, future_size=14,
+    seed_size=None,
     stride=1,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
@@ -365,6 +366,7 @@ def preprocessing_5(
     # limit_past=True,
     # val=True
 ):
+    assert (not seed_size) or seed_size < past_size
     for kabko in kabkos:
         split_indices = kabko.split_indices[1], kabko.split_indices[3]
         split_indices = [kabko.data.index.get_loc(s) for s in split_indices]
@@ -373,6 +375,7 @@ def preprocessing_5(
         kabko.datasets, kabko.dataset_labels = preprocessing.split_dataset(
             kabko.data,
             past_size=past_size, future_size=future_size,
+            seed_size=seed_size,
             val_start=val_start, test_start=test_start,
             stride=1,
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
@@ -385,6 +388,7 @@ def preprocessing_5(
         kabko.datasets_1, kabko.dataset_labels_1 = preprocessing.split_dataset(
             kabko.data,
             past_size=past_size, future_size=future_size,
+            seed_size=seed_size,
             val_start=val_start, test_start=test_start,
             stride=1,
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
@@ -397,6 +401,7 @@ def preprocessing_5(
         kabko.datasets_2, kabko.dataset_labels_2 = preprocessing.split_dataset(
             kabko.data,
             past_size=past_size, future_size=future_size,
+            seed_size=seed_size,
             val_start=val_start, test_start=test_start,
             stride=1,
             past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,

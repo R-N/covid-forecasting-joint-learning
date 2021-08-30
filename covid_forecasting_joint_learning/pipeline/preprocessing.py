@@ -171,6 +171,7 @@ def slice_dataset(
 def label_dataset_0(
     past, future,
     past_cols=None,
+    seed_size=None,
     label_cols=DataCol.SIRD_VARS,
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
     final_seed_cols=DataCol.SIRD,
@@ -178,8 +179,11 @@ def label_dataset_0(
 ):
     final_seed = [x.iloc[-1] for x in past]
     indices = [x.index for x in future]
+    past_size = len(past[0])
+    seed_size = seed_size or past_size
+    assert seed_size <= past_size
 
-    past_seed = [x[label_cols].to_numpy() for x in past]
+    past_seed = [x.loc[-seed_size:, label_cols].to_numpy() for x in past]
     past_exo = [x[future_exo_cols].to_numpy() for x in past]
     future_exo = [x[future_exo_cols].to_numpy() for x in future]
     if past_cols is not None:
@@ -282,6 +286,7 @@ def split_dataset(
     df,
     val_start=None, test_start=None,
     past_size=30, future_size=14,
+    seed_size=None,
     stride=1,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
@@ -303,6 +308,7 @@ def split_dataset(
             stride=stride,
             limit_past=limit_past
         ),
+        seed_size=seed_size,
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
@@ -316,6 +322,7 @@ def split_dataset(
             stride=stride,
             limit_past=limit_past
         ),
+        seed_size=seed_size,
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,
@@ -329,6 +336,7 @@ def split_dataset(
             stride=stride,
             limit_past=limit_past
         ),
+        seed_size=seed_size,
         past_cols=past_cols,
         label_cols=label_cols,
         future_exo_cols=future_exo_cols,

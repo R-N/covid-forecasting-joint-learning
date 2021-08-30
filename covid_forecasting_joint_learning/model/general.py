@@ -438,6 +438,7 @@ class ObjectiveModel:
         preprocessing_5(
             members,
             past_size=past_length,
+            seed_size=seed_length,
             past_cols=past_cols,
             future_exo_cols=future_exo_cols
         )
