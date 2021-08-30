@@ -151,7 +151,6 @@ class PastModel(nn.Module):
             )
         self.shared_head = shared_head
 
-    @LINE_PROFILER
     def forward(self, x, return_cx=True):
         if self.use_representation:
             x_private, x_shared = self.representation_model(x)
@@ -341,6 +340,7 @@ class SingleModel(nn.Module):
         self.teacher_forcing = teacher_forcing
         self.use_exo = use_exo
 
+    @LINE_PROFILER
     def prepare_seed(self, past_seed_full, o=None, o_exo=None, seed_length=None):
         # past_seed_full is of sequential shape (Length, Batch, Channel)
         # o and o_exo is of sequential item shape (Batch, Channel)
