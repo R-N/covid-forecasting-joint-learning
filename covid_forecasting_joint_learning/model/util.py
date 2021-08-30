@@ -83,7 +83,7 @@ def str_dict(d):
     )
 
 
-def filter_trials_undone(trials, count_pruned=True):
+def filter_trials_undone(trials, count_pruned=False):
     return [t.number for t in trials if not (t.state == TrialState.COMPLETE or (count_pruned and t.state == TrialState.PRUNED))]
 
 
