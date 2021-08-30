@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from ..util import LINE_PROFILER
 
 
 class ResidualBlock(nn.Module):
@@ -27,6 +28,7 @@ class ResidualBlock(nn.Module):
         self.activation = activation()
         self.residual = nn.Identity()
 
+    @LINE_PROFILER
     def forward(self, x):
         residual = self.residual(x)
         if self.highway:

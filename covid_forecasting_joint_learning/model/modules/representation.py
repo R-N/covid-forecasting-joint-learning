@@ -3,6 +3,7 @@ import torch
 from torch import nn
 from .residual import ResidualStack
 from optuna.structs import TrialPruned
+from ..util import LINE_PROFILER
 
 
 class RepresentationSingle(nn.Module):
@@ -44,7 +45,8 @@ class RepresentationSingle(nn.Module):
             nn.ConstantPad1d((padding, 0), 0),
             activation()
         )
-    
+
+    @LINE_PROFILER
     def forward(self, x):
         try:
             return self.main(x)
@@ -113,6 +115,6 @@ class RepresentationBlock(nn.Module):
             depth=depth,
             **residual_kwargs
         )
-    
+
     def forward(self, x):
         return self.main(x)
