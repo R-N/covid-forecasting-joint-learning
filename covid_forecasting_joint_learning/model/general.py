@@ -221,49 +221,78 @@ class ClusterModel:
     def get_target_aggregate_layer_attr(self, *args, **kwargs):
         return self.target.get_aggregate_layer_attr(*args, **kwargs)
 
+    hidden_sizes=(3, 50),
+    normal_conv_depths=(1, 20),
+    pre_conv_depths=(0, 5),
+    normal_fc_depths=(1, 20),
+    pre_fc_depths=(0, 5),
+    past_kernel_sizes=(3, 14),
+    past_strides=(1, 7),
+    past_dilations=(1, 7),
+    future_kernel_sizes=(3, 7),
+    future_strides=(1, 7),
+    future_dilations=(1, 7),
+    w0_means=(0.0, 1.0),
+    w0_stds=(0.0, 0.5),
+    booleans=(0, 1),
+    lrs=(1e-5, 1e-2),
+    source_weights=(0.5, 1.0),
+    batch_sizes=(0, 5),
+    additional_past_lengths=(0, 4),
+
+DEFAULT_ACTIVATIONS = {
+    "ReLU": nn.ReLU,
+    "LeakyReLU": nn.LeakyReLU,
+    "Sigmoid": nn.Sigmoid,
+    "Tanh": nn.Tanh,
+    "SELU": nn.SELU
+}
+DEFAULT_PAST_COLS = [None]
+DEFAULT_FUTURE_EXO_COLS = [["psbb", "ppkm", "ppkm_mikro"]]
+
 
 class ObjectiveModel:
     def __init__(
         self,
         cluster,
-        hidden_size_past,
-        hidden_size_future,
-        shared_state_size,
-        private_state_size,
-        representation_past_private_depth,
-        representation_past_private_kernel_size,
-        representation_past_private_stride,
-        representation_past_private_dilation,
-        representation_past_shared_depth,
-        representation_past_shared_kernel_size,
-        representation_past_shared_stride,
-        representation_past_shared_dilation,
-        representation_past_pre_shared_depth,
-        combine_representation_past_w0_mean,
-        combine_representation_past_w0_std,
-        representation_future_private_depth,
-        representation_future_private_kernel_size,
-        representation_future_private_stride,
-        representation_future_private_dilation,
-        representation_future_shared_depth,
-        representation_future_shared_kernel_size,
-        representation_future_shared_stride,
-        representation_future_shared_dilation,
-        representation_future_pre_shared_depth,
-        combine_representation_future_w0_mean,
-        combine_representation_future_w0_std,
-        combine_head_w0_mean,
-        combine_head_w0_std,
-        precombine_head_depth,
-        combine_head_depth,
-        conv_activation,
-        fc_activation,
-        residual_activation,
-        past_cols,
-        future_exo_cols,
-        batch_size,
-        additional_past_length,
-        use_last_past,
+        hidden_size_past=3,
+        hidden_size_future=3,
+        shared_state_size=3,
+        private_state_size=3,
+        representation_past_private_depth=1,
+        representation_past_private_kernel_size=3,
+        representation_past_private_stride=1,
+        representation_past_private_dilation=1,
+        representation_past_shared_depth=0,
+        representation_past_shared_kernel_size=3,
+        representation_past_shared_stride=1,
+        representation_past_shared_dilation=1,
+        representation_past_pre_shared_depth=0,
+        combine_representation_past_w0_mean=1.0,
+        combine_representation_past_w0_std=0.0,
+        representation_future_private_depth=0,
+        representation_future_private_kernel_size=3,
+        representation_future_private_stride=1,
+        representation_future_private_dilation=1,
+        representation_future_shared_depth=0,
+        representation_future_shared_kernel_size=3,
+        representation_future_shared_stride=1,
+        representation_future_shared_dilation=1,
+        representation_future_pre_shared_depth=0,
+        combine_representation_future_w0_mean=1.0,
+        combine_representation_future_w0_std=0.0,
+        combine_head_w0_mean=1.0,
+        combine_head_w0_std=0.0,
+        precombine_head_depth=0,
+        combine_head_depth=0,
+        conv_activation=nn.ReLU,
+        fc_activation=nn.ReLU,
+        residual_activation=nn.ReLU,
+        past_cols=DEFAULT_PAST_COLS[0],
+        future_exo_cols=DEFAULT_FUTURE_EXO_COLS[0],
+        batch_size=8,
+        additional_past_length=0,
+        use_last_past=True,
         seed_length=30,
         source_pick=SourcePick.ALL,
         private_mode=SharedMode.PRIVATE,
@@ -282,6 +311,9 @@ class ObjectiveModel:
         shared_model=None
     ):
         self.cluster = cluster
+
+        if representation_future_private_depth <= 0 and representation_future_shared_depth <= 0:
+            seed_length = 1
 
         past_length = 30 + additional_past_length
         future_length = 14
@@ -591,17 +623,6 @@ class ObjectiveModel:
             plt.close(layer_fig)
 
 
-DEFAULT_ACTIVATIONS = {
-    "ReLU": nn.ReLU,
-    "LeakyReLU": nn.LeakyReLU,
-    "Sigmoid": nn.Sigmoid,
-    "Tanh": nn.Tanh,
-    "SELU": nn.SELU
-}
-DEFAULT_PAST_COLS = [None]
-DEFAULT_FUTURE_EXO_COLS = [["psbb", "ppkm", "ppkm_mikro"]]
-
-
 def prepare_params(
     params,
     activations=DEFAULT_ACTIVATIONS,
@@ -634,6 +655,31 @@ def upload_logs(drive, trial_id, log_dir, log_dir_id, model_dir, model_dir_id):
         )
 
 
+class TrialWrapper:
+    def __init__(self, trial):
+        self.trial = trial
+        self.number = trial.number
+
+    def suggest_int(self, name, param, *args, **kwargs):
+        if isinstance(param, tuple) or isinstance(param, list) and param[0] != param[1]:
+            return self.trial.suggest_int(name, *param, *args, **args)
+        return param
+
+    def suggest_float(self, name, param, *args, **kwargs):
+        if isinstance(param, tuple) or isinstance(param, list) and param[0] != param[1]:
+            return self.trial.suggest_float(name, *param, *args, **args)
+        return param
+
+    def suggest_categorical(self, name, param, *args, **kwargs):
+        if isinstance(param, list) or isinstance(param, tuple):
+            return self.trial.suggest_categorical(name, param, *args, **args)
+        return param
+
+    def suggest_categorical_list(self, name, param, *args, **kwargs):
+        if (isinstance(param, list) or isinstance(param, tuple)) and (isinstance(param[0], list) or isinstance(param[0], tuple)):
+            return self.trial.suggest_categorical(name, param, *args, **args)
+        return param
+
 def make_objective(
     groups,
     log_dir=None,
@@ -645,7 +691,7 @@ def make_objective(
     write_graph=False,
     early_stopping_interval_mode=2,
     max_epoch=100,
-    teacher_forcing=(True,),
+    teacher_forcing=True,
     activations=DEFAULT_ACTIVATIONS,
     hidden_sizes=(3, 50),
     normal_conv_depths=(1, 20),
@@ -653,11 +699,11 @@ def make_objective(
     normal_fc_depths=(1, 20),
     pre_fc_depths=(0, 5),
     past_kernel_sizes=(3, 14),
-    past_strides=(1, 1),
-    past_dilations=(1, 1),
+    past_strides=(1, 7),
+    past_dilations=(1, 7),
     future_kernel_sizes=(3, 7),
-    future_strides=(1, 1),
-    future_dilations=(1, 1),
+    future_strides=(1, 7),
+    future_dilations=(1, 7),
     w0_means=(0.0, 1.0),
     w0_stds=(0.0, 0.5),
     booleans=(0, 1),
@@ -665,64 +711,101 @@ def make_objective(
     source_weights=(0.5, 1.0),
     batch_sizes=(0, 5),
     additional_past_lengths=(0, 4),
-    seed_lengths=(30, 30),
+    seed_lengths=30,
+    min_epochs=50,
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
-    process_per_model=4,
-    pretrain_upload=False
+    pretrain_upload=False,
+    use_past_representation=True,
+    use_future_representation=False,
+    use_shared=True,
+    joint_learning=True
 ):
     activation_keys = [x for x in activations.keys()]
+    if not use_future_representation:
+        seed_lengths = 1
 
     @LINE_PROFILER
     def objective(
         trial
     ):
+        trial = TrialWrapper(trial)
         ModelUtil.global_random_seed()
 
         params = {
-            "hidden_size_past": trial.suggest_int("hidden_size_past", *hidden_sizes),
-            "hidden_size_future": trial.suggest_int("hidden_size_future", *hidden_sizes),
-            "shared_state_size": trial.suggest_int("shared_state_size", *hidden_sizes),
-            "private_state_size": trial.suggest_int("private_state_size", *hidden_sizes),
-            "representation_past_private_depth": trial.suggest_int("representation_past_private_depth", *normal_conv_depths),
-            "representation_past_private_kernel_size": trial.suggest_int("representation_past_private_kernel_size", *past_kernel_sizes),
-            "representation_past_private_stride": trial.suggest_int("representation_past_private_stride", *past_strides),
-            "representation_past_private_dilation": trial.suggest_int("representation_past_private_dilation", *past_dilations),
-            "representation_past_shared_depth": trial.suggest_int("representation_past_shared_depth", *normal_conv_depths),
-            "representation_past_shared_kernel_size": trial.suggest_int("representation_past_shared_kernel_size", *past_kernel_sizes),
-            "representation_past_shared_stride": trial.suggest_int("representation_past_shared_stride", *past_strides),
-            "representation_past_shared_dilation": trial.suggest_int("representation_past_shared_dilation", *past_dilations),
-            "representation_past_pre_shared_depth": trial.suggest_int("representation_past_pre_shared_depth", *pre_conv_depths),
-            "combine_representation_past_w0_mean": trial.suggest_float("combine_representation_past_w0_mean", *w0_means),
-            "combine_representation_past_w0_std": trial.suggest_float("combine_representation_past_w0_std", *w0_stds),
-            "representation_future_private_depth": trial.suggest_int("representation_future_private_depth", *normal_conv_depths),
-            "representation_future_private_kernel_size": trial.suggest_int("representation_future_private_kernel_size", *future_kernel_sizes),
-            "representation_future_private_stride": trial.suggest_int("representation_future_private_stride", *future_strides),
-            "representation_future_private_dilation": trial.suggest_int("representation_future_private_dilation", *future_dilations),
-            "representation_future_shared_depth": trial.suggest_int("representation_future_shared_depth", *normal_conv_depths),
-            "representation_future_shared_kernel_size": trial.suggest_int("representation_future_shared_kernel_size", *future_kernel_sizes),
-            "representation_future_shared_stride": trial.suggest_int("representation_future_shared_stride", *future_strides),
-            "representation_future_shared_dilation": trial.suggest_int("representation_future_shared_dilation", *future_dilations),
-            "representation_future_pre_shared_depth": trial.suggest_int("representation_future_pre_shared_depth", *pre_conv_depths),
-            "combine_representation_future_w0_mean": trial.suggest_float("combine_representation_future_w0_mean", *w0_means),
-            "combine_representation_future_w0_std": trial.suggest_float("combine_representation_future_w0_std", *w0_stds),
-            "combine_head_w0_mean": trial.suggest_float("combine_head_w0_mean", *w0_means),
-            "combine_head_w0_std": trial.suggest_float("combine_head_w0_std", *w0_stds),
-            "precombine_head_depth": trial.suggest_int("precombine_head_depth", *pre_fc_depths),
-            "combine_head_depth": trial.suggest_int("combine_head_depth", *normal_fc_depths),
-            "conv_activation": trial.suggest_categorical("conv_activation", activation_keys),
-            "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
-            "residual_activation": trial.suggest_categorical("residual_activation", activation_keys),
-            "lr": trial.suggest_float("lr", *lrs),
-            "source_weight": trial.suggest_float("source_weight", *source_weights),
-            "batch_size": trial.suggest_int("batch_size", *batch_sizes),
-            "additional_past_length": trial.suggest_int("additional_past_length", *additional_past_lengths),
-            "seed_length": trial.suggest_int("seed_length", *seed_lengths),
-            "use_last_past": trial.suggest_int("use_last_past", *booleans),
-            "past_cols": trial.suggest_int("past_cols", 0, len(past_cols) - 1),
-            "future_exo_cols": trial.suggest_int("future_exo_cols", 0, len(future_exo_cols) - 1),
+            "private_state_size": trial.suggest_int("private_state_size", hidden_sizes),
+            "lr": trial.suggest_float("lr", lrs),
+            "batch_size": trial.suggest_int("batch_size", batch_sizes),
+            "additional_past_length": trial.suggest_int("additional_past_length", additional_past_lengths),
+            "seed_length": trial.suggest_int("seed_length", seed_lengths),
+            "use_last_past": trial.suggest_int("use_last_past", booleans),
+            "past_cols": trial.suggest_int("past_cols", (0, len(past_cols) - 1)),
+            "future_exo_cols": trial.suggest_int("future_exo_cols", (0, len(future_exo_cols) - 1)),
             "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
         }
+
+        if joint_learning:
+            params.update({
+                "source_weight": trial.suggest_float("source_weight", source_weights)
+            })
+
+        if use_past_representation or use_future_representation or use_shared:
+            params.update({
+                "residual_activation": trial.suggest_categorical("residual_activation", activation_keys)
+            })
+
+        if use_past_representation or use_future_representation:
+            params.update({
+                "conv_activation": trial.suggest_categorical("conv_activation", activation_keys)
+            })
+
+        if use_shared:
+            params.update({
+                "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
+                "shared_state_size": trial.suggest_int("shared_state_size", hidden_sizes),
+                "combine_head_w0_mean": trial.suggest_float("combine_head_w0_mean", w0_means),
+                "combine_head_w0_std": trial.suggest_float("combine_head_w0_std", w0_stds),
+                "precombine_head_depth": trial.suggest_int("precombine_head_depth", pre_fc_depths),
+                "combine_head_depth": trial.suggest_int("combine_head_depth", normal_fc_depths)
+            })
+
+        if use_past_representation:
+            params.update({
+                "hidden_size_past": trial.suggest_int("hidden_size_past", hidden_sizes),
+                "representation_past_private_depth": trial.suggest_int("representation_past_private_depth", normal_conv_depths),
+                "representation_past_private_kernel_size": trial.suggest_int("representation_past_private_kernel_size", past_kernel_sizes),
+                "representation_past_private_stride": trial.suggest_int("representation_past_private_stride", past_strides),
+                "representation_past_private_dilation": trial.suggest_int("representation_past_private_dilation", past_dilations)
+            })
+            if use_shared:
+                params.update({
+                    "representation_past_shared_depth": trial.suggest_int("representation_past_shared_depth", normal_conv_depths),
+                    "representation_past_shared_kernel_size": trial.suggest_int("representation_past_shared_kernel_size", past_kernel_sizes),
+                    "representation_past_shared_stride": trial.suggest_int("representation_past_shared_stride", past_strides),
+                    "representation_past_shared_dilation": trial.suggest_int("representation_past_shared_dilation", past_dilations),
+                    "representation_past_pre_shared_depth": trial.suggest_int("representation_past_pre_shared_depth", pre_conv_depths),
+                    "combine_representation_past_w0_mean": trial.suggest_float("combine_representation_past_w0_mean", w0_means),
+                    "combine_representation_past_w0_std": trial.suggest_float("combine_representation_past_w0_std", w0_stds)
+                })
+
+        if use_future_representation:
+            params.update({
+                "hidden_size_future": trial.suggest_int("hidden_size_future", hidden_sizes),
+                "representation_future_private_depth": trial.suggest_int("representation_future_private_depth", normal_conv_depths),
+                "representation_future_private_kernel_size": trial.suggest_int("representation_future_private_kernel_size", future_kernel_sizes),
+                "representation_future_private_stride": trial.suggest_int("representation_future_private_stride", future_strides),
+                "representation_future_private_dilation": trial.suggest_int("representation_future_private_dilation", future_dilations)
+            })
+            if use_shared:
+                params.update({
+                    "representation_future_shared_depth": trial.suggest_int("representation_future_shared_depth", normal_conv_depths),
+                    "representation_future_shared_kernel_size": trial.suggest_int("representation_future_shared_kernel_size", future_kernel_sizes),
+                    "representation_future_shared_stride": trial.suggest_int("representation_future_shared_stride", future_strides),
+                    "representation_future_shared_dilation": trial.suggest_int("representation_future_shared_dilation", future_dilations),
+                    "representation_future_pre_shared_depth": trial.suggest_int("representation_future_pre_shared_depth", pre_conv_depths),
+                    "combine_representation_future_w0_mean": trial.suggest_float("combine_representation_future_w0_mean", w0_means),
+                    "combine_representation_future_w0_std": trial.suggest_float("combine_representation_future_w0_std", w0_stds)
+                })
 
         params = prepare_params(params, activations, past_cols, future_exo_cols)
         use_exo = bool(params["future_exo_cols"])
@@ -746,6 +829,7 @@ def make_objective(
                     model_dir=model_dir,
                     grad_scaler=grad_scaler,
                     # teacher_forcing=True,
+                    min_epochs=min_epochs,
                     **params
                 )
                 model.to(device)
