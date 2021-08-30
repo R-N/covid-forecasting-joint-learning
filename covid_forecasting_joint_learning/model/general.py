@@ -237,7 +237,7 @@ class ObjectiveModel:
         self,
         cluster,
         hidden_size_past=3,
-        hidden_size_future=3,
+        hidden_size_future=0,
         shared_state_size=3,
         private_state_size=3,
         representation_past_private_depth=1,
