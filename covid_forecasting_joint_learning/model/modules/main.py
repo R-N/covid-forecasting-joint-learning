@@ -472,7 +472,7 @@ class SingleModel(nn.Module):
         if "use_exo" not in kwargs:
             kwargs["use_exo"] = self.use_exo
         if "use_seed" not in kwargs:
-            kwargs["use_seed"] = self.representation_future_model is not None
+            kwargs["use_seed"] = True
         return kwargs
 
     def get_input_attr(self, sample, *args, **kwargs):
