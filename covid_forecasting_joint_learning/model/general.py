@@ -662,22 +662,22 @@ class TrialWrapper:
 
     def suggest_int(self, name, param, *args, **kwargs):
         if isinstance(param, tuple) or isinstance(param, list) and param[0] != param[1]:
-            return self.trial.suggest_int(name, *param, *args, **args)
+            return self.trial.suggest_int(name, *param, *args, **kwargs)
         return param
 
     def suggest_float(self, name, param, *args, **kwargs):
         if isinstance(param, tuple) or isinstance(param, list) and param[0] != param[1]:
-            return self.trial.suggest_float(name, *param, *args, **args)
+            return self.trial.suggest_float(name, *param, *args, **kwargs)
         return param
 
     def suggest_categorical(self, name, param, *args, **kwargs):
         if isinstance(param, list) or isinstance(param, tuple):
-            return self.trial.suggest_categorical(name, param, *args, **args)
+            return self.trial.suggest_categorical(name, param, *args, **kwargs)
         return param
 
     def suggest_categorical_list(self, name, param, *args, **kwargs):
         if (isinstance(param, list) or isinstance(param, tuple)) and (isinstance(param[0], list) or isinstance(param[0], tuple)):
-            return self.trial.suggest_categorical(name, param, *args, **args)
+            return self.trial.suggest_categorical(name, param, *args, **kwargs)
         return param
 
 def make_objective(
