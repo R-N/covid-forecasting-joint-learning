@@ -281,6 +281,8 @@ class SingleModel(nn.Module):
             use_representation_future = True
         self.use_representation_future = use_representation_future
 
+        print(use_representation_future, hidden_size_future, representation_future_model)
+
         self.past_model = PastModel(
             input_size_past,
             hidden_size_past,
@@ -347,7 +349,7 @@ class SingleModel(nn.Module):
         if o is not None:
             # o = o.detach()
             if o_exo is not None:
-                o = torch.cat([o, o_exo], dim=o.dim()-1)
+                o = torch.cat([o, o_exo], dim=o.dim() - 1)
             past_seed_full = torch.cat([past_seed_full, torch.stack([o])], dim=0)
         seed_length = seed_length or self.seed_length
         past_seed_full = past_seed_full[:seed_length]

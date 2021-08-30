@@ -700,13 +700,13 @@ def make_objective(
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
     pretrain_upload=False,
-    use_past_representation=True,
-    use_future_representation=False,
+    use_representation_past=True,
+    use_representation_future=False,
     use_shared=True,
     joint_learning=True
 ):
     activation_keys = [x for x in activations.keys()]
-    if not use_future_representation:
+    if not use_representation_future:
         seed_lengths = 1
 
     @LINE_PROFILER
@@ -733,12 +733,12 @@ def make_objective(
                 "source_weight": trial.suggest_float("source_weight", source_weights)
             })
 
-        if use_past_representation or use_future_representation or use_shared:
+        if use_representation_past or use_representation_future or use_shared:
             params.update({
                 "residual_activation": trial.suggest_categorical("residual_activation", activation_keys)
             })
 
-        if use_past_representation or use_future_representation:
+        if use_representation_past or use_representation_future:
             params.update({
                 "conv_activation": trial.suggest_categorical("conv_activation", activation_keys)
             })
@@ -753,7 +753,7 @@ def make_objective(
                 "combine_head_depth": trial.suggest_int("combine_head_depth", normal_fc_depths)
             })
 
-        if use_past_representation:
+        if use_representation_past:
             params.update({
                 "hidden_size_past": trial.suggest_int("hidden_size_past", hidden_sizes),
                 "representation_past_private_depth": trial.suggest_int("representation_past_private_depth", normal_conv_depths),
@@ -772,7 +772,7 @@ def make_objective(
                     "combine_representation_past_w0_std": trial.suggest_float("combine_representation_past_w0_std", w0_stds)
                 })
 
-        if use_future_representation:
+        if use_representation_future:
             params.update({
                 "hidden_size_future": trial.suggest_int("hidden_size_future", hidden_sizes),
                 "representation_future_private_depth": trial.suggest_int("representation_future_private_depth", normal_conv_depths),
