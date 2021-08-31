@@ -335,8 +335,6 @@ class SingleModel(nn.Module):
             **post_future_model
         )
 
-        print("Post future", self.post_future_model)
-
         self.seed_length = seed_length
         self.future_length = future_length
         self.teacher_forcing = teacher_forcing
@@ -429,7 +427,6 @@ class SingleModel(nn.Module):
                     )
 
             o = self.post_future_model(cx_private, cx_shared)
-            print("Output shape", o.size())
             outputs.append(o)
 
             if teacher_forcing:

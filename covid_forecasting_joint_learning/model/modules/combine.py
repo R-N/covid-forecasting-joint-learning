@@ -73,7 +73,6 @@ class CombineHead(nn.Module):
                 **reducer
             )
         self.reducer = reducer
-        print("Reducer", reducer)
 
     def forward(self, x_private, x_shared=None):
         if self.use_shared_head:
