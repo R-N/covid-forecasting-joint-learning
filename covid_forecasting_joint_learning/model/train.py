@@ -56,6 +56,7 @@ def __eval(
         if clip_grad_norm:
             clip_grad_norm()
 
+    print("target_losses", target_losses)
     target_losses = [target_losses[i + 1].detach().item() for i in range(len(target_losses))]
     return loss, target_loss, target_losses
 
@@ -83,6 +84,8 @@ def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
             target.model.train()
         else:
             target.model.eval()
+
+    print([t.is_target for t in targets])
 
     return weights, target_weights
 
