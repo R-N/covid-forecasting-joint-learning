@@ -41,7 +41,6 @@ def __eval(
             loss += weight * loss_s
 
             if kabko.is_target:
-                print("is_target", kabko.is_target)
                 target_loss += loss_s
                 target_losses[kabko.is_target] = loss_s
 
@@ -87,8 +86,6 @@ def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
         else:
             target.model.eval()
 
-    print([t.is_target for t in targets])
-
     return weights, target_weights
 
 def eval(
@@ -119,9 +116,9 @@ def eval(
     size = len(joint_dataloader_enum)
     # assert len(set([len(samples) for samples in joint_dataloader_enum])) == 1
 
-    print([t.is_target for t in targets])
     print([t.is_target for t in members if t.is_target])
     print([sample[-1].name for sample in joint_dataloader_enum[0]])
+    print([sample[-1].name for sample in joint_dataloader_enum[1]])
 
     stepped = False
 
