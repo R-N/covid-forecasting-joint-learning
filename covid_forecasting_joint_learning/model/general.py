@@ -315,7 +315,7 @@ class ObjectiveModel:
                         "residual_kwargs": {
                             "activation": residual_activation
                         }
-                    },
+                    } if representation_past_private_depth else None,
                     "pre_shared_representation": {
                         "depth": representation_past_pre_shared_depth,
                         "data_length": past_length,
