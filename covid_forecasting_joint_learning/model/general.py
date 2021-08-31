@@ -470,6 +470,7 @@ class ObjectiveModel:
         self.sizes = sizes
         self.model_kwargs = deepcopy(model_kwargs)
 
+        print("debug", debug)
         if debug:
             print(ModelUtil.str_dict(sizes))
             print(ModelUtil.str_dict(model_kwargs))
