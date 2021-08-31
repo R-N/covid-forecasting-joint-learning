@@ -337,12 +337,15 @@ class SingleModel(nn.Module):
             use_shared_head = True
         self.use_shared_head = use_shared_head
 
-        self.post_future_model = CombineHead(
-            private_state_size,
-            shared_state_size,
-            output_size,
-            **post_future_model
-        )
+
+        if isinstance(shared_head_future_cell, dict):
+            shared_head_future_cell = CombineHead(
+                private_state_size,
+                shared_state_size,
+                output_size,
+                **post_future_model
+            )
+        self.shared_head_future_cell = shared_head_future_cell
 
         self.seed_length = seed_length
         self.future_length = future_length
