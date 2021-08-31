@@ -112,12 +112,13 @@ def eval(
     avg_target_loss = 0
     avg_target_losses = [0 for i in range(len(targets))]
 
-    joint_dataloader_enum = list(zip(*[key(k) for k in members]))
+    samples = [key(k) for k in members]
+    joint_dataloader_enum = list(zip(*samples))
     size = len(joint_dataloader_enum)
     # assert len(set([len(samples) for samples in joint_dataloader_enum])) == 1
 
     print([t.is_target for t in members if t.is_target])
-    print(len(joint_dataloader_enum), len(members))
+    print(len(samples), len(joint_dataloader_enum), len(members))
     print([sample[-1].name for sample in joint_dataloader_enum[0]])
     print([sample[-1].name for sample in joint_dataloader_enum[1]])
 
