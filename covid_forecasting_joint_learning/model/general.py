@@ -716,6 +716,7 @@ def make_objective(
     merge_clusters=False,
     debug=False
 ):
+    print("debug1", debug)
     activation_keys = [x for x in activations.keys()]
     if not use_representation_future:
         seed_lengths = 1
