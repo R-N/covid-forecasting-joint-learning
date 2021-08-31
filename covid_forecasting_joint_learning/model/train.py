@@ -110,7 +110,7 @@ def eval(
     avg_target_loss = 0
     avg_target_losses = [0 for i in range(len(targets))]
 
-    samples = [iter(key(k)) for k in members]
+    samples = [list(key(k)) for k in members]
     joint_dataloader_enum = list(zip(*samples))
 
     print([k.name for k in members])

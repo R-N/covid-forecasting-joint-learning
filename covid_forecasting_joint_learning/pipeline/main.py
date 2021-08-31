@@ -430,6 +430,7 @@ def preprocessing_6(
             samples_1 = tuple([sample[i] for sample in samples] for i in range(8))
             samples_1 = tuple(torch.stack(samples_1[i]).detach() if i < tensor_count else samples_1[i] for i in range(len(samples_1)))
             samples_1 = samples_1 + (kabko.population, kabko,)
+            print(kabko.name)
             return samples_1
 
         dataset_count = len(kabko.datasets_torch)
