@@ -236,9 +236,9 @@ class ObjectiveModel:
     def __init__(
         self,
         cluster,
-        hidden_size_past=3,
+        hidden_size_past=0,
         hidden_size_future=0,
-        shared_state_size=3,
+        shared_state_size=0,
         private_state_size=3,
         representation_past_private_depth=1,
         representation_past_private_kernel_size=3,
