@@ -102,8 +102,10 @@ def eval(
     grad_scaler=None
 ):
     members = sources + targets
+    """
     shortest = min(members, key=lambda k: len(key(k).dataset))
     size = len(key(shortest).dataset)
+    """
 
     weights, target_weights = prepare_kabkos(sources, targets, source_weight, train=train)
 
@@ -111,15 +113,16 @@ def eval(
     avg_target_loss = 0
     avg_target_losses = [0 for i in range(len(targets))]
 
-    joint_dataloader_enum = zip(*[key(k) for k in members])
+    joint_dataloader_enum = list(zip(*[key(k) for k in members]))
+    size = len(joint_dataloader_enum)
+    assert len(set([len(samples) for samples in joint_dataloader_enum])) == 1
+
 
     stepped = False
 
     context = dummy_context if train else torch.no_grad()
     with context:
         for batch_id, samples in enumerate(joint_dataloader_enum):
-            loss = 0
-            target_loss = 0
 
             loss_s, target_loss_s, target_losses = __eval(
                 samples,
