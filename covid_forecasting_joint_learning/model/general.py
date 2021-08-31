@@ -676,7 +676,8 @@ def make_objective(
     max_epoch=100,
     teacher_forcing=True,
     activations=DEFAULT_ACTIVATIONS,
-    hidden_sizes=(3, 50),
+    hidden_sizes=(3, 30),
+    state_sizes=(3, 50),
     normal_conv_depths=(1, 20),
     pre_conv_depths=(0, 5),
     normal_fc_depths=(1, 20),
@@ -716,7 +717,7 @@ def make_objective(
         ModelUtil.global_random_seed()
 
         params = {
-            "private_state_size": trial.suggest_int("private_state_size", hidden_sizes),
+            "private_state_size": trial.suggest_int("private_state_size", state_sizes),
             "lr": trial.suggest_float("lr", lrs),
             "batch_size": trial.suggest_int("batch_size", batch_sizes),
             "additional_past_length": trial.suggest_int("additional_past_length", additional_past_lengths),
@@ -745,7 +746,7 @@ def make_objective(
         if use_shared:
             params.update({
                 "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
-                "shared_state_size": trial.suggest_int("shared_state_size", hidden_sizes),
+                "shared_state_size": trial.suggest_int("shared_state_size", state_sizes),
                 "combine_head_w0_mean": trial.suggest_float("combine_head_w0_mean", w0_means),
                 "combine_head_w0_std": trial.suggest_float("combine_head_w0_std", w0_stds),
                 "precombine_head_depth": trial.suggest_int("precombine_head_depth", pre_fc_depths),
