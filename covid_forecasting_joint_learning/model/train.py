@@ -101,10 +101,8 @@ def eval(
     grad_scaler=None
 ):
     members = sources + targets
-    """
     shortest = min(members, key=lambda k: len(key(k).dataset))
     size = len(key(shortest).dataset)
-    """
 
     weights, target_weights = prepare_kabkos(sources, targets, source_weight, train=train)
 
@@ -113,9 +111,7 @@ def eval(
     avg_target_losses = [0 for i in range(len(targets))]
 
     samples = [key(k) for k in members]
-    joint_dataloader_enum = list(zip(*samples))
-    size = len(joint_dataloader_enum)
-    # assert len(set([len(samples) for samples in joint_dataloader_enum])) == 1
+    joint_dataloader_enum = list(zip(samples))
 
     print([k.name for k in members])
     print([t.is_target for t in members if t.is_target])
