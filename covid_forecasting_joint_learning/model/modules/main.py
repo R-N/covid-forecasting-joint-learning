@@ -517,6 +517,6 @@ class SingleModel(nn.Module):
             layer_attrs["future_model.private_head"] = self.get_layer_attr(self.private_head_future_cell, sample, labels=["cx", "hx"])
         with suppress(KeyError, TypeError, AttributeError):
             layer_attrs["future_model.shared_head"] = self.get_layer_attr(self.shared_head_future_cell, sample, labels=["cx", "hx"])
-        print([k for k, v in layer_attrs.items() if v is None])
+        layer_attrs = {k: v for k, v in layer_attrs.items() if v is not None}
         layer_attrs = Attribution.aggregate_layer_attr(layer_attrs)
         return layer_attrs

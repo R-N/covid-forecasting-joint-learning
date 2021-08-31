@@ -154,6 +154,8 @@ def calc_layer_attr(
     out_dim=3,
     labels=None
 ):
+    if layer is None:
+        return None
     model = __prepare_model(
         model,
         teacher_forcing=teacher_forcing,
