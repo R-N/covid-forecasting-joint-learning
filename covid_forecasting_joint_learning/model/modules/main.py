@@ -65,7 +65,6 @@ class RepresentationModel(nn.Module):
             )
         self.combine_representation = combine_representation
 
-    @LINE_PROFILER
     def forward(self, x):
         # Input is of linear shape (Batch, Length, Channel)
         x = ModelUtil.linear_to_conv1d_tensor(x)
@@ -341,7 +340,6 @@ class SingleModel(nn.Module):
         self.teacher_forcing = teacher_forcing
         self.use_exo = use_exo
 
-    @LINE_PROFILER
     def prepare_seed(self, past_seed_full, o=None, o_exo=None, seed_length=None):
         # past_seed_full is of sequential shape (Length, Batch, Channel)
         # o and o_exo is of sequential item shape (Batch, Channel)
@@ -363,7 +361,6 @@ class SingleModel(nn.Module):
             x_private, x_shared = past_seed_full, past_seed_full
         return past_seed_full, x_private[-1], x_shared[-1]
 
-    @LINE_PROFILER
     def forward(self, past, past_seed, past_exo=None, future=None, future_exo=None):
         # if self.use_exo:
         #     x_past = torch.cat(x_past, input["past_exo"])

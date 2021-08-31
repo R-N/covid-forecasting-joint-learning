@@ -4,12 +4,14 @@ import contextlib
 from .loss import MSSELoss
 from .util import LINE_PROFILER
 
+
 dummy_context = contextlib.nullcontext()
+
 
 def dummy():
     pass
 
-@LINE_PROFILER
+
 def __eval(
     samples,
     loss_fn,

@@ -710,7 +710,7 @@ def make_objective(
     if not use_representation_future:
         seed_lengths = 1
 
-    @LINE_PROFILER
+
     def objective(
         trial
     ):

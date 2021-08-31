@@ -28,7 +28,6 @@ class ResidualBlock(nn.Module):
         self.activation = activation()
         self.residual = nn.Identity()
 
-    @LINE_PROFILER
     def forward(self, x):
         residual = self.residual(x)
         if self.highway:

@@ -46,7 +46,6 @@ class RepresentationSingle(nn.Module):
             activation()
         )
 
-    @LINE_PROFILER
     def forward(self, x):
         try:
             return self.main(x)
