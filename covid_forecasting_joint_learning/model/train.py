@@ -31,7 +31,6 @@ def __eval(
 
     context = torch.cuda.amp.autocast() if train and grad_scaler else dummy_context
 
-    print("epoch")
     with context:
         for sample in samples:
             sample, kabko = sample[:-1], sample[-1]
@@ -57,7 +56,6 @@ def __eval(
         if clip_grad_norm:
             clip_grad_norm()
 
-    print("target_losses", target_losses)
     target_losses = [target_losses[i + 1].detach().item() for i in range(len(target_losses))]
     return loss, target_loss, target_losses
 
@@ -111,10 +109,6 @@ def eval(
     avg_target_losses = [0 for i in range(len(targets))]
 
     joint_dataloader_enum = list(zip(*[key(k) for k in members]))
-
-    print([k.name for k in members])
-    print([t.is_target for t in members if t.is_target])
-    print([sample[-1].name for sample in joint_dataloader_enum[0]])
 
     stepped = False
 
