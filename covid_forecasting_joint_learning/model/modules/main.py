@@ -150,7 +150,7 @@ class PastModel(nn.Module):
             )
         self.shared_head = shared_head
 
-    def forward(self, x, return_cx=True):
+    def forward(self, x, return_cx=False):
         if self.use_representation:
             x_private, x_shared = self.representation_model(x)
         else:
@@ -365,8 +365,7 @@ class SingleModel(nn.Module):
         # if self.use_exo:
         #     x_past = torch.cat(x_past, input["past_exo"])
         # hx_private, cx_private, hx_shared, cx_shared = self.past_model(past)
-        print("Past", type(past))
-        hx_private, hx_shared = self.past_model(past, return_cx=False)
+        hx_private, hx_shared = self.past_model(past)
 
         teacher_forcing = self.teacher_forcing and self.training
         future = ModelUtil.linear_to_sequential_tensor(future) if teacher_forcing else None
