@@ -117,6 +117,7 @@ def eval(
     # assert len(set([len(samples) for samples in joint_dataloader_enum])) == 1
 
     print([t.is_target for t in members if t.is_target])
+    print(len(joint_dataloader_enum), len(members))
     print([sample[-1].name for sample in joint_dataloader_enum[0]])
     print([sample[-1].name for sample in joint_dataloader_enum[1]])
 
