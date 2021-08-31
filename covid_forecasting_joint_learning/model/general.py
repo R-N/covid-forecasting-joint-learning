@@ -742,9 +742,7 @@ def make_objective(
                 "source_weight": trial.suggest_float("source_weight", source_weights)
             })
         else:
-            params.update({
-                "source_pick": SourcePick.NONE
-            })
+            source_pick = SourcePick.NONE
 
         if use_representation_past or use_representation_future or use_shared:
             params.update({
