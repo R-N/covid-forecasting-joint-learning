@@ -700,6 +700,7 @@ def make_objective(
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
     pretrain_upload=False,
+    posttrain_upload=False,
     use_representation_past=True,
     use_representation_future=False,
     use_shared=True,
@@ -849,11 +850,15 @@ def make_objective(
                 if model_dir:
                     model.posttrain_save_model()
 
-                if drive:
+                if drive and posttrain_upload:
                     upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
                 torch.cuda.empty_cache()
                 gc.collect()
+
+
+        if drive and not (pretrain_upload or posttrain_upload):
+            upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
         return sum_val_loss_target
 

@@ -3,6 +3,8 @@ from pydrive.drive import GoogleDrive
 from oauth2client.client import GoogleCredentials
 from pathlib import Path
 from . import util as DataUtil
+from multiprocessing.pool import ThreadPool
+from threading import Thread
 
 try:
     from google.colab import auth
@@ -36,7 +38,15 @@ class Drive:
         self.client = client
         return client
 
-    def download_file(self, file_id, save_path):
+    def exec(self, func, *args, wait=True, **kwargs):
+        if wait:
+            return func(*args, **kwargs)
+        else:
+            thread = Thread(target=func, args=args, kwargs=kwargs)
+            thread.start()
+            return thread
+
+    def __download_file(self, file_id, save_path):
         DataUtil.mkparent(Path(save_path))
         drive_file = self.client.CreateFile({
             "id": file_id
@@ -44,7 +54,10 @@ class Drive:
         drive_file.GetContentFile(save_path)
         return drive_file
 
-    def upload_file(self, file_path, parent_id, file_name=None):
+    def download_file(self, *args, wait=True, **kwargs):
+        return self.exec(self.__download_file, *args, wait=wait, **kwargs)
+
+    def __upload_file(self, file_path, parent_id, file_name=None):
         file_path_2 = Path(file_path)
         DataUtil.mkparent(file_path_2)
         file_name = file_name or file_path_2.name
@@ -59,7 +72,10 @@ class Drive:
         drive_file.Upload()
         return drive_file
 
-    def update_file(self, file_path, file_id, file_name=None):
+    def upload_file(self, *args, wait=True, **kwargs):
+        return self.exec(self.__upload_file, *args, wait=wait, **kwargs)
+
+    def __update_file(self, file_path, file_id, file_name=None, wait=False):
         file_path_2 = Path(file_path)
         DataUtil.mkparent(file_path_2)
         file_name = file_name or file_path_2.name
@@ -71,7 +87,10 @@ class Drive:
         drive_file.Upload()
         return drive_file
 
-    def create_folder(self, folder_name, parent_id):
+    def update_file(self, *args, wait=True, **kwargs):
+        return self.exec(self.__update_file, *args, wait=wait, **kwargs)
+
+    def __create_folder(self, folder_name, parent_id):
 
         folders = self.client.ListFile(
             {'q': f"title='{folder_name}' and '{parent_id}' in parents and trashed=false".format()}
@@ -91,6 +110,9 @@ class Drive:
 
         return folder
 
+    def create_folder(self, *args, wait=True, **kwargs):
+        return self.exec(self.__create_folder, *args, wait=wait, **kwargs)
+
     def get_folder_files(self, folder_id):
         files = self.client.ListFile(
             {'q': "'{0}' in parents and trashed=false".format(folder_id)}
@@ -109,7 +131,7 @@ class Drive:
         return files
 
 
-    def upload_folder(self, folder_path, parent_id, only_contents=False, replace=True, merge=True):
+    def __upload_folder(self, folder_path, parent_id, only_contents=False, replace=True, merge=True):
         folder = Path(folder_path)
         folders, files = DataUtil.get_sub_folders_files(folder)
 
@@ -128,12 +150,14 @@ class Drive:
                 if replace:
                     self.update_file(
                         file_path,
-                        file_id=existing_files[f.name]["id"]
+                        file_id=existing_files[f.name]["id"],
+                        wait=False
                     )
             else:
                 self.upload_file(
                     file_path,
-                    parent_id=parent_id
+                    parent_id=parent_id,
+                    wait=False
                 )
 
         existing_folders = self.find_files(
@@ -146,15 +170,20 @@ class Drive:
                     self.upload_folder(
                         f"{folder_path}/{f.name}",
                         parent_id=existing_folders[f.name]["id"],
-                        only_contents=True
+                        only_contents=True,
+                        wait=False
                     )
             else:
                 self.upload_folder(
                     f"{folder_path}/{f.name}",
                     parent_id=parent_id,
-                    only_contents=False
+                    only_contents=False,
+                    wait=False
                 )
         drive_parent = self.client.CreateFile({
             "id": parent_id
         })
         return drive_parent
+
+    def upload_folder(self, *args, wait=True, **kwargs):
+        return self.exec(self.__upload_folder, *args, wait=wait, **kwargs)
