@@ -265,7 +265,7 @@ class ObjectiveModel:
         combine_head_w0_mean=1.0,
         combine_head_w0_std=0.0,
         precombine_head_depth=0,
-        combine_head_depth=0,
+        combine_head_depth=1,
         conv_activation=nn.ReLU,
         fc_activation=nn.ReLU,
         residual_activation=nn.ReLU,
@@ -730,6 +730,7 @@ def make_objective(
             "private_state_size": trial.suggest_int("private_state_size", state_sizes),
             "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
             "residual_activation": trial.suggest_categorical("residual_activation", activation_keys),
+            "combine_head_depth": trial.suggest_int("combine_head_depth", normal_fc_depths),
             "lr": trial.suggest_float("lr", lrs),
             "batch_size": trial.suggest_int("batch_size", batch_sizes),
             "additional_past_length": trial.suggest_int("additional_past_length", additional_past_lengths),
@@ -757,8 +758,7 @@ def make_objective(
                 "shared_state_size": trial.suggest_int("shared_state_size", state_sizes),
                 "combine_head_w0_mean": trial.suggest_float("combine_head_w0_mean", w0_means),
                 "combine_head_w0_std": trial.suggest_float("combine_head_w0_std", w0_stds),
-                "precombine_head_depth": trial.suggest_int("precombine_head_depth", pre_fc_depths),
-                "combine_head_depth": trial.suggest_int("combine_head_depth", normal_fc_depths)
+                "precombine_head_depth": trial.suggest_int("precombine_head_depth", pre_fc_depths)
             })
 
         if use_representation_past:
