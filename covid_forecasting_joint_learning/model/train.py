@@ -31,6 +31,7 @@ def __eval(
 
     context = torch.cuda.amp.autocast() if train and grad_scaler else dummy_context
 
+    print("epoch")
     with context:
         for sample in samples:
             sample, kabko = sample[:-1], sample[-1]
@@ -86,6 +87,8 @@ def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
         else:
             target.model.eval()
 
+    print([t.is_target for t in targets])
+
     return weights, target_weights
 
 def eval(
@@ -116,6 +119,8 @@ def eval(
     size = len(joint_dataloader_enum)
     # assert len(set([len(samples) for samples in joint_dataloader_enum])) == 1
 
+    print([t.is_target for t in targets])
+    print([t.is_target for t in members if t.is_target])
 
     stepped = False
 
