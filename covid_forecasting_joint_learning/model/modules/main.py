@@ -365,6 +365,7 @@ class SingleModel(nn.Module):
         # if self.use_exo:
         #     x_past = torch.cat(x_past, input["past_exo"])
         # hx_private, cx_private, hx_shared, cx_shared = self.past_model(past)
+        print("Past", type(past))
         hx_private, hx_shared = self.past_model(past, return_cx=False)
 
         teacher_forcing = self.teacher_forcing and self.training
