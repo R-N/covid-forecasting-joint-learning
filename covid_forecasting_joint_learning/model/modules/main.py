@@ -81,7 +81,9 @@ class RepresentationModel(nn.Module):
             x_shared = ModelUtil.conv1d_to_linear_tensor(x_shared)
 
             x_private = self.combine_representation(x_private, x_shared)
-        return x_private, x_shared
+            return x_private, x_shared
+        else:
+            return x_private
 
     def freeze_shared(self, freeze=True):
         if self.use_shared_representation:
@@ -151,10 +153,12 @@ class PastModel(nn.Module):
         self.shared_head = shared_head
 
     def forward(self, x, return_cx=False):
+        x_private, x_shared = x, x
         if self.use_representation:
-            x_private, x_shared = self.representation_model(x)
-        else:
-            x_private, x_shared = x, x
+            if self.use_shared_representation:
+                x_private, x_shared = self.representation_model(x)
+            else:
+                x_private = self.representation_model(x)
         x_private = ModelUtil.linear_to_sequential_tensor(x_private)
 
         hx_private = self.private_head(x_private, return_cx=return_cx)
@@ -166,9 +170,14 @@ class PastModel(nn.Module):
 
         # hx stays in sequential shape
         if return_cx:
-            return hx_private[0], hx_private[1], hx_shared[0], hx_shared[1]
+            if self.use_shared_head:
+                return hx_private[0], hx_private[1], hx_shared[0], hx_shared[1]
+            else:
+                return hx_private[0], hx_private[1]
         else:
-            return hx_private, hx_shared
+            if self.use_shared_head:
+                return hx_private, hx_shared
+            return hx_private
 
 
     def freeze_shared(self, freeze=True):
@@ -350,22 +359,28 @@ class SingleModel(nn.Module):
             past_seed_full = torch.cat([past_seed_full, torch.stack([o])], dim=0)
         seed_length = seed_length or self.seed_length
         past_seed_full = past_seed_full[:seed_length]
+        x_private, x_shared = past_seed_full, past_seed_full
         if self.use_representation_future:
             # print("prepare_seed", "past_seed_full", past_seed_full.size())
             past_seed_full = ModelUtil.sequential_to_linear_tensor(past_seed_full)
-            x_private, x_shared = self.representation_future_model(past_seed_full)
+            if self.use_shared_representation_future:
+                x_private, x_shared = self.representation_future_model(past_seed_full)
+            else:
+                x_private = self.representation_future_model(past_seed_full)
             past_seed_full = ModelUtil.linear_to_sequential_tensor(past_seed_full)
             x_private = ModelUtil.linear_to_sequential_tensor(x_private)
             x_shared = ModelUtil.linear_to_sequential_tensor(x_shared)
-        else:
-            x_private, x_shared = past_seed_full, past_seed_full
         return past_seed_full, x_private[-1], x_shared[-1]
 
     def forward(self, past, past_seed, past_exo=None, future=None, future_exo=None):
         # if self.use_exo:
         #     x_past = torch.cat(x_past, input["past_exo"])
         # hx_private, cx_private, hx_shared, cx_shared = self.past_model(past)
-        hx_private, hx_shared = self.past_model(past)
+        hx_private, hx_shared = None, None
+        if self.past_model.use_shared_head:
+            hx_private, hx_shared = self.past_model(past)
+        else:
+            hx_private = self.past_model(past)
 
         teacher_forcing = self.teacher_forcing and self.training
         future = ModelUtil.linear_to_sequential_tensor(future) if teacher_forcing else None
