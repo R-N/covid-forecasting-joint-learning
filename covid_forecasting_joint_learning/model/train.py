@@ -119,7 +119,7 @@ def eval(
 
     print([k.name for k in members])
     print([t.is_target for t in members if t.is_target])
-    print(len(members), len(samples), len(joint_dataloader_enum), len(joint_dataloader_enum[0]))
+    print(len(members), len(samples), len(set(samples)), len(joint_dataloader_enum), len(set(joint_dataloader_enum)), len(joint_dataloader_enum[0]), len(set(joint_dataloader_enum[0])))
     print([sample[-1].name for sample in joint_dataloader_enum[0]])
     print([sample[-1].name for sample in joint_dataloader_enum[1]])
 
