@@ -33,7 +33,7 @@ setuptools.setup(
         "torch",  #==1.8.1",
         "torchinfo",
         "scipy",
-        "pydrive",
+        "pydrive2",
         "captum",
         "openpyxl",
         "line_profiler"
