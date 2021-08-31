@@ -3,8 +3,7 @@ from pydrive.drive import GoogleDrive
 from oauth2client.client import GoogleCredentials
 from pathlib import Path
 from . import util as DataUtil
-from multiprocessing.pool import ThreadPool
-from threading import Thread
+from concurrent.futures import ThreadPoolExecutor
 
 try:
     from google.colab import auth
@@ -17,8 +16,9 @@ PARENT_KIND = "drive#fileLink"
 
 
 class Drive:
-    def __init__(self, creds_path="drive_creds.json"):
+    def __init__(self, creds_path="drive_creds.json", max_threads=8):
         self.client = self.auth(creds_path=creds_path)
+        self.executor = ThreadPoolExecutor(max_workers=max_threads)
 
     def auth(self, creds_path="drive_creds.json"):
         gauth = GoogleAuth()
@@ -42,9 +42,7 @@ class Drive:
         if wait:
             return func(*args, **kwargs)
         else:
-            thread = Thread(target=func, args=args, kwargs=kwargs)
-            thread.start()
-            return thread
+            return self.executor.submit(func, *args, **kwargs)
 
     def __download_file(self, file_id, save_path):
         DataUtil.mkparent(Path(save_path))
