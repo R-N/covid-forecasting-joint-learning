@@ -712,7 +712,8 @@ def make_objective(
     use_representation_future=False,
     use_shared=True,
     joint_learning=True,
-    merge_clusters=False
+    merge_clusters=False,
+    debug=False
 ):
     activation_keys = [x for x in activations.keys()]
     if not use_representation_future:
@@ -830,6 +831,7 @@ def make_objective(
                     source_pick=source_pick,
                     private_mode=private_mode,
                     shared_mode=shared_mode,
+                    debug=debug,
                     **params
                 )
                 model.to(device)
