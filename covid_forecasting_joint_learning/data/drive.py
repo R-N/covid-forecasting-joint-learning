@@ -16,7 +16,7 @@ PARENT_KIND = "drive#fileLink"
 
 
 class Drive:
-    def __init__(self, creds_path="drive_creds.json", max_threads=2):
+    def __init__(self, creds_path="drive_creds.json", max_threads=4):
         self.client = self.auth(creds_path=creds_path)
         self.executor = ThreadPoolExecutor(max_workers=max_threads)
 
