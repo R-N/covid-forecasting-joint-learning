@@ -741,12 +741,13 @@ def make_objective(
             "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
         }
 
+        source_pick_1 = source_pick
         if joint_learning:
             params.update({
                 "source_weight": trial.suggest_float("source_weight", source_weights)
             })
         else:
-            source_pick = SourcePick.NONE
+            source_pick_1 = SourcePick.NONE
 
         if use_representation_past or use_representation_future:
             params.update({
@@ -824,7 +825,7 @@ def make_objective(
                     # teacher_forcing=True,
                     min_epochs=min_epochs,
                     use_shared=use_shared,
-                    source_pick=source_pick,
+                    source_pick=source_pick_1,
                     private_mode=private_mode,
                     shared_mode=shared_mode,
                     debug=debug,
