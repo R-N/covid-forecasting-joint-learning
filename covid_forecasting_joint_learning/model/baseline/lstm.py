@@ -5,5 +5,6 @@ def make_objective(*args, **kwargs):
         *args,
         use_representation_past=False,
         use_shared=False,
-        joint_learning=False
+        joint_learning=False,
+        **kwargs
     )
