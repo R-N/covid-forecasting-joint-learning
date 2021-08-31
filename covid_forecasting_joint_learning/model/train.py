@@ -110,11 +110,18 @@ def eval(
     avg_target_loss = 0
     avg_target_losses = [0 for i in range(len(targets))]
 
-    samples = [key(k) for k in members]
-    joint_dataloader_enum = list(zip(samples))
+    samples = [iter(key(k)) for k in members]
+    joint_dataloader_enum = list(zip(*samples))
 
     print([k.name for k in members])
     print([t.is_target for t in members if t.is_target])
+    print(
+        len(members),
+        len(samples),
+        len(joint_dataloader_enum),
+        len(joint_dataloader_enum[0])
+    )
+    print([sample[-1].name for sample in joint_dataloader_enum[0]])
 
     stepped = False
 
