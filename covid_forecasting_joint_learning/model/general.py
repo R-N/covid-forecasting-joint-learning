@@ -240,7 +240,7 @@ class ObjectiveModel:
         hidden_size_future=0,
         shared_state_size=0,
         private_state_size=3,
-        representation_past_private_depth=1,
+        representation_past_private_depth=0,
         representation_past_private_kernel_size=3,
         representation_past_private_stride=1,
         representation_past_private_dilation=1,
