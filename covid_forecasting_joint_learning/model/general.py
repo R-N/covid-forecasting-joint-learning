@@ -728,6 +728,8 @@ def make_objective(
 
         params = {
             "private_state_size": trial.suggest_int("private_state_size", state_sizes),
+            "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
+            "residual_activation": trial.suggest_categorical("residual_activation", activation_keys),
             "lr": trial.suggest_float("lr", lrs),
             "batch_size": trial.suggest_int("batch_size", batch_sizes),
             "additional_past_length": trial.suggest_int("additional_past_length", additional_past_lengths),
@@ -745,11 +747,6 @@ def make_objective(
         else:
             source_pick = SourcePick.NONE
 
-        if use_representation_past or use_representation_future or use_shared:
-            params.update({
-                "residual_activation": trial.suggest_categorical("residual_activation", activation_keys)
-            })
-
         if use_representation_past or use_representation_future:
             params.update({
                 "conv_activation": trial.suggest_categorical("conv_activation", activation_keys)
@@ -757,7 +754,6 @@ def make_objective(
 
         if use_shared:
             params.update({
-                "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
                 "shared_state_size": trial.suggest_int("shared_state_size", state_sizes),
                 "combine_head_w0_mean": trial.suggest_float("combine_head_w0_mean", w0_means),
                 "combine_head_w0_std": trial.suggest_float("combine_head_w0_std", w0_stds),
