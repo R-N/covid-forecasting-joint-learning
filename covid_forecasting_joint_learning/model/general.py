@@ -160,7 +160,7 @@ class ClusterModel:
 
     @property
     def members(self):
-        return [*self.sources, self.target]
+        return self.sources + self.targets
 
     def create_optimizer(self):
         return self.optimizer_fn(self.models.parameters(), **self.optimizer_kwargs)
