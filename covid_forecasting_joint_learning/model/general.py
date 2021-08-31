@@ -470,7 +470,6 @@ class ObjectiveModel:
         self.sizes = sizes
         self.model_kwargs = deepcopy(model_kwargs)
 
-        print("debug", debug)
         if debug:
             print(ModelUtil.str_dict(sizes))
             print(ModelUtil.str_dict(model_kwargs))
@@ -716,7 +715,6 @@ def make_objective(
     merge_clusters=False,
     debug=False
 ):
-    print("debug1", debug)
     activation_keys = [x for x in activations.keys()]
     if not use_representation_future:
         seed_lengths = 1
