@@ -315,7 +315,7 @@ class ObjectiveModel:
                         "residual_kwargs": {
                             "activation": residual_activation
                         }
-                    } if representation_past_private_depth else None,
+                    },
                     "pre_shared_representation": {
                         "depth": representation_past_pre_shared_depth,
                         "data_length": past_length,
@@ -346,7 +346,7 @@ class ObjectiveModel:
                         "w0_mean": combine_representation_past_w0_mean,
                         "w0_std": combine_representation_past_w0_std,
                     } if representation_past_shared_depth else None
-                },
+                } if representation_past_private_depth else None,
                 "private_head": {
                     "use_last_past": use_last_past
                 },
