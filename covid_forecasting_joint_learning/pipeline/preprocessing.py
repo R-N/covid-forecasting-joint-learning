@@ -6,6 +6,7 @@ from . import sird
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from ..data import cols as DataCol
 import itertools
+from .clustering import shortest, merge_clusters
 
 
 # Zero handling
@@ -93,6 +94,9 @@ class Group:
     @property
     def target(self):
         return max(self.targets, key=lambda x: shortest(x))
+
+    def merge_clusters(self):
+        return merge_clusters(self)
 
 
 # Note that slicing with date index includes the second part as opposed to integer index

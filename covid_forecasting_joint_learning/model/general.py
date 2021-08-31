@@ -699,12 +699,16 @@ def make_objective(
     min_epochs=50,
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
+    source_pick=SourcePick.ALL,
+    private_mode=SharedMode.PRIVATE,
+    shared_mode=SharedMode.SHARED,
     pretrain_upload=False,
     posttrain_upload=False,
     use_representation_past=True,
     use_representation_future=False,
     use_shared=True,
-    joint_learning=True
+    joint_learning=True,
+    merge_clusters=False
 ):
     activation_keys = [x for x in activations.keys()]
     if not use_representation_future:
@@ -732,6 +736,10 @@ def make_objective(
         if joint_learning:
             params.update({
                 "source_weight": trial.suggest_float("source_weight", source_weights)
+            })
+        else:
+            params.update({
+                "source_pick": SourcePick.NONE
             })
 
         if use_representation_past or use_representation_future or use_shared:
@@ -798,7 +806,8 @@ def make_objective(
         sum_val_loss_target = 0
 
         for group in groups:
-            for cluster in group.clusters:
+            clusters = [group.merge_clusters()] if merge_clusters else group.clusters
+            for cluster in clusters:
 
                 if group.id > 0 or cluster.id > 1:
                     continue
@@ -816,6 +825,9 @@ def make_objective(
                     # teacher_forcing=True,
                     min_epochs=min_epochs,
                     use_shared=use_shared,
+                    source_pick=source_pick,
+                    private_mode=private_mode,
+                    shared_mode=shared_mode,
                     **params
                 )
                 model.to(device)
