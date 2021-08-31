@@ -111,6 +111,7 @@ class PastModel(nn.Module):
         use_representation = False
         if hidden_size_past\
             or representation_model is not None:
+            print(hidden_size_past, representation_model)
             assert hidden_size_past\
                 and representation_model is not None
             use_representation = True
