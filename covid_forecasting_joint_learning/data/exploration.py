@@ -26,6 +26,10 @@ FIG_SIZE = (13, 6)
 LINE_WIDTH = 2
 
 
+def my_abs(x):
+    return abs(x) if (x is not None and not np.isnan(x)) else 0
+
+
 # IPython
 def init_ipython():
     from IPython.display import HTML, display
@@ -273,14 +277,14 @@ def corr_lag_best_multi(
         method=method,
         lag_start=lag_start,
         lag_end=lag_end
-    ), key=lambda x: abs(x) if not np.isnan(x) else 0) for y_col in y_cols] for x_col in x_cols])
+    ), key=lambda x: my_abs(x)) for y_col in y_cols] for x_col in x_cols])
     if reduction:
         if abs_corr:
             corr = np.abs(corr)
         if reduction == "sum":
             corr = np.sum(corr, axis=1, skipna=True)
         elif reduction == "max":
-            corr = np.array([max(row, key=lambda x: abs(x) if not np.isnan(x) else 0) for row in corr])
+            corr = np.array([max(row, key=lambda x: my_abs(x)) for row in corr])
         elif reduction in ("avg", "mean"):
             corr = np.mean(corr, axis=1, skipna=True)
         else:
@@ -315,10 +319,10 @@ def corr_lag_sort_multi(
     min_corr_percentile = np.percentile(corr_values, min_corr_percentile)
     best_corr = np.max(corr_values)
     mean_corr = np.mean(corr_values) if mean else 0
-    corrs = [corr + (abs(corr[-1]),) for corr in corrs]
+    corrs = [corr + (my_abs(corr[-1]),) for corr in corrs]
     corrs = [(x_col, y_col, x_lag, corr) for x_col, y_col, x_lag, corr, abs_corr in corrs if abs_corr >= min_corr and abs_corr >= min_corr_percentile and best_corr - abs_corr <= max_corr_diff and abs_corr >= mean_corr]
 
-    corrs = sorted(corrs, key=lambda x: abs(x[-1]), reverse=True)
+    corrs = sorted(corrs, key=lambda x: my_abs(x[-1]), reverse=True)
     corrs = [{
         "x_col": x_col,
         "y_col": y_col,
@@ -375,7 +379,7 @@ def explore_date_corr(
                 new_dates = [x for x in new_dates if x not in date_set]
                 stack.append((
                     DataUtil.label_combinations(new_dates),
-                    abs(corr),
+                    my_abs(corr),
                     {
                         "x_col": x_col,
                         "corr": corr,
@@ -479,7 +483,7 @@ def corr_lag_best_multi_dfs(
                     corrs_0[x_col] = [sum(c) for c in zip(corrs_0[x_col], corr)]
             elif kabko_reduction == "max":
                 for x_col, corr in corrs.items():
-                    corrs_0[x_col] = [max(c, key=lambda x: abs(x)) for c in zip(corrs_0[x_col], corr)]
+                    corrs_0[x_col] = [max(c, key=lambda x: my_abs(x)) for c in zip(corrs_0[x_col], corr)]
             else:
                 raise ValueError(f"Invalid kabko_reduction '{kabko_reduction}'")
         else:
