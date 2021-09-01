@@ -285,13 +285,11 @@ def corr_lag_best_multi(
             corr = np.mean(corr, axis=1, skipna=True)
         else:
             raise ValueError(f"Invalid reduction '{reduction}'")
-        if as_dict:
-            return dict(zip(x_cols, corr))
-        df = pd.DataFrame(corr, columns=["corr"], index=x_cols)
-        return df
-    else:
-        df = pd.DataFrame(corr, columns=y_cols, index=x_cols)
-        return df if y_as_cols else df.T
+        y_cols = ["corr"]
+    if as_dict:
+        return dict(zip(x_cols, corr))
+    df = pd.DataFrame(corr, columns=y_cols, index=x_cols)
+    return df if y_as_cols else df.T
 
 
 def corr_lag_sort_multi(
@@ -450,6 +448,55 @@ def corr_lag_best_multi_kabko(
         corrs_0 = {k: v / scale for k, v in corrs_0.items()}
 
     return corrs_0
+
+
+def corr_lag_best_multi_kabko_df(
+    kabkos,
+    labeled_dates,
+    y_cols,
+    lag_start=0, lag_end=-14,
+    method="kendall",
+    kabko_reduction="max",
+    as_dict=False
+):
+    corrs_0 = None
+    for kabko in kabkos:
+        df = kabko.add_dates(
+            kabko.data,
+            dates={k: list(v) for k, v in labeled_dates.items()}
+        )
+
+        corrs = corr_lag_best_multi(
+            df,
+            x_cols=list(labeled_dates.keys()),
+            y_cols=y_cols,
+            lag_start=lag_start,
+            lag_end=lag_end,
+            method=method,
+            as_dict=True
+        )
+        del df
+
+        if corrs_0:
+            if kabko_reduction in ("avg", "mean", "sum"):
+                for x_col, corr in corrs.items():
+                    corrs_0[x_col] = [sum(c) for c in zip(corrs_0[x_col], corr)]
+            elif kabko_reduction == "max":
+                for x_col, corr in corrs.items():
+                    corrs_0[x_col] = [max(c, key=lambda x: abs(x)) for c in zip(corrs_0[x_col], corr)]
+            else:
+                raise ValueError(f"Invalid kabko_reduction '{kabko_reduction}'")
+        else:
+            corrs_0 = corrs
+        del corrs
+
+    if kabko_reduction in ("avg", "mean"):
+        scale = len(kabkos)
+        corrs_0 = {k: [c / scale for c in v] for k, v in corrs_0.items()}
+
+    if as_dict:
+        return corrs_0
+    return pd.DataFrame(corrs_0, index=y_cols).T
 
 
 def score_labeled_dates(
