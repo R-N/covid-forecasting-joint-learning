@@ -464,7 +464,7 @@ def corr_lag_best_multi_dfs(
 
         corrs = corr_lag_best_multi(
             df,
-            x_cols=list(x_cols.keys()),
+            x_cols=x_cols.keys(),
             y_cols=y_cols,
             lag_start=lag_start,
             lag_end=lag_end,
