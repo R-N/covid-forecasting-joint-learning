@@ -450,9 +450,9 @@ def corr_lag_best_multi_kabko(
     return corrs_0
 
 
-def corr_lag_best_multi_kabko_df(
-    kabkos,
-    labeled_dates,
+def corr_lag_best_multi_dfs(
+    dfs,
+    x_cols,
     y_cols,
     lag_start=0, lag_end=-14,
     method="kendall",
@@ -460,15 +460,11 @@ def corr_lag_best_multi_kabko_df(
     as_dict=False
 ):
     corrs_0 = None
-    for kabko in kabkos:
-        df = kabko.add_dates(
-            kabko.data,
-            dates={k: list(v) for k, v in labeled_dates.items()}
-        )
+    for df in dfs:
 
         corrs = corr_lag_best_multi(
             df,
-            x_cols=list(labeled_dates.keys()),
+            x_cols=list(x_cols.keys()),
             y_cols=y_cols,
             lag_start=lag_start,
             lag_end=lag_end,
@@ -491,7 +487,7 @@ def corr_lag_best_multi_kabko_df(
         del corrs
 
     if kabko_reduction in ("avg", "mean"):
-        scale = len(kabkos)
+        scale = len(dfs)
         corrs_0 = {k: [c / scale for c in v] for k, v in corrs_0.items()}
 
     if as_dict:
