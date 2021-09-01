@@ -26,8 +26,11 @@ FIG_SIZE = (13, 6)
 LINE_WIDTH = 2
 
 
+def handle_nan(x):
+    return x if (x is not None and not np.isnan(x)) else 0
+
 def my_abs(x):
-    return abs(x) if (x is not None and not np.isnan(x)) else 0
+    return abs(handle_nan(x))
 
 
 # IPython
