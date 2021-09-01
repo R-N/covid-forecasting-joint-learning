@@ -809,7 +809,7 @@ def make_objective(
             clusters = [group.merge_clusters()] if merge_clusters else group.clusters
             for cluster in clusters:
 
-                if group.id > 0 or cluster.id > 1:
+                if debug and group.id > 0 or cluster.id > 1:
                     continue
 
                 print(f"Model for {group.id}.{cluster.id}")
