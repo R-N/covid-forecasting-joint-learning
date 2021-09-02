@@ -133,7 +133,7 @@ def plot_pacf(series, *args, name="", **kwargs):
 
 
 # Classical decomposition
-def classical_decompose(series, period, *args, model="additive", **kwargs):
+def classical_decompose(series, period=None, *args, model="additive", **kwargs):
     return seasonal_decompose(series, *args, period=period, model=model, **kwargs)
 
 
