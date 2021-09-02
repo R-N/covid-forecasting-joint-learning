@@ -149,7 +149,7 @@ def plot_classical_decompose(decomposed, name=""):
 
 # Residual stats
 def rmse(residual):
-    return math.sqrt((residual * residual).sum())
+    return math.sqrt((residual * residual).sum() / len(residual))
 
 
 def print_residual_stats(residual, name=""):
