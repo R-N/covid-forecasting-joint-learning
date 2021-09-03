@@ -36,6 +36,7 @@ setuptools.setup(
         "pydrive2",
         "captum",
         "openpyxl",
-        "line_profiler"
+        "line_profiler",
+        "mpld3"
     ]
 )

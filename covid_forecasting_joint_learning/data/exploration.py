@@ -14,6 +14,7 @@ from scipy.stats import pearsonr, spearmanr, kendalltau
 from . import util as DataUtil
 from collections import deque
 import gc
+import mpld3
 # from matplotlib import rcParams
 # import itertools
 
@@ -110,6 +111,18 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
         return fig, ax
     return fig
 
+
+def interactive_legends(fig, ax):
+    handles, labels = ax.get_legend_handles_labels()  # return lines and labels
+    interactive_legend = mpld3.plugins.InteractiveLegendPlugin(
+        zip(handles, ax.collections),
+        labels,
+        alpha_unsel=0.5,
+        alpha_over=1.5,
+        start_visible=True
+    )
+    mpld3.plugins.connect(fig, interactive_legend)
+    mpld3.display(fig)
 
 # ADF test
 def print_adf(adf, name=""):
