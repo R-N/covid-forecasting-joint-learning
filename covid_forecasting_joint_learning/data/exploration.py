@@ -79,7 +79,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
 
     if interactive:
         legend = False
-        alpha /= alpha_unsel
+        alpha = min(1, alpha / alpha_unsel)
 
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     max_val = max([line.max() for line in lines])
