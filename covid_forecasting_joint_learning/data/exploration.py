@@ -71,7 +71,7 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.15, interactive=True, alpha_unsel=0.5, alpha_over=1.5):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.2, interactive=True, alpha_unsel=0.35, alpha_over=1.5):
     if isinstance(lines[0], str):
         lines = [df[line] for line in lines]
     if isinstance(fills[0], str):
