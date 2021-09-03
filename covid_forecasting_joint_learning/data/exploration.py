@@ -122,7 +122,7 @@ def interactive_legends(fig, ax):
         start_visible=True
     )
     mpld3.plugins.connect(fig, interactive_legend)
-    mpld3.display(fig)
+    return mpld3.display(fig)
 
 # ADF test
 def print_adf(adf, name=""):
