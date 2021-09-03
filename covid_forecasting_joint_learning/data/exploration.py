@@ -163,12 +163,14 @@ def print_residual_stats(residual, name=""):
     return '\n'.join(ret)
 
 
+
 # Differencing
-def diff(series, period=1, **kwargs):
+def diff(series, order=1, shift=1, **kwargs):
     # ret = series - series.shift()
-    ret = series.diff(period=period, **kwargs)
-    ret.dropna(inplace=True)
-    return ret
+    for i in range(order):
+        series = series.diff(periods=shift, **kwargs)
+    series.dropna(inplace=True)
+    return series
 
 
 # Correlation
