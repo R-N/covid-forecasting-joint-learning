@@ -70,7 +70,7 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1)):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), return_ax=False):
     if isinstance(lines[0], str):
         lines = [df[line] for line in lines]
     if isinstance(fills[0], str):
@@ -106,6 +106,8 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
 
     ax.set_title(title)
     ax.legend(bbox_to_anchor=bbox, loc="upper left")
+    if return_ax:
+        return fig, ax
     return fig
 
 
