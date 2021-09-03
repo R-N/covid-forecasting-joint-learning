@@ -71,11 +71,15 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.15, interactive=True, alpha_unsel=0.5, alpha_over=1.5):
     if isinstance(lines[0], str):
         lines = [df[line] for line in lines]
     if isinstance(fills[0], str):
         fills = [df[fill] for fill in fills]
+
+    if interactive:
+        legend = False
+        alpha /= alpha_unsel
 
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     max_val = max([line.max() for line in lines])
@@ -100,7 +104,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
             where=df_fill > min_val,
             label=fill.name,
             # facecolor=next(cgen)['color'],
-            alpha=0.15
+            alpha=alpha
         )
     for line in lines:
         ax.plot(line, label=line.name)
@@ -108,18 +112,20 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
     ax.set_title(title)
     if legend:
         ax.legend(bbox_to_anchor=bbox, loc="upper left")
+    if interactive:
+        fig = interactive_legend(fig, ax, alpha_unsel=alpha_unsel, alpha_over=alpha_over)
     if return_ax:
         return fig, ax
     return fig
 
 
-def interactive_legend(fig, ax):
+def interactive_legend(fig, ax, alpha_unsel=0.5, alpha_over=1.5):
     handles, labels = ax.get_legend_handles_labels()  # return lines and labels
     interactive_legend = mpld3.plugins.InteractiveLegendPlugin(
-        zip(handles, ax.collections),
+        handles,
         labels,
-        alpha_unsel=0.5,
-        alpha_over=1.5,
+        alpha_unsel=alpha_unsel,
+        alpha_over=alpha_unsel,
         start_visible=True
     )
     mpld3.plugins.connect(fig, interactive_legend)
