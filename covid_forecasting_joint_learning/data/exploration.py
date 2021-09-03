@@ -71,7 +71,7 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend_best=False, return_ax=False):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False):
     if isinstance(lines[0], str):
         lines = [df[line] for line in lines]
     if isinstance(fills[0], str):
@@ -106,16 +106,14 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
         ax.plot(line, label=line.name)
 
     ax.set_title(title)
-    if legend_best:
-        ax.legend(loc="best")
-    else:
+    if legend:
         ax.legend(bbox_to_anchor=bbox, loc="upper left")
     if return_ax:
         return fig, ax
     return fig
 
 
-def interactive_legends(fig, ax):
+def interactive_legend(fig, ax):
     handles, labels = ax.get_legend_handles_labels()  # return lines and labels
     interactive_legend = mpld3.plugins.InteractiveLegendPlugin(
         zip(handles, ax.collections),
