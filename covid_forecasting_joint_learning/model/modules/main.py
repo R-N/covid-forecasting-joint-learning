@@ -277,7 +277,8 @@ class SingleModel(nn.Module):
         shared_head_future_cell=None,
         post_future_model={},
         teacher_forcing=True,
-        use_exo=True
+        use_exo=True,
+        update_hx=True
     ):
         super(SingleModel, self).__init__()
 
@@ -351,6 +352,7 @@ class SingleModel(nn.Module):
         self.future_length = future_length
         self.teacher_forcing = teacher_forcing
         self.use_exo = use_exo
+        self.update_hx = update_hx
 
     def prepare_seed(self, past_seed_full, o=None, o_exo=None, seed_length=None):
         # past_seed_full is of sequential shape (Length, Batch, Channel)
@@ -402,7 +404,7 @@ class SingleModel(nn.Module):
             past_seed_full = past_seed
 
         outputs = []
-        cx_private, cx_shared, o, o_exo = None, None, None, None
+        cx_private, cx_shared, o, o_exo, hx_private_1, hx_shared_1 = None, None, None, None, None, None
         last = self.future_length - 1
         for i in range(self.future_length):
             # print("for", "past_seed_full", past_seed_full.size())
@@ -420,17 +422,19 @@ class SingleModel(nn.Module):
             """
 
             if i < last:
-                cx_private, hx_private = self.private_head_future_cell(
+                cx_private, hx_private_1 = self.private_head_future_cell(
                     x_private,
                     hx_private, cx_private,
                     return_reversed=True
                 )
                 if self.use_shared_head:
-                    cx_shared, hx_shared = self.shared_head_future_cell(
+                    cx_shared, hx_shared_1 = self.shared_head_future_cell(
                         x_shared,
                         hx_shared, cx_shared,
                         return_reversed=True
                     )
+                if self.update_hx:
+                    hx_private, hx_shared = hx_private_1, hx_shared_1
             else:
                 cx_private = self.private_head_future_cell(
                     x_private,

@@ -290,7 +290,8 @@ class ObjectiveModel:
         debug=False,
         min_epochs=50,
         shared_model=None,
-        use_shared=True
+        use_shared=True,
+        update_hx=True
     ):
         self.cluster = cluster
 
@@ -418,7 +419,8 @@ class ObjectiveModel:
                 }
             },
             "seed_length": seed_length,
-            "teacher_forcing": teacher_forcing
+            "teacher_forcing": teacher_forcing,
+            "update_hx": update_hx
         }
 
         with suppress(KeyError, TypeError, AttributeError):
@@ -711,6 +713,7 @@ def make_objective(
     use_representation_past=True,
     use_representation_future=False,
     use_shared=True,
+    update_hx=True,
     joint_learning=True,
     merge_clusters=False,
     debug=False
@@ -738,8 +741,11 @@ def make_objective(
             "use_last_past": trial.suggest_int("use_last_past", booleans),
             "past_cols": trial.suggest_int("past_cols", (0, len(past_cols) - 1)),
             "future_exo_cols": trial.suggest_int("future_exo_cols", (0, len(future_exo_cols) - 1)),
-            "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing)
+            "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing),
+            "update_hx": trial.suggest_categorical("update_hx", update_hx)
         }
+        use_exo = bool(params["future_exo_cols"])
+        params["use_exo"] = use_exo
 
         source_pick_1 = source_pick
         if joint_learning:
@@ -801,7 +807,6 @@ def make_objective(
                 })
 
         params = prepare_params(params, activations, past_cols, future_exo_cols)
-        use_exo = bool(params["future_exo_cols"])
 
         sum_val_loss_target = 0
 
