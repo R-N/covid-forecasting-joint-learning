@@ -70,13 +70,19 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1)):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1)):
+    if isinstance(lines[0], str):
+        lines = [df[line] for line in lines]
+    if isinstance(fills[0], str):
+        fills = [df[fill] for fill in fills]
+
     fig, ax = plt.subplots(1, 1, figsize=figsize)
-    max_val = df[lines].max().max()
-    min_val = df[lines].min().min()
+    max_val = max([line.max() for line in lines])
+    min_val = min([line.min() for line in lines])
     # x_zero = pd.Series(min_val, index=df.index)
+
     for fill in fills:
-        df_fill = df[fill].copy()
+        df_fill = fill.copy()
         df_fill.loc[(df_fill != 0)] = max_val
         df_fill.loc[(df_fill == 0)] = min_val
         ax.fill_between(
@@ -84,12 +90,13 @@ def plot_fill(df, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1)):
             min_val,
             df_fill,
             where=df_fill > min_val,
-            label=fill,
+            label=fill.name,
             # facecolor=next(cgen)['color'],
             alpha=0.15
         )
     for line in lines:
-        ax.plot(df[line], label=line)
+        ax.plot(line, label=line.name)
+
     ax.set_title(title)
     ax.legend(bbox_to_anchor=bbox, loc="upper left")
     return fig
