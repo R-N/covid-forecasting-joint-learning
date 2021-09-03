@@ -83,6 +83,8 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
 
     for fill in fills:
         df_fill = fill.copy()
+        if df_fill.max() <= 0:
+            continue
         df_fill.loc[(df_fill != 0)] = max_val
         df_fill.loc[(df_fill == 0)] = min_val
         ax.fill_between(
