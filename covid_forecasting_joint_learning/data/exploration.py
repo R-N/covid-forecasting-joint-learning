@@ -161,11 +161,11 @@ def plot_rolling_stats(series, mean, std, name="", window="?"):
 
 # ACF plots
 def plot_acf(series, *args, name="", **kwargs):
-    return tsaplots.plot_acf(series, *args, title="ACF Plot for %s" % name, **kwargs)
+    return tsaplots.plot_acf(series, *args, title="ACF Plot for %s" % name, zero=False, **kwargs)
 
 
 def plot_pacf(series, *args, name="", **kwargs):
-    return tsaplots.plot_pacf(series, *args, title="PACF Plot for %s" % name, **kwargs)
+    return tsaplots.plot_pacf(series, *args, title="PACF Plot for %s" % name, zero=False, **kwargs)
 
 
 # Classical decomposition
