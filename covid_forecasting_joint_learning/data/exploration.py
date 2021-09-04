@@ -108,7 +108,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
         )
     for line in lines:
         ax.plot(line, label=line.name)
-
+    ax.grid(which="major")
     ax.set_title(title)
     if legend:
         ax.legend(bbox_to_anchor=bbox, loc="upper left")
