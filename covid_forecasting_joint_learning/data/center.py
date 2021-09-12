@@ -204,13 +204,12 @@ class DataCenter:
             self.covid_local[DataCol.KABKO] == kabko,
             [
                 DataCol.DATE,
-                DataCol.I,
-                DataCol.R,
-                DataCol.D
+                *DataCol.IRD
             ]
         ].copy()
         # del covid["kabko"]
         covid.set_index(DataCol.DATE, inplace=True)
+        covid.sort_index(ascending=True, inplace=True)
         return covid
 
     def get_dates_kabko(
@@ -248,8 +247,7 @@ class DataCenter:
     @property
     def population_global(self):
         return self.__population_global
-    
-    
+
     def get_population_kabko(
         self,
         kabko

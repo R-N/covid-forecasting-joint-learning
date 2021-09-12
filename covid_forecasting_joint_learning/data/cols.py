@@ -46,3 +46,6 @@ BETA = "beta"
 GAMMA = "gamma"
 DELTA = "delta"
 SIRD_VARS = [BETA, GAMMA, DELTA]
+DAYS = [f"day_{i}" for i in range(7)]
+DAY_DUM = "day_dum"
+DAY = "day"

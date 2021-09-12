@@ -75,6 +75,21 @@ def handle_zero(
     return df
 
 
+# Days
+def add_day_of_week(df, use_index=True):
+    dates = df.index if use_index else df[DataCol.DATE]
+    df[DataCol.DAY_DUM] = dates.dt.dayofweek
+    dum = pd.get_dummies(df[DataCol.DAY_DUM], prefix=DataCol.DAY)
+    df.loc[:, dum.columns] = dum
+    del df[DataCol.DAY_DUM]
+    return df
+
+
+def add_day_since(df):
+    df[DataCol.DAY] = list(range(len(df.index)))
+    return df
+
+
 # Month splitting
 class Group:
     def __init__(self, id, members, clusters=None, clustering_info=None):
@@ -123,9 +138,9 @@ def calc_split(
     n = len(df) - past_size
     val_len, test_len = int(val_portion * n), int(test_portion * n)
     train_len = n - (val_len + test_len)
-    val_start, test_start = train_len+past_size, train_len+val_len+past_size
+    val_start, test_start = train_len + past_size, train_len + val_len + past_size
     # Note that slicing with date index includes the second part as opposed to integer index
-    train_end, val_end = df.index[val_start-1], df.index[test_start-1]
+    train_end, val_end = df.index[val_start - 1], df.index[test_start - 1]
     val_start, test_start = df.index[val_start], df.index[test_start]
     return train_end, val_start, val_end, test_start
 

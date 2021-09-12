@@ -95,13 +95,15 @@ def __preprocessing_1(
     )
     k.raw = sird.calc_s(k.raw, k.population)
     k.raw.dropna(inplace=True)
+    k.raw = preprocessing.add_day_of_week(k.raw, use_index=True)
+    k.raw = preprocessing.add_day_since(k.raw)
     df_shifted = k.raw.shift()
     delta = k.raw.copy()
     delta = sird.calc_delta(delta, df_shifted)
     # delta.dropna(inplace=True)
     k.data = delta
     k.data = sird.calc_vars(k.data, k.population, df_shifted)
-    prev = len(k.data)
+    # prev = len(k.data)
     k.data.dropna(inplace=True)
     return k
 
