@@ -77,8 +77,8 @@ def handle_zero(
 
 # Days
 def add_day_of_week(df, use_index=True):
-    dates = df.index if use_index else df[DataCol.DATE]
-    df[DataCol.DAY_DUM] = dates.dt.dayofweek
+    dates = df.index if use_index else df[DataCol.DATE].dt
+    df[DataCol.DAY_DUM] = dates.dayofweek
     dum = pd.get_dummies(df[DataCol.DAY_DUM], prefix=DataCol.DAY)
     df.loc[:, dum.columns] = dum
     del df[DataCol.DAY_DUM]
