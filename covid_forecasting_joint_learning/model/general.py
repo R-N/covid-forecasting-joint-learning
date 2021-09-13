@@ -700,7 +700,7 @@ def make_objective(
     lrs=(1e-5, 1e-2),
     source_weights=(0.5, 1.0),
     batch_sizes=(0, 5),
-    additional_past_lengths=(0, 4),
+    additional_past_lengths=(0, 30),
     seed_lengths=30,
     min_epochs=50,
     past_cols=DEFAULT_PAST_COLS,
