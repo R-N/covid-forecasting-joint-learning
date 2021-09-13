@@ -876,7 +876,7 @@ def make_objective(
                 gc.collect()
 
 
-        if drive and not (pretrain_upload or posttrain_upload):
+        if drive and not posttrain_upload:
             upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
         return sum_val_loss_target
