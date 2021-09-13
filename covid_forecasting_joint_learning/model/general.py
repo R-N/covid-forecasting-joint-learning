@@ -505,7 +505,7 @@ class ObjectiveModel:
         if isinstance(log_dir, str):
             if not log_dir.endswith("/"):
                 log_dir = log_dir + "/"
-            log_dir = log_dir + str(self.trial_id)
+            log_dir = f"{log_dir}T{self.trial_id}"
             Path(log_dir).mkdir(parents=True, exist_ok=True)
         self.log_dir = log_dir
 
