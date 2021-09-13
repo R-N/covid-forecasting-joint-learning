@@ -650,12 +650,12 @@ class TrialWrapper:
         self.number = trial.number
 
     def suggest_int(self, name, param, *args, **kwargs):
-        if isinstance(param, tuple) or isinstance(param, list) and param[0] != param[1]:
+        if isinstance(param, tuple) or isinstance(param, list):  # and param[0] != param[1]:
             return self.trial.suggest_int(name, *param, *args, **kwargs)
         return param
 
     def suggest_float(self, name, param, *args, **kwargs):
-        if isinstance(param, tuple) or isinstance(param, list) and param[0] != param[1]:
+        if isinstance(param, tuple) or isinstance(param, list):  # and param[0] != param[1]:
             return self.trial.suggest_float(name, *param, *args, **kwargs)
         return param
 
@@ -689,18 +689,18 @@ def make_objective(
     normal_fc_depths=(1, 20),
     pre_fc_depths=(0, 5),
     past_kernel_sizes=(3, 14),
-    past_strides=1,
-    past_dilations=1,
+    past_strides=(1, 1),
+    past_dilations=(1, 1),
     future_kernel_sizes=(3, 7),
-    future_strides=1,
-    future_dilations=1,
+    future_strides=(1, 1),
+    future_dilations=(1, 1),
     w0_means=(0.0, 1.0),
     w0_stds=(0.0, 0.5),
     booleans=(0, 1),
     lrs=(1e-5, 1e-2),
     source_weights=(0.5, 1.0),
     batch_sizes=(0, 5),
-    additional_past_lengths=(0, 30),
+    additional_past_lengths=(0, 4),
     seed_lengths=30,
     min_epochs=50,
     past_cols=DEFAULT_PAST_COLS,
