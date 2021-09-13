@@ -169,6 +169,7 @@ def slice_dataset(
     limit_past=True
 ):
     len_df = len(df)
+    past_size = min(len_df - future_size, past_size)
     future_start = max(future_start or past_size, past_size)
     future_end = min(future_end or len_df, len_df)
 
