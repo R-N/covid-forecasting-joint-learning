@@ -291,7 +291,8 @@ class ObjectiveModel:
         min_epochs=50,
         shared_model=None,
         use_shared=True,
-        update_hx=True
+        update_hx=True,
+        use_exo=True
     ):
         self.cluster = cluster
 
@@ -453,11 +454,11 @@ class ObjectiveModel:
         input_size_past = sample[0].shape[-1]
         input_size_future = sample[3].shape[-1]
 
-        use_exo_cols = future_exo_cols is not None and len(future_exo_cols) > 0
-        if use_exo_cols:
+        use_exo = use_exo and future_exo_cols is not None and len(future_exo_cols) > 0
+        if use_exo:
             # input_size_past += sample[2].shape[-1]
             input_size_future += sample[4].shape[-1]
-        model_kwargs["use_exo"] = use_exo_cols
+        model_kwargs["use_exo"] = use_exo
 
         sizes = {
             "input_size_past": input_size_past,
