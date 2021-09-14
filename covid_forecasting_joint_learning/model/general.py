@@ -857,7 +857,7 @@ def make_objective(
 
                 if pretrain_copy:
                     if model_dir_copy:
-                        ModelUtil.copytree(model_dir, model_dir_copy)
+                        ModelUtil.copytree(model_dir, model_dir_copy, dirs_exist_ok=True)
                 if drive and pretrain_upload:
                     upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
@@ -884,9 +884,9 @@ def make_objective(
 
                 if posttrain_copy:
                     if log_dir_copy:
-                        ModelUtil.copytree(log_dir, log_dir_copy)
+                        ModelUtil.copytree(log_dir, log_dir_copy, dirs_exist_ok=True)
                     if model_dir_copy:
-                        ModelUtil.copytree(model_dir, model_dir_copy)
+                        ModelUtil.copytree(model_dir, model_dir_copy, dirs_exist_ok=True)
                 if drive and posttrain_upload:
                     upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
@@ -896,9 +896,9 @@ def make_objective(
 
         if not posttrain_copy:
             if log_dir_copy:
-                ModelUtil.copytree(log_dir, log_dir_copy)
+                ModelUtil.copytree(log_dir, log_dir_copy, dirs_exist_ok=True)
             if model_dir_copy:
-                ModelUtil.copytree(model_dir, model_dir_copy)
+                ModelUtil.copytree(model_dir, model_dir_copy, dirs_exist_ok=True)
         if drive and not posttrain_upload:
             upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
         if cleanup:
