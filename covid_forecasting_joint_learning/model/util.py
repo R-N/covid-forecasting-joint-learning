@@ -4,6 +4,9 @@ from torch import nn
 import numpy as np
 from optuna.trial import TrialState
 import line_profiler
+import os
+from shutil import copy2, Error, copystat, rmtree
+from pathlib import Path
 
 
 LINE_PROFILER = line_profiler.LineProfiler()
@@ -121,3 +124,81 @@ def single_batch(t):
 def global_random_seed(seed=257):
     torch.manual_seed(seed)
     np.random.seed(seed)
+
+
+def _copytree(entries, src, dst, symlinks, ignore, copy_function,
+              ignore_dangling_symlinks, dirs_exist_ok=False):
+    if ignore is not None:
+        ignored_names = ignore(src, set(os.listdir(src)))
+    else:
+        ignored_names = set()
+
+    os.makedirs(dst, exist_ok=dirs_exist_ok)
+    errors = []
+    use_srcentry = copy_function is copy2 or copy_function is copy
+
+    for srcentry in entries:
+        if srcentry.name in ignored_names:
+            continue
+        srcname = os.path.join(src, srcentry.name)
+        dstname = os.path.join(dst, srcentry.name)
+        srcobj = srcentry if use_srcentry else srcname
+        try:
+            if srcentry.is_symlink():
+                linkto = os.readlink(srcname)
+                if symlinks:
+                    os.symlink(linkto, dstname)
+                    copystat(srcobj, dstname, follow_symlinks=not symlinks)
+                else:
+                    if not os.path.exists(linkto) and ignore_dangling_symlinks:
+                        continue
+                    if srcentry.is_dir():
+                        copytree(srcobj, dstname, symlinks, ignore,
+                                 copy_function, dirs_exist_ok=dirs_exist_ok)
+                    else:
+                        copy_function(srcobj, dstname)
+            elif srcentry.is_dir():
+                copytree(srcobj, dstname, symlinks, ignore, copy_function,
+                         dirs_exist_ok=dirs_exist_ok)
+            else:
+                # Will raise a SpecialFileError for unsupported file types
+                copy_function(srcentry, dstname)
+        # catch the Error from the recursive copytree so that we can
+        # continue with other files
+        except Error as err:
+            errors.extend(err.args[0])
+        except OSError as why:
+            errors.append((srcname, dstname, str(why)))
+    try:
+        copystat(src, dst)
+    except OSError as why:
+        # Copying file access times may fail on Windows
+        if getattr(why, 'winerror', None) is None:
+            errors.append((src, dst, str(why)))
+    if errors:
+        raise Error(errors)
+    return dst
+
+def copytree(src, dst, symlinks=False, ignore=None, copy_function=copy2,
+             ignore_dangling_symlinks=False, dirs_exist_ok=False):
+    with os.scandir(src) as entries:
+        return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+                         ignore=ignore, copy_function=copy_function,
+                         ignore_dangling_symlinks=ignore_dangling_symlinks,
+                         dirs_exist_ok=dirs_exist_ok)
+
+def prepare_dir(path):
+    if isinstance(path, str):
+        if not path.endswith("/"):
+            path = path + "/"
+        Path(path).mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def delete_dir_contents(target_dir):
+    with os.scandir(target_dir) as entries:
+        for entry in entries:
+            if entry.is_dir() and not entry.is_symlink():
+                rmtree(entry.path)
+            else:
+                os.remove(entry.path)

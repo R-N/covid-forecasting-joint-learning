@@ -285,8 +285,8 @@ class ObjectiveModel:
         teacher_forcing=True,
         grad_scaler=None,
         trial_id=None,
-        log_dir=None,
-        model_dir=None,
+        log_dir="temp/logs/",
+        model_dir="temp/model/",
         debug=False,
         min_epochs=50,
         shared_model=None,
@@ -503,8 +503,7 @@ class ObjectiveModel:
         self.trial_id = trial_id if trial_id is not None else datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
         if isinstance(log_dir, str):
-            if not log_dir.endswith("/"):
-                log_dir = log_dir + "/"
+            log_dir = ModelUtil.prepare_dir(log_dir)
             log_dir = f"{log_dir}T{self.trial_id}"
             Path(log_dir).mkdir(parents=True, exist_ok=True)
         self.log_dir = log_dir
@@ -514,9 +513,8 @@ class ObjectiveModel:
             self.val_summary_writer = SummaryWriter(self.log_dir + '/val')
 
         if isinstance(model_dir, str):
-            if not model_dir.endswith("/"):
-                model_dir = model_dir + "/"
-            model_dir = model_dir + f"{self.trial_id}/{self.cluster.group.id}/{self.cluster.id}/"
+            model_dir = ModelUtil.prepare_dir(model_dir)
+            model_dir = f"{model_dir}{self.trial_id}/{self.cluster.group.id}/{self.cluster.id}/"
             Path(model_dir).mkdir(parents=True, exist_ok=True)
         self.model_dir = model_dir
 
@@ -672,8 +670,10 @@ class TrialWrapper:
 
 def make_objective(
     groups,
-    log_dir=None,
-    model_dir=None,
+    log_dir="temp/logs/",
+    model_dir="temp/model/",
+    log_dir_copy=None,
+    model_dir_copy=None,
     drive=None,
     log_dir_id=None,
     model_dir_id=None,
@@ -711,6 +711,9 @@ def make_objective(
     shared_mode=SharedMode.SHARED,
     pretrain_upload=False,
     posttrain_upload=False,
+    pretrain_copy=True,
+    posttrain_copy=True,
+    cleanup=True,
     use_representation_past=True,
     use_representation_future=False,
     use_shared=True,
@@ -723,6 +726,13 @@ def make_objective(
     if not use_representation_future:
         seed_lengths = 1
 
+    assert (not log_dir_copy) or log_dir
+    assert (not model_dir_copy) or model_dir
+
+    log_dir = ModelUtil.prepare_dir(log_dir)
+    model_dir = ModelUtil.prepare_dir(model_dir)
+    log_dir_copy = ModelUtil.prepare_dir(log_dir_copy)
+    model_dir_copy = ModelUtil.prepare_dir(model_dir_copy)
 
     def objective(
         trial
@@ -845,6 +855,9 @@ def make_objective(
                 if model_dir:
                     model.pretrain_save_model()
 
+                if pretrain_copy:
+                    if model_dir_copy:
+                        ModelUtil.copytree(model_dir, model_dir_copy)
                 if drive and pretrain_upload:
                     upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
@@ -869,6 +882,11 @@ def make_objective(
                 if model_dir:
                     model.posttrain_save_model()
 
+                if posttrain_copy:
+                    if log_dir_copy:
+                        ModelUtil.copytree(log_dir, log_dir_copy)
+                    if model_dir_copy:
+                        ModelUtil.copytree(model_dir, model_dir_copy)
                 if drive and posttrain_upload:
                     upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
 
@@ -876,8 +894,18 @@ def make_objective(
                 gc.collect()
 
 
+        if not posttrain_copy:
+            if log_dir_copy:
+                ModelUtil.copytree(log_dir, log_dir_copy)
+            if model_dir_copy:
+                ModelUtil.copytree(model_dir, model_dir_copy)
         if drive and not posttrain_upload:
             upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
+        if cleanup:
+            if log_dir and (log_dir_copy or drive):
+                ModelUtil.delete_dir_contents(log_dir)
+            if model_dir and (model_dir_copy or drive):
+                ModelUtil.delete_dir_contents(model_dir)
 
         return sum_val_loss_target
 
