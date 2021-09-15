@@ -70,7 +70,7 @@ class KabkoData:
     def population_global(self):
         return self.data_center.population_global
 
-    def copy(self):
+    def copy(self, cluster=None):
         return KabkoData(
             name=self.name,
             data_center=self.data_center,
@@ -83,7 +83,7 @@ class KabkoData:
             split_indices=self.split_indices,
             scaler=self.scaler,
             group=self.group,
-            cluster=self.cluster,
+            cluster=cluster or self.cluster,
             scaler_2=self.scaler_2,
             datasets=self.datasets,
             datasets_torch=self.datasets_torch,

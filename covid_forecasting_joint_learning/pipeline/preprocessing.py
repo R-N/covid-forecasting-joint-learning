@@ -113,6 +113,16 @@ class Group:
     def merge_clusters(self):
         return merge_clusters(self)
 
+    def copy(self):
+        copy_dict = {k: k.copy() for k in self.members}
+        group = Group(
+            id=self.id,
+            members=[copy_dict[k] for k in self.members],
+            clustering_info=self.clustering_info
+        )
+        group.clusters = [c.copy(group=group, copy_dict=copy_dict) for c in self.clusters]
+        return group
+
 
 # Note that slicing with date index includes the second part as opposed to integer index
 def split_groups(

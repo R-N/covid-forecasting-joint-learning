@@ -827,14 +827,15 @@ def make_objective(
 
         sum_val_loss_target = 0
 
-        for group in groups:
+        for group_0 in groups:
+            group = group_0.copy()
             clusters = [group.merge_clusters()] if merge_clusters else group.clusters
             for cluster in clusters:
 
                 if debug and (group.id > 0 or cluster.id > 1):
                     continue
 
-                print(f"Model for {group.id}.{cluster.id}")
+                print(f"Model for {trial_id}.{group.id}.{cluster.id}")
 
                 grad_scaler = None  # GradScaler(init_scale=8192)
 
@@ -896,9 +897,14 @@ def make_objective(
                 if drive and posttrain_upload:
                     upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
 
+                del model
+                del early_stopping
+
                 torch.cuda.empty_cache()
                 gc.collect()
 
+            del group
+            gc.collect()
 
         if not posttrain_copy:
             if log_dir_copy_i:

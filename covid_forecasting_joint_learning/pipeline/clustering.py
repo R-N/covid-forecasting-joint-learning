@@ -66,6 +66,19 @@ class Cluster:
     def source_closest(self):
         return min(self.sources, key=lambda x: dtw(self.target, x))
 
+    def copy(self, group=None, copy_dict=None):
+        cluster = Cluster(
+            id=self.id,
+            group=group or self.group
+        )
+        if not copy_dict:
+            copy_dict = {k: k.copy(cluster=cluster) for k in self.members}
+        cluster.sources = [copy_dict[k] for k in self.sources]
+        cluster.targets = [copy_dict[k] for k in self.targets]
+        for k in cluster.members:
+            k.cluster = cluster
+        return cluster
+
 
 def merge_clusters(group):
     return Cluster(
