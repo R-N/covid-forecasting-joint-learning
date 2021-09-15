@@ -504,7 +504,7 @@ class ObjectiveModel:
 
         if isinstance(log_dir, str):
             log_dir = ModelUtil.prepare_dir(log_dir)
-            log_dir = f"{log_dir}T{self.trial_id}"
+            # log_dir = f"{log_dir}T{self.trial_id}"
             Path(log_dir).mkdir(parents=True, exist_ok=True)
         self.log_dir = log_dir
 
@@ -514,7 +514,8 @@ class ObjectiveModel:
 
         if isinstance(model_dir, str):
             model_dir = ModelUtil.prepare_dir(model_dir)
-            model_dir = f"{model_dir}{self.trial_id}/{self.cluster.group.id}/{self.cluster.id}/"
+            # model_dir = f"{model_dir}{self.trial_id}/{self.cluster.group.id}/{self.cluster.id}/"
+            model_dir = f"{model_dir}/{self.cluster.group.id}/{self.cluster.id}/"
             Path(model_dir).mkdir(parents=True, exist_ok=True)
         self.model_dir = model_dir
 
@@ -626,19 +627,19 @@ def prepare_params(
     return params
 
 
-def upload_logs(drive, trial_id, log_dir, log_dir_id, model_dir, model_dir_id):
-    if log_dir and log_dir_id:
+def upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id, only_contents=False):
+    if log_dir_i and log_dir_id:
         drive.upload_folder(
-            log_dir + str(trial_id),
+            log_dir_i,
             parent_id=log_dir_id,
-            only_contents=False,
+            only_contents=only_contents,
             replace=False
         )
-    if model_dir and model_dir_id:
+    if model_dir_i and model_dir_id:
         drive.upload_folder(
-            model_dir + str(trial_id),
+            model_dir_i,
             parent_id=model_dir_id,
-            only_contents=False,
+            only_contents=only_contents,
             replace=False
         )
 
@@ -737,6 +738,11 @@ def make_objective(
     def objective(
         trial
     ):
+        trial_id = trial.number
+
+        log_dir_i, model_dir_i = ModelUtil.prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=True)
+        log_dir_copy_i, model_dir_copy_i = ModelUtil.prepare_log_model_dir(log_dir_copy, model_dir_copy, trial_id, mkdir=False)
+
         trial = TrialWrapper(trial)
         ModelUtil.global_random_seed()
 
@@ -834,9 +840,9 @@ def make_objective(
 
                 model = ObjectiveModel(
                     cluster,
-                    trial_id=trial.number,
-                    log_dir=log_dir,  # "%s/%s/%s" % (log_dir, group.id, cluster.id),
-                    model_dir=model_dir,
+                    trial_id=trial_id,
+                    log_dir=log_dir_i,
+                    model_dir=model_dir_i,
                     grad_scaler=grad_scaler,
                     # teacher_forcing=True,
                     min_epochs=min_epochs,
@@ -856,10 +862,10 @@ def make_objective(
                     model.pretrain_save_model()
 
                 if pretrain_copy:
-                    if model_dir_copy:
-                        ModelUtil.copytree(model_dir, model_dir_copy, dirs_exist_ok=True)
+                    if model_dir_copy_i:
+                        ModelUtil.copytree(model_dir, model_dir_copy_i, dirs_exist_ok=True)
                 if drive and pretrain_upload:
-                    upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
+                    upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
 
                 early_stopping = EarlyStopping(
                     model.model.models,
@@ -883,29 +889,29 @@ def make_objective(
                     model.posttrain_save_model()
 
                 if posttrain_copy:
-                    if log_dir_copy:
-                        ModelUtil.copytree(log_dir, log_dir_copy, dirs_exist_ok=True)
-                    if model_dir_copy:
-                        ModelUtil.copytree(model_dir, model_dir_copy, dirs_exist_ok=True)
+                    if log_dir_copy_i:
+                        ModelUtil.copytree(log_dir_i, log_dir_copy_i, dirs_exist_ok=True)
+                    if model_dir_copy_i:
+                        ModelUtil.copytree(model_dir_i, model_dir_copy_i, dirs_exist_ok=True)
                 if drive and posttrain_upload:
-                    upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
+                    upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
 
                 torch.cuda.empty_cache()
                 gc.collect()
 
 
         if not posttrain_copy:
-            if log_dir_copy:
-                ModelUtil.copytree(log_dir, log_dir_copy, dirs_exist_ok=True)
-            if model_dir_copy:
-                ModelUtil.copytree(model_dir, model_dir_copy, dirs_exist_ok=True)
+            if log_dir_copy_i:
+                ModelUtil.copytree(log_dir_i, log_dir_copy_i, dirs_exist_ok=True)
+            if model_dir_copy_i:
+                ModelUtil.copytree(model_dir_i, model_dir_copy_i, dirs_exist_ok=True)
         if drive and not posttrain_upload:
-            upload_logs(drive, model.trial_id, log_dir, log_dir_id, model_dir, model_dir_id)
+            upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
         if cleanup:
-            if log_dir and (log_dir_copy or drive):
-                ModelUtil.delete_dir_contents(log_dir)
-            if model_dir and (model_dir_copy or drive):
-                ModelUtil.delete_dir_contents(model_dir)
+            if log_dir_i and (log_dir_copy_i or drive):
+                ModelUtil.rmtree(log_dir_i)
+            if model_dir_i and (model_dir_copy_i or drive):
+                ModelUtil.rmtree(model_dir_i)
 
         return sum_val_loss_target
 

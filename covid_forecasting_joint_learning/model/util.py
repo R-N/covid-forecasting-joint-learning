@@ -202,3 +202,16 @@ def delete_dir_contents(target_dir):
                 rmtree(entry.path)
             else:
                 os.remove(entry.path)
+
+def prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=False):
+    if not trial_id:
+        return log_dir, model_dir
+    if isinstance(log_dir, str):
+        log_dir_i = f"{log_dir}T{trial_id}"
+        if mkdir:
+            Path(log_dir_i).mkdir(parents=True, exist_ok=True)
+    if isinstance(model_dir, str):
+        model_dir_i = f"{model_dir}{trial_id}"
+        if mkdir:
+            Path(model_dir_i).mkdir(parents=True, exist_ok=True)
+    return log_dir_i, model_dir_i
