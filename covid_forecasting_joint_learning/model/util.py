@@ -204,7 +204,7 @@ def delete_dir_contents(target_dir):
                 os.remove(entry.path)
 
 def prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=False):
-    if not trial_id:
+    if trial_id is None:
         return log_dir, model_dir
     if isinstance(log_dir, str):
         log_dir_i = f"{log_dir}T{trial_id}"
