@@ -198,11 +198,11 @@ def prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=False):
     if trial_id is None:
         return log_dir, model_dir
     if isinstance(log_dir, str):
-        log_dir_i = f"{log_dir}T{trial_id}"
+        log_dir = f"{log_dir}T{trial_id}"
         if mkdir:
-            Path(log_dir_i).mkdir(parents=True, exist_ok=True)
+            Path(log_dir).mkdir(parents=True, exist_ok=True)
     if isinstance(model_dir, str):
-        model_dir_i = f"{model_dir}{trial_id}"
+        model_dir = f"{model_dir}{trial_id}"
         if mkdir:
-            Path(model_dir_i).mkdir(parents=True, exist_ok=True)
-    return log_dir_i, model_dir_i
+            Path(model_dir).mkdir(parents=True, exist_ok=True)
+    return log_dir, model_dir
