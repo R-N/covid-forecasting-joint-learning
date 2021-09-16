@@ -62,7 +62,8 @@ def make_objective(
         drive=drive,
         past_cols=past_cols,
         future_exo_cols=future_exo_cols,
-        debug=debug
+        debug=debug,
+        **kwargs
     )
 
 def optimize(study, model_objective, n_jobs=1, batch=None):
