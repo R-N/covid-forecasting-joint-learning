@@ -49,3 +49,66 @@ SIRD_VARS = [BETA, GAMMA, DELTA]
 DAYS = [f"day_{i}" for i in range(7)]
 DAY_DUM = "day_dum"
 DAY = "day"
+
+LOCKDOWN_DATES = [
+    "psbb",
+    "ppkm",
+    "ppkm_mikro"
+]
+HOLIDAY_DATES = [
+    "kenaikan_isa",
+    "libur_awal_puasa",
+    "hari_buruh",
+    "idul_fitri_siswa",
+    "idul_fitri_umum",
+    "libur_semester_genap",
+    "idul_adha",
+    "hut_ri",
+    "tahun_baru_hijriyah",
+    "tahun_baru_hijriyah_ext",
+    "maulid_nabi",
+    "maulid_nabi_ext",
+    "natal",
+    "natal_ext",
+    "libur_semester_ganjil",
+    "tahun_baru_masehi",
+    "imlek"
+]
+OTHER_DATES = [
+    "ramadhan",
+    "pilkada"
+]
+SINGLE_DATES = LOCKDOWN_DATES + HOLIDAY_DATES + OTHER_DATES
+LABELED_DATES = {d: [d] for d in SINGLE_DATES}
+
+DATES = list(LABELED_DATES.keys())
+
+COLS_NON_DATE = [
+    VAC_PEOPLE_S,
+    VAC_FULL_S,
+    POS_RATE,
+    DAILY_POS_RATE,
+    DELTA_VAC_PEOPLE,
+    DELTA_VAC_FULL,
+    DELTA_TEST
+]
+
+FUTURE_EXO_COLS = [
+    DAY,
+    *DAYS,
+    *DATES
+]
+PAST_COLS = [
+    *COLS_NON_DATE,
+    *[c for c in FUTURE_EXO_COLS if c not in COLS_NON_DATE]
+]
+LABEL_COLS = [
+    *SIRD_VARS
+]
+FINAL_SEED_COLS = [
+    *SIRD
+]
+FINAL_COLS = [
+    *IRD
+]
+COLS = PAST_COLS + [c for c in LABEL_COLS if c not in PAST_COLS] + [c for c in FINAL_SEED_COLS if c not in PAST_COLS]

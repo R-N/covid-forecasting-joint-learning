@@ -17,6 +17,7 @@ from .early_stopping import EarlyStopping
 import gc
 from ..pipeline.main import preprocessing_5, preprocessing_6
 from copy import deepcopy
+from ..data import cols as DataCol
 
 from .util import LINE_PROFILER
 
@@ -221,6 +222,7 @@ class ClusterModel:
     def get_target_aggregate_layer_attr(self, *args, **kwargs):
         return self.target.get_aggregate_layer_attr(*args, **kwargs)
 
+
 DEFAULT_ACTIVATIONS = {
     "ReLU": nn.ReLU,
     "LeakyReLU": nn.LeakyReLU,
@@ -228,8 +230,8 @@ DEFAULT_ACTIVATIONS = {
     "Tanh": nn.Tanh,
     "SELU": nn.SELU
 }
-DEFAULT_PAST_COLS = [None]
-DEFAULT_FUTURE_EXO_COLS = [["psbb", "ppkm", "ppkm_mikro"]]
+DEFAULT_PAST_COLS = [DataCol.PAST_COLS]
+DEFAULT_FUTURE_EXO_COLS = [DataCol.FUTURE_EXO_COLS]
 
 
 class ObjectiveModel:
