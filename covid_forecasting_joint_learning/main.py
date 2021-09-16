@@ -66,10 +66,9 @@ def make_objective(
         **kwargs
     )
 
-def optimize(study, model_objective, n_jobs=1, batch=None):
+def optimize(study, model_objective, n_jobs=1, batch=None, n_trials=10000):
     # torch.autograd.set_detect_anomaly(True)
 
-    n_trials = 10000
     n_trials_remain = n_trials - PipelineUtil.count_trials_done(study.trials)
     batch = batch or n_trials_remain
 
