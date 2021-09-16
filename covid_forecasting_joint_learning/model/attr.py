@@ -220,7 +220,7 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     fig, ax = plt.subplots(1, 1)
 
     prev = None
-    counter = [0 for i in range(len(v))]
+    counter = [0 for i in range(len(full_label))]
     for k in sorted(labeled_attr.keys()):
         v = labeled_attr[k]
         p1 = ax.bar(x, v, width=width, bottom=prev, label=k)
