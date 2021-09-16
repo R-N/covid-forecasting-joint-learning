@@ -84,12 +84,12 @@ LABELED_DATES = {d: [d] for d in SINGLE_DATES}
 DATES = list(LABELED_DATES.keys())
 
 COLS_NON_DATE = [
-    VAC_PEOPLE_S,
-    VAC_FULL_S,
-    POS_RATE,
     DAILY_POS_RATE,
     DELTA_VAC_PEOPLE,
     DELTA_VAC_FULL,
+    VAC_PEOPLE_S,
+    VAC_FULL_S,
+    POS_RATE,
     DELTA_TEST
 ]
 
