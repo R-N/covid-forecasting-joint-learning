@@ -832,6 +832,7 @@ def make_objective(
         for group_0 in groups:
             group = group_0.copy()
             clusters = [group.merge_clusters()] if merge_clusters else group.clusters
+            sum_val_loss_target_group = 0
             for cluster in clusters:
 
                 if debug and (group.id > 0 or cluster.id > 1):
@@ -886,7 +887,7 @@ def make_objective(
                     val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
                     early_stopping(train_loss_target, val_loss_target)
 
-                sum_val_loss_target += val_loss_target
+                sum_val_loss_target_group += val_loss_target
 
                 if model_dir:
                     model.posttrain_save_model()
@@ -905,7 +906,10 @@ def make_objective(
                 torch.cuda.empty_cache()
                 gc.collect()
 
+            sum_val_loss_target_group /= len(clusters)
+            sum_val_loss_target += sum_val_loss_target_group
             del group
+            del clusters
             gc.collect()
 
         if not posttrain_copy:
@@ -921,6 +925,6 @@ def make_objective(
             if model_dir_i and (model_dir_copy_i or drive):
                 ModelUtil.rmtree(model_dir_i)
 
-        return sum_val_loss_target
+        return sum_val_loss_target / len(groups)
 
     return objective
