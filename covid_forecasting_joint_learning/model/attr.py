@@ -220,16 +220,24 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     fig, ax = plt.subplots(1, 1)
 
     prev = None
+    counter = [0 for i in range(len(v))]
     for k in sorted(labeled_attr.keys()):
         v = labeled_attr[k]
         p1 = ax.bar(x, v, width=width, bottom=prev, label=k)
         texts = ax.bar_label(p1, fmt=fmt, label_type='center', rotation=rotation)
-        for t in texts:
+        for i in range(len(texts)):
+            t = texts[i]
             if t.get_text().strip() == "0":
                 t.set_text("")
+            else:
+                counter[i] += 1
         prev = v
 
-    ax.bar_label(p1, fmt=fmt, rotation=rotation)
+    texts = ax.bar_label(p1, fmt=fmt, rotation=rotation)
+    for i in range(len(texts)):
+        t = texts[i]
+        if t.get_text().strip() == "0" or counter[i] <= 1:
+            t.set_text("")
 
     ax.axhline(0, color='grey', linewidth=0.8)
     ax.set_ylabel(y_label)
