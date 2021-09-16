@@ -8,7 +8,7 @@ from ..data import cols as DataCol
 import torch
 from torch.utils.data import DataLoader, Dataset
 from ..data.center import DataCenter
-from ..model import util as ModelUtil
+from . import util as PipelineUtil
 import gc
 
 
@@ -505,7 +505,7 @@ def optimize(study, model_objective, n_jobs=1, batch=None):
     # torch.autograd.set_detect_anomaly(True)
 
     n_trials = 10000
-    n_trials_remain = n_trials - ModelUtil.count_trials_done(study.trials)
+    n_trials_remain = n_trials - PipelineUtil.count_trials_done(study.trials)
     batch = batch or n_trials_remain
 
     cond = True

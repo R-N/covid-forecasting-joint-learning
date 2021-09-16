@@ -2,7 +2,6 @@ import torch
 import json
 from torch import nn
 import numpy as np
-from optuna.trial import TrialState
 import line_profiler
 import os
 from shutil import copy2, Error, copystat, rmtree
@@ -84,14 +83,6 @@ def str_dict(d):
         indent=4,
         default=str
     )
-
-
-def filter_trials_undone(trials, count_pruned=False):
-    return [t.number for t in trials if not (t.state == TrialState.COMPLETE or (count_pruned and t.state == TrialState.PRUNED))]
-
-
-def count_trials_done(trials):
-    return len(trials) - len(filter_trials_undone(trials))
 
 
 def smooth(scalars, weight):  # Weight between 0 and 1
