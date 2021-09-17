@@ -680,7 +680,7 @@ def make_objective(
     drive=None,
     log_dir_id=None,
     model_dir_id=None,
-    device="cpu",
+    device=None,
     write_graph=False,
     early_stopping_interval_mode=2,
     min_epochs=50,
@@ -725,6 +725,8 @@ def make_objective(
     merge_clusters=False,
     debug=False
 ):
+    if device is None:
+        device = ModelUtil.DEVICE
     activation_keys = [x for x in activations.keys()]
     if not use_representation_future:
         seed_lengths = 1
