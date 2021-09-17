@@ -424,7 +424,6 @@ def make_collate_fn(kabko, tensor_count=7):
         samples_1 = tuple([sample[i] for sample in samples] for i in range(8))
         samples_1 = tuple(torch.stack(samples_1[i]).detach() if i < tensor_count else samples_1[i] for i in range(len(samples_1)))
         samples_1 = samples_1 + (kabko.population, kabko,)
-        print("B", sum([1 if str(samples_1[i].device) != "cuda:0" else 0 for i in range(tensor_count)]))
         return samples_1
     return collate_fn
 
@@ -442,14 +441,6 @@ def preprocessing_6(
                 torch.Tensor(sample[i]) if i < tensor_count else sample[i] for i in range(8)
             ) for sample in dataset
         ] for dataset in kabko.datasets]
-
-        print("A", sum([
-            sum([
-                sum(tuple(
-                    1 if i < tensor_count and str(sample[i].device) != "cuda:0" else 0 for i in range(8)
-                )) for sample in dataset
-            ]) for dataset in kabko.datasets_torch
-        ]))
 
         dataset_count = len(kabko.datasets_torch)
         last = dataset_count - 1
