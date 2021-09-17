@@ -5,6 +5,7 @@ from . import sird
 from . import clustering
 from ..data.kabko import KabkoData
 from ..data import cols as DataCol
+from ..model import util as ModelUtil
 import torch
 from torch.utils.data import DataLoader
 
@@ -437,7 +438,7 @@ def preprocessing_6(
     for kabko in kabkos:
         kabko.datasets_torch = [[
             tuple(
-                torch.Tensor(sample[i]) if i < tensor_count else sample[i] for i in range(8)
+                torch.Tensor(sample[i]).to(ModelUtil.DEVICE) if i < tensor_count else sample[i] for i in range(8)
             ) for sample in dataset
         ] for dataset in kabko.datasets]
 
