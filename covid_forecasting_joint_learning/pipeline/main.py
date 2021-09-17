@@ -365,6 +365,7 @@ def preprocessing_5(
     future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD,
+    labeling=0
     # limit_past=True,
     # val=True
 ):
@@ -374,44 +375,47 @@ def preprocessing_5(
         split_indices = [kabko.data.index.get_loc(s) for s in split_indices]
         val_start, test_start = split_indices
 
-        kabko.datasets, kabko.dataset_labels = preprocessing.split_dataset(
-            kabko.data,
-            past_size=past_size, future_size=future_size,
-            seed_size=seed_size,
-            val_start=val_start, test_start=test_start,
-            stride=1,
-            past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
-            final_seed_cols=final_seed_cols, final_cols=final_cols,
-            limit_past=True,
-            val=True,
-            labeling=preprocessing.label_dataset_0
-        )
-
-        kabko.datasets_1, kabko.dataset_labels_1 = preprocessing.split_dataset(
-            kabko.data,
-            past_size=past_size, future_size=future_size,
-            seed_size=seed_size,
-            val_start=val_start, test_start=test_start,
-            stride=1,
-            past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
-            final_seed_cols=final_seed_cols, final_cols=final_cols,
-            limit_past=False,
-            val=False,
-            labeling=preprocessing.label_dataset_1
-        )
-
-        kabko.datasets_2, kabko.dataset_labels_2 = preprocessing.split_dataset(
-            kabko.data,
-            past_size=past_size, future_size=future_size,
-            seed_size=seed_size,
-            val_start=val_start, test_start=test_start,
-            stride=1,
-            past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
-            final_seed_cols=final_seed_cols, final_cols=final_cols,
-            limit_past=False,
-            val=False,
-            labeling=preprocessing.label_dataset_2
-        )
+        if labeling == 0:
+            kabko.datasets, kabko.dataset_labels = preprocessing.split_dataset(
+                kabko.data,
+                past_size=past_size, future_size=future_size,
+                seed_size=seed_size,
+                val_start=val_start, test_start=test_start,
+                stride=1,
+                past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
+                final_seed_cols=final_seed_cols, final_cols=final_cols,
+                limit_past=True,
+                val=True,
+                labeling=preprocessing.label_dataset_0
+            )
+        elif labeling == 1:
+            kabko.datasets, kabko.dataset_labels = preprocessing.split_dataset(
+                kabko.data,
+                past_size=past_size, future_size=future_size,
+                seed_size=seed_size,
+                val_start=val_start, test_start=test_start,
+                stride=1,
+                past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
+                final_seed_cols=final_seed_cols, final_cols=final_cols,
+                limit_past=False,
+                val=False,
+                labeling=preprocessing.label_dataset_1
+            )
+        elif labeling == 2:
+            kabko.datasets, kabko.dataset_labels = preprocessing.split_dataset(
+                kabko.data,
+                past_size=past_size, future_size=future_size,
+                seed_size=seed_size,
+                val_start=val_start, test_start=test_start,
+                stride=1,
+                past_cols=past_cols, label_cols=label_cols, future_exo_cols=future_exo_cols,
+                final_seed_cols=final_seed_cols, final_cols=final_cols,
+                limit_past=False,
+                val=False,
+                labeling=preprocessing.label_dataset_2
+            )
+        else:
+            raise Exception(f"Invalid labeling {labeling}")
 
 
 def make_collate_fn(kabko, tensor_count=7):
