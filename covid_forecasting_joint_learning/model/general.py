@@ -588,6 +588,11 @@ class ObjectiveModel:
         DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
         DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
 
+        device = str(self.model.models.device)
+        device = device.split(":", 1)[0]
+        if device != "cpu":
+            DataUtil.write_string("1", model_dir + device)
+
     def posttrain_save_model(self, model_dir=None):
         model_dir = model_dir or self.model_dir
         if not model_dir:
