@@ -75,7 +75,8 @@ class ClusterModel:
         train_kwargs={},
         grad_scaler=None,
         min_epochs=50,
-        shared_model=None
+        shared_model=None,
+        device="cpu"
     ):
         self.cluster = cluster
         if source_pick == SourcePick.ALL:
@@ -144,6 +145,8 @@ class ClusterModel:
             k.model = SingleModel(**sizes, **model_kwargs)
 
         self.models = nn.ModuleList([k.model for k in self.members])
+        self._device = "cpu"
+        self.to(device)
         self.optimizer_fn = optimizer_fn
         self.lr = lr
         optimizer_kwargs["lr"] = lr
@@ -211,7 +214,17 @@ class ClusterModel:
         self.target.write_model_graph(path)
 
     def to(self, device):
-        return self.models.to(device)
+        ret = self.models.to(device)
+        self._device = device
+        return ret
+
+    @property
+    def device(self):
+        return self._device
+
+    @device.setter
+    def device(self, value):
+        self.to(value)
 
     def share_memory(self):
         return self.models.share_memory()
@@ -570,6 +583,14 @@ class ObjectiveModel:
     def to(self, device):
         return self.model.to(device)
 
+    @property
+    def device(self):
+        return self.model.device
+
+    @device.setter
+    def device(self, value):
+        self.to(value)
+
     def share_memory(self):
         return self.model.share_memory()
 
@@ -588,7 +609,7 @@ class ObjectiveModel:
         DataUtil.write_string(ModelUtil.str_dict(self.sizes), model_dir + "sizes.json")
         DataUtil.write_string(ModelUtil.str_dict(self.model_kwargs), model_dir + "model_kwargs.json")
 
-        device = str(self.model.models.device)
+        device = str(self.device)
         device = device.split(":", 1)[0]
         if device != "cpu":
             DataUtil.write_string("1", model_dir + device)
