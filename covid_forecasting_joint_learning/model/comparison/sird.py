@@ -1,7 +1,7 @@
 from scipy.integrate import odeint
 from lmfit import minimize, Parameters
 import numpy as np
-from ..loss import msse, rmsse
+from ..loss_common import msse, rmsse
 from ...data import cols as DataCol
 
 def dpsird(y, t, n, beta, gamma, delta):

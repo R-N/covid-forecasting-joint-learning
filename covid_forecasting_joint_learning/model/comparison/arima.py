@@ -1,5 +1,5 @@
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from ..loss import msse, rmsse
+from ..loss_common import msse, rmsse
 from numpy import np
 
 class ARIMAModel:
