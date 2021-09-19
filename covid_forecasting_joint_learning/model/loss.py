@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 def mse(err):
-    return torch.mean((err)**2, dim=1)
+    return torch.mean((err)**2, dim=-2)
 
 def naive(past, step=1):
     return past[:, :-step] - past[:, step:]
@@ -14,9 +14,9 @@ def rmsse(past, future, pred):
     return torch.sqrt(msse(past, future, pred))
 
 def reduce(loss, reduction="sum"):
-    while loss.dim > 1:
+    while loss.dim() > 1:
         loss = torch.sum(loss, dim=-1)
-    if reduction == "mean":
+    if reduction in ("mean", "avg"):
         return torch.mean(loss)
     elif reduction == "sum":
         return torch.sum(loss)

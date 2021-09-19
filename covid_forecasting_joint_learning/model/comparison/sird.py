@@ -1,8 +1,11 @@
 from scipy.integrate import odeint
 from lmfit import minimize, Parameters
 import numpy as np
-from ..loss_common import msse, rmsse
+from ..loss_common import msse, rmsse, wrap_reduce
 from ...data import cols as DataCol
+
+msse = wrap_reduce(msse)
+rmsse = wrap_reduce(rmsse)
 
 def dpsird(y, t, n, beta, gamma, delta):
     s, i, r, d = y
@@ -57,7 +60,7 @@ def make_params(params):
 
 
 def fit(objective, params, loss_fn=None):
-    result = minimize(objective, params, reduce_fcn=loss_fn, calc_covar=True)
+    result = minimize(objective, params, calc_covar=True)
     return result
 
 

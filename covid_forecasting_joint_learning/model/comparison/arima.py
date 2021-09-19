@@ -1,6 +1,11 @@
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from ..loss_common import msse, rmsse
+from ..loss_common import msse, rmsse, wrap_reduce
 from numpy import np
+
+
+msse = wrap_reduce(msse)
+rmsse = wrap_reduce(rmsse)
+
 
 class ARIMAModel:
     def __init__(self, order, seasonal_order):
