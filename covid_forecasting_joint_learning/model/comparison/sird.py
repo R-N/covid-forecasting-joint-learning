@@ -4,43 +4,43 @@ import numpy as np
 from ..loss import msse, rmsse
 from ...data import cols as DataCol
 
-def dpsird(y, t, population, beta, gamma, delta):
-    population, susceptible, exposed, infectious, recovered, dead = y
-    infectious_flow = beta * susceptible * infectious / population
-    recovery_flow = gamma * infectious * 1
-    death_flow = delta * infectious * 1
-    dSdt = -infectious_flow
-    dIdt = infectious_flow - recovery_flow - death_flow
-    dRdt = recovery_flow
-    dDdt = death_flow
+def dpsird(y, t, n, beta, gamma, delta):
+    s, i, r, d = y
+    i_flow = beta * s * i / n
+    r_flow = gamma * i * 1
+    d_flow = delta * i * 1
+    dSdt = -i_flow
+    dIdt = i_flow - r_flow - d_flow
+    dRdt = r_flow
+    dDdt = d_flow
     dPdt = dSdt + dIdt + dRdt + dDdt
-    return dPdt, dSdt, dIdt, dRdt, dDdt
+    assert abs(dPdt) <= 1e-6
+    return dSdt, dIdt, dRdt, dDdt
 
 
-def pred(t, y0, population, beta, gamma, delta):
+def pred(t, y0, n, beta, gamma, delta):
     # Integrate the SIR equations over the time grid, t.
     ret = odeint(dpsird, y0, t, args=(
-        population, beta, gamma, delta
+        n, beta, gamma, delta
     ))
     retT = ret.T
-    population_2, susceptible, infectious, recovered, dead = retT
-    assert np.mean(np.abs(population_2 - population)) <= 1e-6
+    s, i, r, d = retT
 
-    return susceptible, infectious, recovered, dead
+    return s, i, r, d
 
 
-def pred_full(days, population, beta, gamma, delta, first=1):
-    susceptible_init, infectious_init, recovered_init, dead_init = population - first, first, 0, 0  # initial conditions: one infectious, rest susceptible
+def pred_full(days, n, beta, gamma, delta, first=1):
+    susceptible_init, infectious_init, recovered_init, dead_init = n - first, first, 0, 0  # initial conditions: one infectious, rest susceptible
 
     t = np.linspace(0, days - 1, days)  # days
     y0 = susceptible_init, infectious_init, recovered_init, dead_init  # Initial conditions tuple
 
-    return pred(t, y0, population, beta, gamma, delta)
+    return pred(t, y0, n, beta, gamma, delta)
 
 
-def make_objective(data, population, x=None):
+def make_objective(data, n, x=None):
     def objective(params):
-        s, i, r, d = pred_full(len(data), population, first=data[0][0], **params)
+        s, i, r, d = pred_full(len(data), n, first=data[0][0], **params)
         if x is not None:
             i, r, d = i[x], r[x], d[x]
         ret = np.concatenate(i, r, d)
@@ -62,9 +62,9 @@ def fit(objective, params, loss_fn=msse):
 
 
 class SIRDModel:
-    def __init__(self, params_hint, population, loss_fn=None):
+    def __init__(self, params_hint, n, loss_fn=None):
         self.params_hint = params_hint
-        self.population = population
+        self.n = n
         self.loss_fn = loss_fn
         self.clear()
 
@@ -85,12 +85,12 @@ class SIRDModel:
 
         loss_fn = self.loss_fn or loss_fn
 
-        objective = make_objective(past, self.population)
+        objective = make_objective(past, self.n)
 
         self.fit_result = fit(objective, self.params_hint, loss_fn=loss_fn)
 
         first = past[-1][0]
-        self.prev = np.array([self.population - first, *past[-1]])
+        self.prev = np.array([self.n - first, *past[-1]])
         self.pred_start = len(past)
 
         return self.fit_result
@@ -103,7 +103,7 @@ class SIRDModel:
         s, i, r, d = pred(
             np.linspace(self.pred_start, full_len - 1, days),
             self.prev,
-            self.population,
+            self.n,
             **self.fit_params
         )
         return np.array([i, r, d]).T
@@ -114,16 +114,16 @@ class SIRDModel:
         return loss_fn(future, pred)
 
 
-def eval(past, future, population, params, loss_fn=msse):
-    model = SIRDModel(params_hint=params, population=population, loss_fn=loss_fn)
+def eval(past, future, n, params, loss_fn=msse):
+    model = SIRDModel(params_hint=params, n=n, loss_fn=loss_fn)
     model.fit(past)
     model.loss = model.test(future)
     return model
 
 
-def eval_dataset(dataset, population, params, loss_fn=msse, reduction="mean"):
+def eval_dataset(dataset, n, params, loss_fn=msse, reduction="mean"):
     losses = [
-        eval(past, future, population, params, loss_fn=loss_fn).loss
+        eval(past, future, n, params, loss_fn=loss_fn).loss
         for past, future in dataset[:2]
     ]
     sum_loss = sum(losses)
