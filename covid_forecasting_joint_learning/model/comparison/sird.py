@@ -82,6 +82,7 @@ class SIRDModel:
         self.prev = None
         self.loss = None
         self.pred_start = None
+        self.first = 1
 
     def fit(self, past, loss_fn=msse):
         self.clear()
@@ -93,8 +94,8 @@ class SIRDModel:
 
         self.fit_result = fit(objective, self.params_hint, loss_fn=loss_fn)
 
-        first = past[-1][0]
-        self.prev = np.array([self.n - first, *past[-1]])
+        self.first = past[-1][0]
+        self.prev = np.array([self.n - self.first, *past[-1]])
         self.pred_start = len(past)
 
         return self.fit_result
@@ -108,6 +109,18 @@ class SIRDModel:
             np.linspace(self.pred_start, full_len - 1, days),
             self.prev,
             self.n,
+            **self.fit_params
+        )
+        return np.array([i, r, d]).T
+
+    def pred_full(self, days):
+        if not self.fit_result:
+            raise Exception("Please fit the model first!")
+
+        s, i, r, d = pred_full(
+            days,
+            self.n,
+            first=self.first,
             **self.fit_params
         )
         return np.array([i, r, d]).T
