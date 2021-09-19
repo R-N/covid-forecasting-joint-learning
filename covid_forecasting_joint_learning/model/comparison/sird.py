@@ -87,7 +87,7 @@ class SIRDModel:
 
         objective = make_objective(past, self.population)
 
-        self.fit_result = fit(objective, self.params, past, loss_fn=loss_fn)
+        self.fit_result = fit(objective, self.params_hint, past, loss_fn=loss_fn)
 
         first = past[-1][0]
         self.prev = np.array([self.population - first, *past[-1]])
