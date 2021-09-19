@@ -100,11 +100,12 @@ class SIRDModel:
             raise Exception("Please fit the model first!")
 
         full_len = self.pred_start + days
-        return pred(
+        s, i, r, d = pred(
             np.linspace(self.pred_start, full_len - 1, days),
             self.prev,
             **self.fit_params
         )
+        return np.array([i, r, d]).T
 
     def test(self, future, loss_fn=msse):
         loss_fn = self.loss_fn or loss_fn
