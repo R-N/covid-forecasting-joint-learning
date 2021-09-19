@@ -140,9 +140,9 @@ def eval(past, future, n, params, loss_fn=rmsse):
     return model
 
 
-def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean"):
+def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past=None):
     losses = [
-        eval(past, future, n, params, loss_fn=loss_fn).loss
+        eval(past if not limit_past else past[:limit_past], future, n, params, loss_fn=loss_fn).loss
         for past, future in dataset[:2]
     ]
     sum_loss = sum(losses)
