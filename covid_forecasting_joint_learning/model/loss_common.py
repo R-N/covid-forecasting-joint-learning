@@ -4,7 +4,7 @@ def mse(err):
     return np.mean((err)**2, axis=-2)
 
 def naive(past, step=1):
-    return past[:, :-step] - past[:, step:]
+    return past[:-step] - past[step:]
 
 def msse(past, future, pred):
     return mse(pred - future) / mse(naive(past))
