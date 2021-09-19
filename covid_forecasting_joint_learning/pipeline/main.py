@@ -11,7 +11,8 @@ from torch.utils.data import DataLoader
 
 
 def preprocessing_0(
-    data_center
+    data_center,
+    Scaler=preprocessing.MinMaxScaler
 ):
     data_center.set_global_ts(
         vaccine=preprocessing.handle_zero(
@@ -60,6 +61,10 @@ def preprocessing_0(
     data_center.data_global = delta
     data_center.data_global = sird.calc_vars_global(data_center.data_global, df_shifted)
     data_center.data_global.dropna(inplace=True)
+    data_center.scaler = Scaler()
+    data_center.scaler.fit(data_center.data_global)
+    data_center.data_global.loc[:] = data_center.scaler.transform(data_center.data_global)
+    data_center.data_global = data_center.data_global.copy()
     return data_center
 
 
