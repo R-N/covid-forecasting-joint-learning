@@ -30,13 +30,15 @@ setuptools.setup(
         "scikit-learn==0.24.1",
         "tslearn",
         "optuna",
-        "torch",  #==1.8.1",
+        "torch",  # ==1.8.1",  # use 1.8.1 if using gpu
         "torchinfo",
         "scipy",
         "pydrive2",
         "captum",
         "openpyxl",
         "line_profiler",
-        "mpld3"
+        "mpld3",
+        "lmfit",
+        "numdifftools"
     ]
 )

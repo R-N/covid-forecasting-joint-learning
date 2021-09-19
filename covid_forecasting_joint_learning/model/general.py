@@ -18,6 +18,7 @@ import gc
 from ..pipeline.main import preprocessing_5, preprocessing_6
 from copy import deepcopy
 from ..data import cols as DataCol
+from .loss import MSSELoss
 
 from .util import LINE_PROFILER
 
@@ -458,7 +459,10 @@ class ObjectiveModel:
             past_size=past_length,
             seed_size=seed_length,
             past_cols=past_cols,
-            future_exo_cols=future_exo_cols
+            future_exo_cols=future_exo_cols,
+            label_cols=DataCol.SIRD_VARS,
+            final_seed_cols=DataCol.SIRD,
+            final_cols=DataCol.IRD
         )
         preprocessing_6(
             members,
@@ -549,24 +553,24 @@ class ObjectiveModel:
         writer.flush()
 
 
-    def train(self, epoch=None):
-        loss = self.model.train()
+    def train(self, epoch=None, loss_fn=MSSELoss()):
+        loss = self.model.train(loss_fn=loss_fn)
         epoch = epoch if epoch is not None else self.train_epoch
         if self.log_dir:
             self._log_scalar(self.train_summary_writer, loss, epoch)
         self.train_epoch = epoch + 1
         return loss
 
-    def val(self, epoch=None):
-        loss = self.model.val()
+    def val(self, epoch=None, loss_fn=MSSELoss()):
+        loss = self.model.val(loss_fn=loss_fn)
         epoch = epoch if epoch is not None else self.val_epoch
         if self.log_dir:
             self._log_scalar(self.val_summary_writer, loss, epoch)
         self.val_epoch = epoch + 1
         return loss
 
-    def test(self):
-        return self.model.test()
+    def test(self, loss_fn=MSSELoss()):
+        return self.model.test(loss_fn=loss_fn)
 
     def get_target_model_summary(self):
         return self.model.get_target_model_summary()
