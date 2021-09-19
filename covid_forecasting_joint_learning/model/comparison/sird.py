@@ -72,7 +72,7 @@ class SIRDModel:
     def fit_params(self):
         if not self.fit_result:
             raise Exception("Please fit the model first")
-        return {k: self.fit_result.params.value for k in self.fit_result.params.keys()}
+        return {k: self.fit_result.params[k].value for k in self.fit_result.params.keys()}
 
     def clear(self):
         self.fit_result = None
