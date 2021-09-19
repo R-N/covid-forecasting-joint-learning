@@ -30,10 +30,10 @@ def pred(t, y0, n, beta, gamma, delta):
 
 
 def pred_full(days, n, beta, gamma, delta, first=1):
-    susceptible_init, infectious_init, recovered_init, dead_init = n - first, first, 0, 0  # initial conditions: one infectious, rest susceptible
+    s_0, i_0, r_0, d_0 = n - first, first, 0, 0  # initial conditions: one infectious, rest susceptible
 
     t = np.linspace(0, days - 1, days)  # days
-    y0 = susceptible_init, infectious_init, recovered_init, dead_init  # Initial conditions tuple
+    y0 = s_0, i_0, r_0, d_0  # Initial conditions tuple
 
     return pred(t, y0, n, beta, gamma, delta)
 
