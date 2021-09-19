@@ -23,6 +23,7 @@ def dpsird(y, t, n, beta, gamma, delta):
 
 def pred(t, y0, n, beta, gamma, delta):
     # Integrate the SIR equations over the time grid, t.
+    y0 = np.array([n - y0[0], *y0])
     ret = odeint(dpsird, y0, t, args=(
         n, beta, gamma, delta
     ))
@@ -33,10 +34,11 @@ def pred(t, y0, n, beta, gamma, delta):
 
 
 def pred_full(days, n, beta, gamma, delta, first=1):
-    s_0, i_0, r_0, d_0 = n - first, first, 0, 0  # initial conditions: one infectious, rest susceptible
+    if not (isinstance(first, tuple) or isinstance(first, list) or isinstance(first, np.ndarray)):
+        first = (first, 0, 0)
 
     t = np.linspace(0, days - 1, days)  # days
-    y0 = s_0, i_0, r_0, d_0  # Initial conditions tuple
+    y0 = first
 
     return pred(t, y0, n, beta, gamma, delta)
 
@@ -94,8 +96,8 @@ class SIRDModel:
 
         self.fit_result = fit(objective, self.params_hint, loss_fn=loss_fn)
 
-        self.first = past[-1][0]
-        self.prev = np.array([self.n - self.first, *past[-1]])
+        self.first = past[0]
+        self.prev = past[-1]
         self.pred_start = len(past)
 
         return self.fit_result
