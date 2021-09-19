@@ -2,6 +2,7 @@ from scipy.integrate import odeint
 from lmfit import minimize, Parameters
 import numpy as np
 from ..loss import msse, rmsse
+from ...data import cols as DataCol
 
 def dpsird(y, t, population, beta, gamma, delta):
     population, susceptible, exposed, infectious, recovered, dead = y
@@ -71,9 +72,7 @@ def eval(past, future, population, params, loss_fn=msse):
     pred_1 = pred(
         t,
         y0,
-        result.params["beta"],
-        result.params["gamma"],
-        result.params["delta"]
+        *[result.params[x].value for x in DataCol.SIRD_VARS]
     )
     result.loss = loss_fn(future, pred_1)
     return result
