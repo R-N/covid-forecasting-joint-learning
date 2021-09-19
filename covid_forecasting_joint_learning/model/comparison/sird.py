@@ -86,8 +86,6 @@ class SIRDModel:
     def fit(self, past, loss_fn=msse):
         self.clear()
 
-        loss_fn = self.loss_fn or loss_fn
-
         def loss_fn(future, pred):
             return loss_fn(past, future, pred)
 
@@ -114,20 +112,20 @@ class SIRDModel:
         )
         return np.array([i, r, d]).T
 
-    def test(self, past, future, loss_fn=msse):
+    def test(self, past, future, loss_fn=rmsse):
         loss_fn = self.loss_fn or loss_fn
         pred = self.pred(len(future))
         return loss_fn(past, future, pred)
 
 
-def eval(past, future, n, params, loss_fn=msse):
-    model = SIRDModel(params_hint=params, n=n, loss_fn=loss_fn)
+def eval(past, future, n, params, loss_fn=rmsse):
+    model = SIRDModel(params_hint=params, n=n)
     model.fit(past)
-    model.loss = model.test(past, future)
+    model.loss = model.test(past, future, loss_fn=loss_fn)
     return model
 
 
-def eval_dataset(dataset, n, params, loss_fn=msse, reduction="mean"):
+def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean"):
     losses = [
         eval(past, future, n, params, loss_fn=loss_fn).loss
         for past, future in dataset[:2]
