@@ -35,7 +35,7 @@ def pred_full(days, population, beta, gamma, delta, first=1):
     t = np.linspace(0, days - 1, days)  # days
     y0 = susceptible_init, infectious_init, recovered_init, dead_init  # Initial conditions tuple
 
-    return pred(t, y0, beta, gamma, delta)
+    return pred(t, y0, population, beta, gamma, delta)
 
 
 def make_objective(data, population, x=None):
