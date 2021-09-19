@@ -39,8 +39,8 @@ def pred_full(days, population, beta, gamma, delta, first=1):
 
 
 def make_objective(data, population, x=None):
-    def objective(beta, gamma, delta):
-        s, i, r, d = pred_full(len(data), population, beta, gamma, delta, first=data[0][0])
+    def objective(params):
+        s, i, r, d = pred_full(len(data), population, first=data[0][0], **params)
         if x is not None:
             i, r, d = i[x], r[x], d[x]
         ret = np.concatenate(i, r, d)
