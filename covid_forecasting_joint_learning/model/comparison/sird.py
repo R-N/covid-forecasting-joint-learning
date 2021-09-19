@@ -170,4 +170,4 @@ def search_limit_past(dataset, n, params, loss_fn=rmsse, reduction="mean", limit
 
     results = [(limit_past, eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past, limit_loss=limit_loss)) for limit_past in range(limit_past_min, limit_past_max + 1)]
 
-    return max(results, key=lambda x: x[1])
+    return min(results, key=lambda x: x[1])
