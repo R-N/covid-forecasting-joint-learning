@@ -43,7 +43,7 @@ def make_objective(data, n, x=None):
         s, i, r, d = pred_full(len(data), n, first=data[0][0], **params)
         if x is not None:
             i, r, d = i[x], r[x], d[x]
-        ret = np.concatenate(i, r, d)
+        ret = np.concatenate((i, r, d))
         ret = ret - data.flatten("F")  # Test flatten
         return ret
     return objective
