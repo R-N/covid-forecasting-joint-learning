@@ -103,6 +103,7 @@ class SIRDModel:
         s, i, r, d = pred(
             np.linspace(self.pred_start, full_len - 1, days),
             self.prev,
+            self.population,
             **self.fit_params
         )
         return np.array([i, r, d]).T
