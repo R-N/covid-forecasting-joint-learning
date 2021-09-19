@@ -56,7 +56,7 @@ def make_params(params):
     return params_1
 
 
-def fit(objective, params, loss_fn=msse):
+def fit(objective, params, loss_fn=None):
     result = minimize(objective, params, reduce_fcn=loss_fn, calc_covar=True)
     return result
 
@@ -85,6 +85,9 @@ class SIRDModel:
 
         loss_fn = self.loss_fn or loss_fn
 
+        def loss_fn(future, pred):
+            return loss_fn(past, future, pred)
+
         objective = make_objective(past, self.n)
 
         self.fit_result = fit(objective, self.params_hint, loss_fn=loss_fn)
@@ -108,16 +111,16 @@ class SIRDModel:
         )
         return np.array([i, r, d]).T
 
-    def test(self, future, loss_fn=msse):
+    def test(self, past, future, loss_fn=msse):
         loss_fn = self.loss_fn or loss_fn
         pred = self.pred(len(future))
-        return loss_fn(future, pred)
+        return loss_fn(past, future, pred)
 
 
 def eval(past, future, n, params, loss_fn=msse):
     model = SIRDModel(params_hint=params, n=n, loss_fn=loss_fn)
     model.fit(past)
-    model.loss = model.test(future)
+    model.loss = model.test(past, future)
     return model
 
 
