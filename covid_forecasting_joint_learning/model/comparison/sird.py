@@ -164,3 +164,4 @@ def search(dataset, n, params, loss_fn=msse, reduction="mean", limit_loss=False,
 
     study = optuna.create_study()
     study.optimize(objective, n_trials=180, n_jobs=1)
+    return study
