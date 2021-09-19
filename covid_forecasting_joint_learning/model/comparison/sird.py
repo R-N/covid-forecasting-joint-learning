@@ -145,7 +145,7 @@ def eval(past, future, n, params, loss_fn=rmsse, limit_past=None, limit_loss=Fal
 def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past=None, limit_loss=False):
     losses = [
         eval(past, future, n, params, loss_fn=loss_fn, limit_past=limit_past, limit_loss=limit_loss).loss
-        for past, future in dataset[:2]
+        for past, future, indices in dataset[:2]
     ]
     sum_loss = sum(losses)
     if reduction == "sum":
