@@ -158,10 +158,9 @@ def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past
 
 def search(dataset, n, params, loss_fn=msse, reduction="mean", limit_loss=False, limit_past_min=0, limit_past_max=366):
     def objective(trial):
-        should_limit = trial.suggest_categorical("should_limit", (True, False))
-        limit_past = 0 if not should_limit else trial.suggest_int("limit_past", limit_past_min, limit_past_max)
+        limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)
         return eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past, limit_loss=limit_loss)
 
     study = optuna.create_study()
-    study.optimize(objective, n_trials=180, n_jobs=1)
+    study.optimize(objective, n_trials=(limit_past_max - limit_past_min + 1), n_jobs=1)
     return study
