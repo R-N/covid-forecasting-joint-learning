@@ -3,6 +3,7 @@ from lmfit import minimize, Parameters
 import numpy as np
 from ..loss_common import msse, rmsse, wrap_reduce
 from ...data import cols as DataCol
+import optuna
 
 msse = wrap_reduce(msse)
 rmsse = wrap_reduce(rmsse)
@@ -133,16 +134,17 @@ class SIRDModel:
         return loss_fn(past, future, pred)
 
 
-def eval(past, future, n, params, loss_fn=rmsse):
+def eval(past, future, n, params, loss_fn=rmsse, limit_past=None, limit_loss=False):
     model = SIRDModel(params_hint=params, n=n)
-    model.fit(past)
-    model.loss = model.test(past, future, loss_fn=loss_fn)
+    past_1 = past if not limit_past else past[:limit_past]
+    model.fit(past_1)
+    model.loss = model.test(past_1 if limit_loss else past, future, loss_fn=loss_fn)
     return model
 
 
-def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past=None):
+def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past=None, limit_loss=False):
     losses = [
-        eval(past if not limit_past else past[:limit_past], future, n, params, loss_fn=loss_fn).loss
+        eval(past, future, n, params, loss_fn=loss_fn, limit_past=limit_past, limit_loss=limit_loss).loss
         for past, future in dataset[:2]
     ]
     sum_loss = sum(losses)
@@ -152,3 +154,13 @@ def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past
         return sum_loss / len(losses)
     else:
         raise Exception(f"Invalid reduction \"{reduction}\"")
+
+
+def search(dataset, n, params, loss_fn=msse, reduction="mean", limit_loss=False, limit_past_min=0, limit_past_max=366):
+    def objective(trial):
+        should_limit = trial.suggest_categorical("should_limit", (True, False))
+        limit_past = 0 if not should_limit else trial.suggest_int("limit_past", limit_past_min, limit_past_max)
+        return eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past, limit_loss=limit_loss)
+
+    study = optuna.create_study()
+    study.optimize(objective, n_trials=180, n_jobs=1)
