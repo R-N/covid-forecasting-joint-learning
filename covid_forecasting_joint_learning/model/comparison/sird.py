@@ -61,32 +61,73 @@ def fit(objective, params, loss_fn=msse):
     return result
 
 
+class SIRDModel:
+    def __init__(self, params_hint, population, loss_fn=None):
+        self.params_hint = params_hint
+        self.population = population
+        self.loss_fn = loss_fn
+        self.clear()
+
+    @property
+    def fit_params(self):
+        if not self.fit_result:
+            raise Exception("Please fit the model first")
+        return {k: self.fit_result.params.value for k in self.fit_result.params.keys()}
+
+    def clear(self):
+        self.fit_result = None
+        self.prev = None
+        self.loss = None
+        self.pred_start = None
+
+    def fit(self, past, loss_fn=msse):
+        self.clear()
+
+        loss_fn = self.loss_fn or loss_fn
+
+        objective = make_objective(past, self.population)
+
+        self.fit_result = fit(objective, self.params, past, loss_fn=loss_fn)
+
+        first = past[-1][0]
+        self.prev = np.array([self.population - first, *past[-1]])
+        self.pred_start = len(past)
+
+        return self.fit_result
+
+    def pred(self, days):
+        if not self.fit_result:
+            raise Exception("Please fit the model first!")
+
+        full_len = self.pred_start + days
+        return pred(
+            np.linspace(self.pred_start, full_len - 1, days),
+            self.prev,
+            **self.fit_params
+        )
+
+    def test(self, future, loss_fn=msse):
+        loss_fn = self.loss_fn or loss_fn
+        pred = self.pred(len(future))
+        return loss_fn(future, pred)
+
+
 def eval(past, future, population, params, loss_fn=msse):
-    objective = make_objective(past, population)
-    result = fit(objective, params, past, loss_fn=loss_fn)
-    past_len, future_len = len(past), len(future)
-    full_len = past_len + future_len
-    t = np.linspace(past_len, full_len - 1, future_len)
-    first = past[-1][0]
-    y0 = [population - first, *past[-1]]
-    pred_1 = pred(
-        t,
-        y0,
-        *[result.params[x].value for x in DataCol.SIRD_VARS]
-    )
-    result.loss = loss_fn(future, pred_1)
-    return result
+    model = SIRDModel(params_hint=params, population=population, loss_fn=loss_fn)
+    model.fit(past)
+    model.loss = model.test(future)
+    return model
 
 
 def eval_dataset(dataset, population, params, loss_fn=msse, reduction="mean"):
-    sum_loss = 0
-    count = 0
-    for past, future in dataset:
-        result = eval(past, future, population, params, loss_fn=loss_fn)
-        sum_loss += result.loss
+    losses = [
+        eval(past, future, population, params, loss_fn=loss_fn).loss
+        for past, future in dataset[:2]
+    ]
+    sum_loss = sum(losses)
     if reduction == "sum":
         return sum_loss
     elif reduction in ("mean", "avg"):
-        return sum_loss / count
+        return sum_loss / len(losses)
     else:
         raise Exception(f"Invalid reduction \"{reduction}\"")
