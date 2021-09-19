@@ -156,13 +156,16 @@ def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past
         raise Exception(f"Invalid reduction \"{reduction}\"")
 
 
-def search(dataset, n, params, loss_fn=msse, reduction="mean", limit_loss=False, limit_past_min=0, limit_past_max=366):
+def search(dataset, n, params, loss_fn=msse, reduction="mean", limit_loss=False, n_trials=None, limit_past_min=0, limit_past_max=366):
     def objective(trial):
         limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)
         return eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past, limit_loss=limit_loss)
 
+    if n_trials is None:
+        n_trials = (limit_past_max - limit_past_min + 1)
+
     study = optuna.create_study()
-    study.optimize(objective, n_trials=(limit_past_max - limit_past_min + 1), n_jobs=1)
+    study.optimize(objective, n_trials=n_trials, n_jobs=1)
     return study
 
 
