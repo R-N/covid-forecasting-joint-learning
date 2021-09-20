@@ -381,7 +381,7 @@ def preprocessing_5(
     val=None
     # limit_past=True,
 ):
-    assert (not seed_size) or seed_size < past_size
+    assert (not seed_size) or seed_size <= past_size
     if val is None:
         val = (labeling == 0)
     for kabko in kabkos:
