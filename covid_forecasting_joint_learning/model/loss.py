@@ -29,7 +29,9 @@ class MSSELoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, past, future, pred):
-        return reduce(msse(past, future, pred), reduction=self.reduction)
+        ret = reduce(msse(past, future, pred), reduction=self.reduction)
+        print(ret)
+        return ret
 
 class RMSSELoss(nn.Module):
     def __init__(self, reduction="sum"):
