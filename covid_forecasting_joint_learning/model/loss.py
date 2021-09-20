@@ -9,28 +9,28 @@ class NaNPredException(TrialPruned):
 def mse(err):
     return torch.mean(torch.square(err), dim=-2)
 
-def naive(past, step=1, limit=None):
+def naive(past, step=1, limit=None, eps=1e-6):
     if past.dim() == 3:
         if limit:
             past = past[:, :limit]
-        return (past[:, :-step] - past[:, step:]).detach()
+        return (past[:, :-step] - past[:, step:] + eps).detach()
     elif past.dim() < 3:
         if limit:
             past = past[:limit]
-        return (past[:-step] - past[step:]).detach()
+        return (past[:-step] - past[step:] + eps).detach()
     else:
         raise Exception(f"Invalid input dim {past.dim()}")
 
-def msse(past, future, pred, limit_naive=30):
+def msse(past, future, pred, limit_naive=30, eps=1e-6):
     if torch.isnan(pred).any():
         # raise NaNPredException()
         raise Exception("Pred is Nan!")
-    div = mse(naive(past, limit=limit_naive)).detach()
+    div = mse(naive(past, limit=limit_naive, eps=eps)).detach()
     print(div)
     return mse(pred - future) / div
 
-def rmsse(past, future, pred, limit_naive=30):
-    return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive))
+def rmsse(past, future, pred, limit_naive=30, eps=1e-6):
+    return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))
 
 def reduce(loss, reduction="sum"):
     while loss.dim() > 1:
@@ -43,19 +43,19 @@ def reduce(loss, reduction="sum"):
         raise ValueError(f"Invalid reduction {reduction}")
 
 class MSSELoss(nn.Module):
-    def __init__(self, reduction="sum", limit_naive=30):
+    def __init__(self, reduction="sum", limit_naive=30, eps=1e-6):
         super().__init__()
         self.reduction = reduction
         self.limit_naive = limit_naive
 
     def forward(self, past, future, pred):
-        return reduce(msse(past, future, pred, limit_naive=self.limit_naive), reduction=self.reduction)
+        return reduce(msse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)
 
 class RMSSELoss(nn.Module):
-    def __init__(self, reduction="sum", limit_naive=30):
+    def __init__(self, reduction="sum", limit_naive=30, eps=1e-6):
         super().__init__()
         self.reduction = reduction
         self.limit_naive = limit_naive
 
     def forward(self, past, future, pred):
-        return reduce(rmsse(past, future, pred, limit_naive=self.limit_naive), reduction=self.reduction)
+        return reduce(rmsse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)

@@ -3,16 +3,16 @@ import numpy as np
 def mse(err):
     return np.mean((err)**2, axis=-2)
 
-def naive(past, step=1, limit=None):
+def naive(past, step=1, limit=None, eps=1e-6):
     if limit:
         past = past[:limit]
-    return past[:-step] - past[step:]
+    return past[:-step] - past[step:] + eps
 
-def msse(past, future, pred, limit_naive=30):
-    return mse(pred - future) / mse(naive(past, limit=limit_naive))
+def msse(past, future, pred, limit_naive=30, eps=1e-6):
+    return mse(pred - future) / mse(naive(past, limit=limit_naive, eps=eps))
 
-def rmsse(past, future, pred, limit_naive=30):
-    return np.sqrt(msse(past, future, pred, limit=limit_naive))
+def rmsse(past, future, pred, limit_naive=30, eps=1e-6):
+    return np.sqrt(msse(past, future, pred, limit=limit_naive, eps=eps))
 
 def reduce(loss, reduction="sum"):
     while loss.ndim > 1:
