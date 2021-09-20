@@ -2,12 +2,9 @@ import torch
 from torch import nn
 
 def mse(err):
-    if torch.isnan(err).any():
-        print(err)
-        raise Exception("NAN")
+    print(err)
     ret = torch.mean((err)**2, dim=-2)
     if torch.isnan(ret).any():
-        print(err)
         print(ret)
         raise Exception("NAN")
     return ret
@@ -20,7 +17,8 @@ def naive(past, step=1):
     return ret
 
 def msse(past, future, pred):
-    ret = mse(pred - future) / mse(naive(past))
+    ret = mse(pred - future)
+    ret = ret / mse(naive(past))
     if torch.isnan(ret).any():
         print(ret)
         raise Exception("NAN")
