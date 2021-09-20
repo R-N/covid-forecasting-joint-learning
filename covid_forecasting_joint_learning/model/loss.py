@@ -4,13 +4,13 @@ from torch import nn
 def mse(err):
     ret = torch.mean(torch.square(err), dim=-2)
     if torch.isnan(ret).any():
+        print(err.shape, err)
+        print(ret.shape, ret)
         raise Exception("NAN")
     return ret
 
 def naive(past, step=1):
     ret = past[:, :-step] - past[:, step:]
-    print(past.shape)
-    print(ret.shape)
     if torch.isnan(ret).any():
         raise Exception("NAN")
     return ret
