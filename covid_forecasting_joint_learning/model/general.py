@@ -5,7 +5,7 @@ from .modules.main import SingleModel
 from .train import train, test
 import datetime
 from torch.utils.tensorboard import SummaryWriter
-from torch.optim.lr_scheduler import OneCycleLR
+from .scheduler import OneCycleLR
 from torch.optim import AdamW
 from contextlib import suppress
 from pathlib import Path
@@ -156,9 +156,9 @@ class ClusterModel:
 
         self.max_grad_norm = max_grad_norm
         self.optimizer = self.create_optimizer()
-        self.scheduler = OneCycleLR(self.optimizer, max_lr=self.lr, total_steps=len(self.target.datasets[0]) * min_epochs)
         self.min_epochs = min_epochs
         self.grad_scaler = grad_scaler
+        self.scheduler = OneCycleLR(self.optimizer, lr=self.lr, steps_per_epoch=len(self.target.datasets[0]), epochs=self.min_epochs)
 
     def clip_grad_norm(self):
         torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
