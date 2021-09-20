@@ -305,7 +305,7 @@ class ObjectiveModel:
         shared_mode=SharedMode.SHARED,
         optimizer_fn=torch.optim.Adam,
         lr=1e-5,
-        loss_fn=nn.MSELoss(),
+        loss_fn=nn.MSSELoss(),
         source_weight=1.0,
         teacher_forcing=True,
         grad_scaler=None,
