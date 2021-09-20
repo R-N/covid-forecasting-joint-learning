@@ -19,6 +19,7 @@ from ..pipeline.main import preprocessing_5, preprocessing_6
 from copy import deepcopy
 from ..data import cols as DataCol
 from .loss import MSSELoss, NaNPredException
+import numpy as np
 
 from .util import LINE_PROFILER
 
