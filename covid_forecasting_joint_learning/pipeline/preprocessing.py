@@ -213,7 +213,7 @@ def label_dataset_0(
     seed_size = seed_size or past_size
     assert seed_size <= past_size
 
-    pritn("SEED_SIZE", seed_size)
+    print("SEED_SIZE", seed_size)
 
     past_seed = [x[label_cols].iloc[-seed_size:].to_numpy() for x in past]
     past_exo = [x[future_exo_cols].iloc[-seed_size:].to_numpy() for x in past]
