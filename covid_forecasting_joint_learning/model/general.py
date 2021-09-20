@@ -563,7 +563,7 @@ class ObjectiveModel:
         writer.flush()
 
 
-    def train(self, epoch=None, loss_fn=MSSELoss()):
+    def train(self, epoch=None, loss_fn=None):
         loss = self.model.train(loss_fn=loss_fn)
         epoch = epoch if epoch is not None else self.train_epoch
         if self.log_dir:
@@ -571,7 +571,7 @@ class ObjectiveModel:
         self.train_epoch = epoch + 1
         return loss
 
-    def val(self, epoch=None, loss_fn=MSSELoss()):
+    def val(self, epoch=None, loss_fn=None):
         loss = self.model.val(loss_fn=loss_fn)
         epoch = epoch if epoch is not None else self.val_epoch
         if self.log_dir:
@@ -579,7 +579,7 @@ class ObjectiveModel:
         self.val_epoch = epoch + 1
         return loss
 
-    def test(self, loss_fn=MSSELoss()):
+    def test(self, loss_fn=None):
         return self.model.test(loss_fn=loss_fn)
 
     def get_target_model_summary(self):
