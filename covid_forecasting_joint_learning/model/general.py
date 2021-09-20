@@ -919,8 +919,7 @@ def make_objective(
                     label=model.label,
                     interval_mode=early_stopping_interval_mode,
                     wait=min_epoch,
-                    max_epoch=max_epoch,
-                    max_nan=min_epoch
+                    max_epoch=max_epoch
                 )
 
                 while not early_stopping.stopped:
