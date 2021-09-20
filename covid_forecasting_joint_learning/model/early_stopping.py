@@ -173,7 +173,7 @@ class EarlyStopping:
             self.active = True
             self.still_counter = 0
             self.rise_counter = 0
-            print(f"INFO: Early stopping active at epoch {epoch} after skipping {self.nan_counter} NaN epochs")
+            print(f"INFO: Early stopping active at epoch {epoch} after skipping {self.nan_counter}/{self.max_nan} NaN epochs and waiting {self.wait_train_below_val_counter}/{self.wait_train_below_val} epochs for train to get below val")
 
         if self.best_val_loss is None:
             self.update_best_2(val_loss)
