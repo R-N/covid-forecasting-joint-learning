@@ -3,7 +3,7 @@ from torch import nn
 
 def mse(err):
     print(err)
-    ret = torch.mean((err)**2, dim=-2)
+    ret = torch.mean(err**2, dim=-2)
     if torch.isnan(ret).any():
         print(ret)
         raise Exception("NAN")
