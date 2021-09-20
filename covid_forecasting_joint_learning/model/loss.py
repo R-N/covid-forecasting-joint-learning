@@ -23,11 +23,8 @@ def naive(past, step=1, limit=None, eps=1e-6):
 
 def msse(past, future, pred, limit_naive=30, eps=1e-6):
     if torch.isnan(pred).any():
-        # raise NaNPredException()
-        raise Exception("Pred is Nan!")
-    div = mse(naive(past, limit=limit_naive, eps=eps)).detach()
-    print(div)
-    return mse(pred - future) / div
+        raise NaNPredException()
+    return mse(pred - future) / mse(naive(past, limit=limit_naive, eps=eps)).detach()
 
 def rmsse(past, future, pred, limit_naive=30, eps=1e-6):
     return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))
