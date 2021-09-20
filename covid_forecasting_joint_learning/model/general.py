@@ -321,6 +321,7 @@ class ObjectiveModel:
     ):
         self.cluster = cluster
 
+        seed_length_0 = seed_length
         if representation_future_private_depth <= 0 and representation_future_shared_depth <= 0:
             seed_length = 1
 
@@ -466,7 +467,7 @@ class ObjectiveModel:
         preprocessing_5(
             members,
             past_size=past_length,
-            seed_size=seed_length,
+            seed_size=seed_length_0,
             past_cols=past_cols,
             future_exo_cols=future_exo_cols,
             label_cols=DataCol.SIRD_VARS,
