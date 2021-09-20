@@ -7,6 +7,7 @@ def mse(err):
         raise Exception("NAN")
     ret = torch.mean((err)**2, dim=-2)
     if torch.isnan(ret).any():
+        print(err)
         print(ret)
         raise Exception("NAN")
     return ret
