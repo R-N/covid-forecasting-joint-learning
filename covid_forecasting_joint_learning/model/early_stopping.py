@@ -80,7 +80,7 @@ class EarlyStopping:
         self.epoch = 0
         self.active = False
 
-        self.max_nan = max_nan or (self.wait - self.history_length)
+        self.max_nan = max_nan or int(0.5 * (self.wait - self.history_length))
         self.nan_counter = 0
 
         if self.log_dir is not None:
