@@ -2,26 +2,15 @@ import torch
 from torch import nn
 
 def mse(err):
-    ret = torch.mean(torch.square(err), dim=-2)
-    if torch.isnan(ret).any():
-        print(err.shape, err)
-        print(ret.shape, ret)
-        raise Exception("NAN")
-    return ret
+    return torch.mean(torch.square(err), dim=-2)
 
 def naive(past, step=1):
-    ret = past[:, :-step] - past[:, step:]
-    if torch.isnan(ret).any():
-        raise Exception("NAN")
-    return ret
+    return past[:, :-step] - past[:, step:]
 
 def msse(past, future, pred):
-    ret = mse(pred - future)
-    ret = ret / mse(naive(past))
-    if torch.isnan(ret).any():
-        print(ret)
-        raise Exception("NAN")
-    return ret
+    if torch.isnan(pred).any():
+        print("Pred has NaN!")
+    return mse(pred - future)
 
 def rmsse(past, future, pred):
     return torch.sqrt(msse(past, future, pred))
@@ -30,17 +19,9 @@ def reduce(loss, reduction="sum"):
     while loss.dim() > 1:
         loss = torch.sum(loss, dim=-1)
     if reduction in ("mean", "avg"):
-        ret = torch.mean(loss)
-        if torch.isnan(ret).any():
-            print(ret)
-            raise Exception("NAN")
-        return ret
+        return torch.mean(loss)
     elif reduction == "sum":
-        ret = torch.sum(loss)
-        if torch.isnan(ret).any():
-            print(ret)
-            raise Exception("NAN")
-        return ret
+        return torch.sum(loss)
     else:
         raise ValueError(f"Invalid reduction {reduction}")
 
@@ -50,11 +31,7 @@ class MSSELoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, past, future, pred):
-        ret = reduce(msse(past, future, pred), reduction=self.reduction)
-        if torch.isnan(ret).any():
-            print(ret)
-            raise Exception("NAN")
-        return ret
+        return reduce(msse(past, future, pred), reduction=self.reduction)
 
 class RMSSELoss(nn.Module):
     def __init__(self, reduction="sum"):
