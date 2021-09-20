@@ -936,7 +936,6 @@ def make_objective(
 
 
                 sum_val_loss_target_group += val_loss_target
-                print("val_loss_target", val_loss_target)
 
                 if model_dir:
                     model.posttrain_save_model()
@@ -956,7 +955,6 @@ def make_objective(
                 gc.collect()
 
             sum_val_loss_target_group /= len(clusters)
-            print("sum_val_loss_target_group", sum_val_loss_target_group)
             sum_val_loss_target += sum_val_loss_target_group
             del group
             del clusters

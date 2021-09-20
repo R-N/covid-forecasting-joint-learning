@@ -10,22 +10,22 @@ class NaNPredException(TrialPruned):
 def mse(err):
     return torch.mean(torch.square(err), dim=-2)
 
-def naive(past, step=1, limit=None, eps=ModelUtil.NAIVE_EPS):
+def naive(past, step=1, limit=None):
     if past.dim() == 3:
         if limit:
             past = past[:, :limit]
-        return (past[:, :-step] - past[:, step:] + eps).detach()
+        return (past[:, :-step] - past[:, step:]).detach()
     elif past.dim() < 3:
         if limit:
             past = past[:limit]
-        return (past[:-step] - past[step:] + eps).detach()
+        return (past[:-step] - past[step:]).detach()
     else:
         raise Exception(f"Invalid input dim {past.dim()}")
 
 def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     if torch.isnan(pred).any():
         raise NaNPredException()
-    return mse(pred - future) / mse(naive(past, limit=limit_naive, eps=eps)).detach()
+    return mse(pred - future) / (mse(naive(past, limit=limit_naive)) + eps).detach()
 
 def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))

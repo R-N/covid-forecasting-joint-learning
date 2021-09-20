@@ -4,13 +4,13 @@ from . import util as ModelUtil
 def mse(err):
     return np.mean((err)**2, axis=-2)
 
-def naive(past, step=1, limit=None, eps=ModelUtil.NAIVE_EPS):
+def naive(past, step=1, limit=None):
     if limit:
         past = past[:limit]
-    return past[:-step] - past[step:] + eps
+    return past[:-step] - past[step:]
 
 def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
-    return mse(pred - future) / mse(naive(past, limit=limit_naive, eps=eps))
+    return mse(pred - future) / (mse(naive(past, limit=limit_naive)) + eps)
 
 def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     return np.sqrt(msse(past, future, pred, limit=limit_naive, eps=eps))
