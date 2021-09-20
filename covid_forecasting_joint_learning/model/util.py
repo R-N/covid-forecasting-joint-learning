@@ -11,7 +11,7 @@ from pathlib import Path
 LINE_PROFILER = line_profiler.LineProfiler()
 
 
-NAIVE_EPS = 1e-3
+NAIVE_EPS = 1
 
 
 CUDA = False
