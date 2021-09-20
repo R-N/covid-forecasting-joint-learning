@@ -18,7 +18,7 @@ import gc
 from ..pipeline.main import preprocessing_5, preprocessing_6
 from copy import deepcopy
 from ..data import cols as DataCol
-from .loss import MSSELoss
+from .loss import MSSELoss, NaNPredException
 
 from .util import LINE_PROFILER
 
@@ -75,7 +75,7 @@ class ClusterModel:
         optimizer_kwargs={},
         train_kwargs={},
         grad_scaler=None,
-        min_epochs=50,
+        min_epoch=50,
         shared_model=None,
         device="cpu"
     ):
@@ -156,9 +156,9 @@ class ClusterModel:
 
         self.max_grad_norm = max_grad_norm
         self.optimizer = self.create_optimizer()
-        self.min_epochs = min_epochs
+        self.min_epoch = min_epoch
         self.grad_scaler = grad_scaler
-        self.scheduler = OneCycleLR(self.optimizer, lr=self.lr, steps_per_epoch=len(self.target.datasets[0]), epochs=self.min_epochs)
+        self.scheduler = OneCycleLR(self.optimizer, lr=self.lr, steps_per_epoch=len(self.target.datasets[0]), epochs=self.min_epoch)
 
     def clip_grad_norm(self):
         torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
@@ -313,7 +313,7 @@ class ObjectiveModel:
         log_dir="temp/logs/",
         model_dir="temp/model/",
         debug=False,
-        min_epochs=50,
+        min_epoch=50,
         shared_model=None,
         use_shared=True,
         update_hx=True,
@@ -516,7 +516,7 @@ class ObjectiveModel:
             optimizer_fn=optimizer_fn,
             grad_scaler=grad_scaler,
             lr=lr,
-            min_epochs=min_epochs,
+            min_epoch=min_epoch,
             optimizer_kwargs={
             },
             train_kwargs={
@@ -723,7 +723,7 @@ def make_objective(
     device=None,
     write_graph=False,
     early_stopping_interval_mode=2,
-    min_epochs=50,
+    min_epoch=50,
     max_epoch=150,
     teacher_forcing=True,
     activations=DEFAULT_ACTIVATIONS,
@@ -889,7 +889,7 @@ def make_objective(
                     model_dir=model_dir_i,
                     grad_scaler=grad_scaler,
                     # teacher_forcing=True,
-                    min_epochs=min_epochs,
+                    min_epoch=min_epoch,
                     use_shared=use_shared,
                     source_pick=source_pick_1,
                     private_mode=private_mode,
@@ -917,15 +917,23 @@ def make_objective(
                     log_dir=model.log_dir,
                     label=model.label,
                     interval_mode=early_stopping_interval_mode,
-                    max_epoch=max_epoch
+                    wait=min_epoch,
+                    max_epoch=max_epoch,
+                    max_nan=min_epoch
                 )
 
                 while not early_stopping.stopped:
-                    train_loss, train_loss_target, train_loss_targets = model.train()
-                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
-                    val_loss, val_loss_target, val_loss_targets = model.val()
-                    val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+                    train_loss_target, val_loss_target = np.nan, np.nan
+                    try:
+                        train_loss, train_loss_target, train_loss_targets = model.train()
+                        train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+                        val_loss, val_loss_target, val_loss_targets = model.val()
+                        val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+                    except NaNPredException:
+                        if not early_stopping.step_nan():
+                            raise
                     early_stopping(train_loss_target, val_loss_target)
+
 
                 sum_val_loss_target_group += val_loss_target
 

@@ -80,6 +80,9 @@ class EarlyStopping:
         self.epoch = 0
         self.active = False
 
+        self.max_nan = max_nan
+        self.nan_counter = 0
+
         if self.log_dir is not None:
             assert self.label is not None
 
@@ -284,3 +287,9 @@ class EarlyStopping:
     def forgive_wait(self):
         if self.debug >= 2:
             print(f"INFO: Early stopping forgiven due to wait")
+
+    def step_nan(self):
+        if self.nan_counter < self.max_nan:
+            self.nan_counter += 1
+            return True
+        return False
