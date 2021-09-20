@@ -18,7 +18,7 @@ class EarlyStopping:
         smoothing=0.6,
         interval_mode=2,
         max_epoch=100,
-        max_nan=50,
+        max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
         variance_still_tolerance=0.35,
@@ -80,7 +80,7 @@ class EarlyStopping:
         self.epoch = 0
         self.active = False
 
-        self.max_nan = max_nan
+        self.max_nan = max_nan or (self.wait - self.history_length)
         self.nan_counter = 0
 
         if self.log_dir is not None:
@@ -173,7 +173,7 @@ class EarlyStopping:
             self.active = True
             self.still_counter = 0
             self.rise_counter = 0
-            print(f"INFO: Early stopping active at epoch {epoch}")
+            print(f"INFO: Early stopping active at epoch {epoch} after skipping {self.nan_counter} NaN epochs")
 
         if self.best_val_loss is None:
             self.update_best_2(val_loss)
@@ -291,5 +291,7 @@ class EarlyStopping:
     def step_nan(self):
         if self.nan_counter < self.max_nan:
             self.nan_counter += 1
+            if self.wait_counter < self.wait:
+                self.wait_counter += 1
             return True
         return False
