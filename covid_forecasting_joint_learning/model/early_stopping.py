@@ -18,6 +18,7 @@ class EarlyStopping:
         smoothing=0.6,
         interval_mode=2,
         max_epoch=100,
+        max_nan=50,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
         variance_still_tolerance=0.35,

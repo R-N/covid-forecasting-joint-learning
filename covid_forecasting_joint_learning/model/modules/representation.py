@@ -6,6 +6,11 @@ from optuna.structs import TrialPruned
 from ..util import LINE_PROFILER
 
 
+class BadConvParamsException(TrialPruned):
+    def __init__(self, kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length):
+        super(BadConvParamsException, self).__init__("output_length can't be smaller than dilated_kernel_size: (%s, %s, %s, %s, %s, %s)" % (kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length))
+
+
 class RepresentationSingle(nn.Module):
     DEFAULT_KWARGS = {
         "kernel_size": 7,
@@ -67,7 +72,7 @@ def conv_output_length(kernel_size, dilation, stride, data_length):
     try:
         assert output_length >= dilated_kernel_size
     except AssertionError:
-        raise TrialPruned("output_length can't be smaller than dilated_kernel_size: (%s, %s, %s, %s, %s, %s)" % (kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length))
+        raise BadConvParamsException(kernel_size, dilation, stride, data_length, dilated_kernel_size, output_length)
     return output_length
 
 

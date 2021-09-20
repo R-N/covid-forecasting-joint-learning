@@ -1,5 +1,10 @@
 import torch
 from torch import nn
+from optuna.structs import TrialPruned
+
+class NaNPredException(TrialPruned):
+    def __init__(self):
+        super(NaNPredException, self).__init__("Pred has NaN!")
 
 def mse(err):
     return torch.mean(torch.square(err), dim=-2)
@@ -9,7 +14,7 @@ def naive(past, step=1):
 
 def msse(past, future, pred):
     if torch.isnan(pred).any():
-        print("Pred has NaN!")
+        raise NaNPredException()
     return mse(pred - future)
 
 def rmsse(past, future, pred):
