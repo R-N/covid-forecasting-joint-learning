@@ -47,6 +47,7 @@ class MSSELoss(nn.Module):
         super().__init__()
         self.reduction = reduction
         self.limit_naive = limit_naive
+        self.eps = eps
 
     def forward(self, past, future, pred):
         return reduce(msse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)
@@ -56,6 +57,7 @@ class RMSSELoss(nn.Module):
         super().__init__()
         self.reduction = reduction
         self.limit_naive = limit_naive
+        self.eps = eps
 
     def forward(self, past, future, pred):
         return reduce(rmsse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)
