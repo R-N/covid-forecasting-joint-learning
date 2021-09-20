@@ -13,18 +13,18 @@ def naive(past, step=1, limit=None):
     if past.dim() == 3:
         if limit:
             past = past[:, :limit]
-        return past[:, :-step] - past[:, step:]
+        return (past[:, :-step] - past[:, step:]).detach()
     elif past.dim() < 3:
         if limit:
             past = past[:limit]
-        return past[:-step] - past[step:]
+        return (past[:-step] - past[step:]).detach()
     else:
         raise Exception(f"Invalid input dim {past.dim()}")
 
 def msse(past, future, pred, limit_naive=30):
     if torch.isnan(pred).any():
         raise NaNPredException()
-    return mse(pred - future) / mse(naive(past, limit=limit_naive))
+    return mse(pred - future) / mse(naive(past, limit=limit_naive)).detach()
 
 def rmsse(past, future, pred, limit_naive=30):
     return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive))
