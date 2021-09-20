@@ -768,8 +768,6 @@ def make_objective(
     if device is None:
         device = ModelUtil.DEVICE
     activation_keys = [x for x in activations.keys()]
-    if not use_representation_future:
-        seed_lengths = 1
 
     assert (not log_dir_copy) or log_dir
     assert (not model_dir_copy) or model_dir
