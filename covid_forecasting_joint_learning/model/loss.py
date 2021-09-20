@@ -9,16 +9,25 @@ class NaNPredException(TrialPruned):
 def mse(err):
     return torch.mean(torch.square(err), dim=-2)
 
-def naive(past, step=1):
-    return past[:, :-step] - past[:, step:]
+def naive(past, step=1, limit=None):
+    if past.dim() == 3:
+        if limit:
+            past = past[:, :limit]
+        return past[:, :-step] - past[:, step:]
+    elif past.dim() < 3:
+        if limit:
+            past = past[:limit]
+        return past[:-step] - past[step:]
+    else:
+        raise Exception(f"Invalid input dim {past.dim()}")
 
-def msse(past, future, pred):
+def msse(past, future, pred, limit_naive=30):
     if torch.isnan(pred).any():
         raise NaNPredException()
-    return mse(pred - future)
+    return mse(pred - future) / mse(naive(past, limit=limit_naive))
 
-def rmsse(past, future, pred):
-    return torch.sqrt(msse(past, future, pred))
+def rmsse(past, future, pred, limit_naive=30):
+    return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive))
 
 def reduce(loss, reduction="sum"):
     while loss.dim() > 1:
@@ -31,17 +40,19 @@ def reduce(loss, reduction="sum"):
         raise ValueError(f"Invalid reduction {reduction}")
 
 class MSSELoss(nn.Module):
-    def __init__(self, reduction="sum"):
+    def __init__(self, reduction="sum", limit_naive=30):
         super().__init__()
         self.reduction = reduction
+        self.limit_naive = limit_naive
 
     def forward(self, past, future, pred):
-        return reduce(msse(past, future, pred), reduction=self.reduction)
+        return reduce(msse(past, future, pred, limit_naive=self.limit_naive), reduction=self.reduction)
 
 class RMSSELoss(nn.Module):
-    def __init__(self, reduction="sum"):
+    def __init__(self, reduction="sum", limit_naive=30):
         super().__init__()
         self.reduction = reduction
+        self.limit_naive = limit_naive
 
     def forward(self, past, future, pred):
-        return reduce(rmsse(past, future, pred), reduction=self.reduction)
+        return reduce(rmsse(past, future, pred, limit_naive=self.limit_naive), reduction=self.reduction)
