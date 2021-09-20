@@ -178,9 +178,12 @@ class ClusterModel:
         for k in self.members:
             self.k.model.freeze_private(freeze)
 
-    def train(self, grad_scaler=None):
+    def train(self, grad_scaler=None, loss_fn=None):
         grad_scaler = grad_scaler or self.grad_scaler
         # optimizer = self.create_optimizer()
+        train_kwargs = self.train_kwargs
+        if loss_fn:
+            train_kwargs["loss_fn"] = loss_fn
         return train(
             self.sources,
             self.targets,
@@ -189,23 +192,29 @@ class ClusterModel:
             key=lambda k: k.dataloaders[0],
             clip_grad_norm=self.clip_grad_norm,
             grad_scaler=grad_scaler,
-            **self.train_kwargs
+            **train_kwargs
         )
 
-    def val(self):
+    def val(self, loss_fn=None):
+        train_kwargs = self.train_kwargs
+        if loss_fn:
+            train_kwargs["loss_fn"] = loss_fn
         return test(
             self.sources,
             self.targets,
             key=lambda k: k.dataloaders[1],
-            **self.train_kwargs
+            **train_kwargs
         )
 
-    def test(self):
+    def test(self, loss_fn=None):
+        train_kwargs = self.train_kwargs
+        if loss_fn:
+            train_kwargs["loss_fn"] = loss_fn
         return test(
             self.sources,
             self.targets,
             key=lambda k: k.dataloaders[2],
-            **self.train_kwargs
+            **train_kwargs
         )
 
     def get_target_model_summary(self):
