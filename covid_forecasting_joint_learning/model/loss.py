@@ -9,9 +9,9 @@ def mse(err):
 
 def naive(past, step=1):
     ret = past[:, :-step] - past[:, step:]
+    print(past)
+    print(ret)
     if torch.isnan(ret).any():
-        print(past)
-        print(ret)
         raise Exception("NAN")
     return ret
 
