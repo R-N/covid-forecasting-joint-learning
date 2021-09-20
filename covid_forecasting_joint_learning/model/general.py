@@ -254,7 +254,13 @@ DEFAULT_ACTIVATIONS = {
     "Tanh": nn.Tanh,
     "SELU": nn.SELU
 }
-DEFAULT_PAST_COLS = [DataCol.PAST_COLS]
+DEFAULT_PAST_COLS = [
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES)),
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_BETA)),
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_DELTA_I)),
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_I)),
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_CORR))
+]
 DEFAULT_FUTURE_EXO_COLS = [DataCol.FUTURE_EXO_COLS]
 
 

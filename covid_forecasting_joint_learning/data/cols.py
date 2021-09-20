@@ -83,6 +83,22 @@ LABELED_DATES = {d: [d] for d in SINGLE_DATES}
 
 DATES = list(LABELED_DATES.keys())
 
+DATES_BETA = ["hari_buruh", "idul_adha", "idul_fitri_siswa", "idul_fitri_umum", "imlek", "kenaikan_isa", "libur_awal_puasa", "libur_semester_ganjil", "libur_semester_genap", "maulid_nabi", "maulid_nabi_ext", "natal", "natal_ext", "pilkada", "ppkm", "ppkm_mikro", "psbb", "ramadhan", "tahun_baru_hijriyah", "tahun_baru_hijriyah_ext", "tahun_baru_masehi"]
+
+DATES_DELTA_I = ["hut_ri", "idul_adha", "idul_fitri_siswa", "idul_fitri_umum", "libur_semester_ganjil", "libur_semester_genap", "maulid_nabi", "maulid_nabi_ext", "natal", "natal_ext", "pilkada", "ppkm", "ppkm_mikro", "psbb", "tahun_baru_hijriyah", "tahun_baru_hijriyah_ext", "tahun_baru_masehi"]
+
+DATES_I = ["hut_ri", "idul_adha", "idul_fitri_siswa", "idul_fitri_umum", "libur_semester_ganjil", "libur_semester_genap", "maulid_nabi", "maulid_nabi_ext", "natal", "natal_ext", "pilkada", "ppkm", "ppkm_mikro", "psbb", "tahun_baru_hijriyah", "tahun_baru_hijriyah_ext", "tahun_baru_masehi"]
+
+DATES_CORR = [
+    'libur_semester_ganjil',
+    'libur_semester_genap',
+    'natal',
+    'ppkm',
+    'ppkm_mikro',
+    'psbb',
+    'ramadhan'
+]
+
 COLS_NON_DATE = [
     DAILY_POS_RATE,
     DELTA_VAC_PEOPLE,
@@ -93,15 +109,25 @@ COLS_NON_DATE = [
     DELTA_TEST
 ]
 
-FUTURE_EXO_COLS = [
-    DAY,
-    *DAYS,
-    *DATES
-]
-PAST_COLS = [
-    *COLS_NON_DATE,
-    *[c for c in FUTURE_EXO_COLS if c not in COLS_NON_DATE]
-]
+def future_exo_cols(dates=DATES, days=DAYS):
+    return [
+        DAY,
+        *days,
+        *dates
+    ]
+
+
+FUTURE_EXO_COLS = future_exo_cols()
+
+def past_cols(future_exo_cols=FUTURE_EXO_COLS, cols_non_date=COLS_NON_DATE):
+    return [
+        *cols_non_date,
+        *[c for c in future_exo_cols if c not in cols_non_date]
+    ]
+
+
+PAST_COLS = past_cols()
+
 LABEL_COLS = [
     *SIRD_VARS
 ]
@@ -111,4 +137,9 @@ FINAL_SEED_COLS = [
 FINAL_COLS = [
     *IRD
 ]
-COLS = PAST_COLS + [c for c in LABEL_COLS if c not in PAST_COLS] + [c for c in FINAL_SEED_COLS if c not in PAST_COLS]
+
+def cols(past_cols=PAST_COLS, label_cols=LABEL_COLS, final_seed_cols=FINAL_SEED_COLS):
+    return past_cols + [c for c in label_cols if c not in past_cols] + [c for c in final_seed_cols if c not in past_cols]
+
+
+COLS = cols()
