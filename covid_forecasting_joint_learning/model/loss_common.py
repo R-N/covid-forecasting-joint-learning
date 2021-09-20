@@ -1,17 +1,18 @@
 import numpy as np
+from . import util as ModelUtil
 
 def mse(err):
     return np.mean((err)**2, axis=-2)
 
-def naive(past, step=1, limit=None, eps=1e-6):
+def naive(past, step=1, limit=None, eps=ModelUtil.NAIVE_EPS):
     if limit:
         past = past[:limit]
     return past[:-step] - past[step:] + eps
 
-def msse(past, future, pred, limit_naive=30, eps=1e-6):
+def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     return mse(pred - future) / mse(naive(past, limit=limit_naive, eps=eps))
 
-def rmsse(past, future, pred, limit_naive=30, eps=1e-6):
+def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     return np.sqrt(msse(past, future, pred, limit=limit_naive, eps=eps))
 
 def reduce(loss, reduction="sum"):

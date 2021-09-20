@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from optuna.structs import TrialPruned
+from . import util as ModelUtil
 
 class NaNPredException(TrialPruned):
     def __init__(self):
@@ -9,7 +10,7 @@ class NaNPredException(TrialPruned):
 def mse(err):
     return torch.mean(torch.square(err), dim=-2)
 
-def naive(past, step=1, limit=None, eps=1e-6):
+def naive(past, step=1, limit=None, eps=ModelUtil.NAIVE_EPS):
     if past.dim() == 3:
         if limit:
             past = past[:, :limit]
@@ -21,12 +22,12 @@ def naive(past, step=1, limit=None, eps=1e-6):
     else:
         raise Exception(f"Invalid input dim {past.dim()}")
 
-def msse(past, future, pred, limit_naive=30, eps=1e-6):
+def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     if torch.isnan(pred).any():
         raise NaNPredException()
     return mse(pred - future) / mse(naive(past, limit=limit_naive, eps=eps)).detach()
 
-def rmsse(past, future, pred, limit_naive=30, eps=1e-6):
+def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))
 
 def reduce(loss, reduction="sum"):
@@ -40,7 +41,7 @@ def reduce(loss, reduction="sum"):
         raise ValueError(f"Invalid reduction {reduction}")
 
 class MSSELoss(nn.Module):
-    def __init__(self, reduction="sum", limit_naive=30, eps=1e-6):
+    def __init__(self, reduction="sum", limit_naive=30, eps=ModelUtil.NAIVE_EPS):
         super().__init__()
         self.reduction = reduction
         self.limit_naive = limit_naive
@@ -50,7 +51,7 @@ class MSSELoss(nn.Module):
         return reduce(msse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)
 
 class RMSSELoss(nn.Module):
-    def __init__(self, reduction="sum", limit_naive=30, eps=1e-6):
+    def __init__(self, reduction="sum", limit_naive=30, eps=ModelUtil.NAIVE_EPS):
         super().__init__()
         self.reduction = reduction
         self.limit_naive = limit_naive

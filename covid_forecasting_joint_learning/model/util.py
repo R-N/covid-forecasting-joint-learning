@@ -11,6 +11,9 @@ from pathlib import Path
 LINE_PROFILER = line_profiler.LineProfiler()
 
 
+NAIVE_EPS = 1e-3
+
+
 CUDA = False
 HALF = False
 DEFAULT_TENSOR = "torch.FloatTensor"
