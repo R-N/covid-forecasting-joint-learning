@@ -2,6 +2,9 @@ import torch
 from torch import nn
 
 def mse(err):
+    if torch.isnan(err).any():
+        print(err)
+        raise("NAN")
     ret = torch.mean((err)**2, dim=-2)
     if torch.isnan(ret).any():
         print(ret)
