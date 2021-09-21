@@ -234,8 +234,8 @@ class EarlyStopping:
                 self.forgive_rise()
                 self.forgive_still()
 
-        self.rise_counter = max(0, min(1, self.rise_counter))
-        self.still_counter = max(0, min(1, self.still_counter))
+        self.rise_counter = max(0, min(self.rise_patience, self.rise_counter))
+        self.still_counter = max(0, min(self.still_patience, self.still_counter))
         still_percent = self.still_counter / self.still_patience
         rise_percent = self.rise_counter / self.rise_patience
 
