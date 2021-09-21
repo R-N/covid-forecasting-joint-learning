@@ -941,7 +941,7 @@ def make_objective(
                     early_stopping(train_loss_target, val_loss_target)
 
 
-                sum_val_loss_target_group += val_loss_target
+                sum_val_loss_target_group += early_stopping.best_val_loss_2
 
                 if model_dir:
                     model.posttrain_save_model()
