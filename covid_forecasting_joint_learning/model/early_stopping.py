@@ -11,7 +11,7 @@ class EarlyStopping:
         wait=50, wait_train_below_val=20,
         rise_patience=20, still_patience=8,
         interval_percent=0.05,
-        min_delta_val=2e-1, min_delta_train=5e-2,
+        min_delta_val=2e-1, min_delta_train=1e-1,
         min_delta_val_percent=0.15, min_delta_train_percent=0.025,
         min_min_delta_val=1e-3, min_min_delta_train=1e-4,
         history_length=None,
@@ -178,8 +178,9 @@ class EarlyStopping:
             print(f"INFO: Early stopping active at epoch {epoch} after skipping {self.nan_counter}/{self.max_nan} NaN epochs and waiting {self.wait_train_below_val_counter}/{self.wait_train_below_val} epochs for train to get below val")
 
         if self.best_val_loss is None:
-            self.update_best_2(val_loss)
-            self.update_best(train_loss, val_loss)
+            self.update_best_val_2(val_loss)
+            self.update_best_train(train_loss)
+            self.update_best_val(val_loss)
 
         mid_val_loss, min_delta_val_percent = self.calculate_interval(val=True)
         mid_train_loss, min_delta_train_percent = self.calculate_interval(val=False)
@@ -203,6 +204,9 @@ class EarlyStopping:
         delta_val_loss = val_loss - self.best_val_loss
         delta_train_loss = train_loss - self.best_train_loss
 
+        train_fall = delta_train_loss < -min_delta_train
+        if train_fall:
+            self.update_best_train(train_loss)
         rise = delta_val_loss > min_delta_val
         if rise:
             self.rise_counter += 1
@@ -220,14 +224,14 @@ class EarlyStopping:
                     still_increment *= (1.0 - self.rel_val_reduction_still_tolerance)
                 if val_loss < self.best_val_loss_2:
                     still_increment *= (1.0 - self.val_reduction_still_tolerance)
-                    self.update_best_2(val_loss)
-                if delta_train_loss < -min_delta_train:
+                    self.update_best_val_2(val_loss)
+                if train_fall:
                     still_increment *= (1.0 - self.train_reduction_still_tolerance)
                 self.still_counter += still_increment
                 if self.still_counter >= self.still_patience:
                     self.early_stop("still", epoch)
             else:
-                self.update_best(train_loss, val_loss)
+                self.update_best_val(val_loss)
                 self.forgive_rise()
                 self.forgive_still()
 
@@ -255,15 +259,17 @@ class EarlyStopping:
     def update_state(self):
         self.best_state = self.model.state_dict()
 
-    def update_best_2(self, val_loss):
+    def update_best_val_2(self, val_loss):
         self.best_val_loss_2 = val_loss
         self.update_state()
 
-    def update_best(self, train_loss, val_loss):
+    def update_best_train(self, train_loss):
         self.best_train_loss = train_loss
+
+    def update_best_val(self, val_loss):
         self.best_val_loss = val_loss
         if val_loss < self.best_val_loss_2:
-            self.update_best_2(val_loss)
+            self.update_best_val_2(val_loss)
 
     def stop(self):
         self.model.load_state_dict(self.best_state)
