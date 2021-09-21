@@ -11,9 +11,7 @@ class EarlyStopping:
         wait=50, wait_train_below_val=20,
         rise_patience=20, still_patience=8,
         interval_percent=0.05,
-        min_delta_val=2e-1, min_delta_train=1e-1,
         min_delta_val_percent=0.15, min_delta_train_percent=0.025,
-        min_min_delta_val=1e-3, min_min_delta_train=1e-4,
         history_length=None,
         smoothing=0.4,
         interval_mode=2,
@@ -22,7 +20,6 @@ class EarlyStopping:
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
         mini_forgiveness_mul=0.25,
-        variance_still_tolerance=0.35,
         rel_val_reduction_tolerance=0.2,
         val_reduction_still_tolerance=0.35,
         train_reduction_still_tolerance=0.25,
@@ -43,12 +40,10 @@ class EarlyStopping:
         self.wait_train_below_val_counter = 0
         self.rise_patience = rise_patience
         self.still_patience = still_patience
-        self.min_delta_val = min_delta_val
-        self.min_delta_train = min_delta_train
+        self.min_delta_val = 0
+        self.min_delta_train = 0
         self.min_delta_val_percent = min_delta_val_percent
         self.min_delta_train_percent = min_delta_train_percent
-        self.min_min_delta_val = min_min_delta_val
-        self.min_min_delta_train = min_min_delta_train
         self.rise_counter = 0
         self.still_counter = 0
         self.history_length = history_length or min(rise_patience, still_patience)
@@ -71,7 +66,6 @@ class EarlyStopping:
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
         self.mini_forgiveness_mul = mini_forgiveness_mul
-        self.variance_still_tolerance = variance_still_tolerance
         self.rel_val_reduction_tolerance = rel_val_reduction_tolerance
         self.val_reduction_still_tolerance = val_reduction_still_tolerance
         self.train_reduction_still_tolerance = train_reduction_still_tolerance
@@ -133,29 +127,29 @@ class EarlyStopping:
         self,
         label, epoch,
         loss,
-        min_delta, min_delta_percent,
-        best_loss, best_loss_2=None
+        min_delta=None, min_delta_percent=None,
+        best_loss=None, best_loss_2=None
     ):
-        self.min_percent_high_writer.add_scalar(self.label + label, best_loss + min_delta_percent, global_step=epoch)
-        self.min_percent_low_writer.add_scalar(self.label + label, best_loss - min_delta_percent, global_step=epoch)
-
-        self.min_high_writer.add_scalar(self.label + label, best_loss + min_delta, global_step=epoch)
-        self.min_low_writer.add_scalar(self.label + label, best_loss - min_delta, global_step=epoch)
-
         self.loss_writer.add_scalar(self.label + label, loss, global_step=epoch)
-        self.best_loss_writer.add_scalar(self.label + label, best_loss, global_step=epoch)
-
-
-        self.min_percent_high_writer.flush()
-        self.min_percent_low_writer.flush()
-
-        self.min_high_writer.flush()
-        self.min_low_writer.flush()
-
         self.loss_writer.flush()
-        self.best_loss_writer.flush()
 
-        if best_loss_2:
+        if min_delta is not None:
+            self.min_high_writer.add_scalar(self.label + label, best_loss + min_delta, global_step=epoch)
+            self.min_low_writer.add_scalar(self.label + label, best_loss - min_delta, global_step=epoch)
+            self.min_high_writer.flush()
+            self.min_low_writer.flush()
+
+        if min_delta_percent is not None:
+            self.min_percent_high_writer.add_scalar(self.label + label, best_loss + min_delta_percent, global_step=epoch)
+            self.min_percent_low_writer.add_scalar(self.label + label, best_loss - min_delta_percent, global_step=epoch)
+            self.min_percent_high_writer.flush()
+            self.min_percent_low_writer.flush()
+
+        if best_loss is not None:
+            self.best_loss_writer.add_scalar(self.label + label, best_loss, global_step=epoch)
+            self.best_loss_writer.flush()
+
+        if best_loss_2 is not None:
             self.best_loss_2_writer.add_scalar(self.label + label, best_loss_2, global_step=epoch)
             self.best_loss_2_writer.flush()
 
@@ -181,23 +175,23 @@ class EarlyStopping:
             self.update_best_val_2(val_loss)
             self.update_best_train(train_loss)
             self.update_best_val(val_loss)
+            self.recalculate_delta_val()
+            self.recalculate_delta_train()
 
-        mid_val_loss, min_delta_val_percent = self.calculate_interval(val=True)
-        mid_train_loss, min_delta_train_percent = self.calculate_interval(val=False)
-        min_delta_val = max(self.min_delta_val, min_delta_val_percent)
-        min_delta_train = max(self.min_delta_train, min_delta_train_percent)
+        min_delta_val = self.min_delta_val
+        min_delta_train = self.min_delta_train
 
         if self.log_dir:
             self.log_stop(
                 label="val_stop", epoch=epoch,
                 loss=val_loss,
-                min_delta=self.min_delta_val, min_delta_percent=min_delta_val_percent,
+                min_delta=self.min_delta_val,
                 best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
             )
             self.log_stop(
                 label="train_stop", epoch=epoch,
                 loss=train_loss,
-                min_delta=self.min_delta_train, min_delta_percent=min_delta_train_percent,
+                min_delta=self.min_delta_train,
                 best_loss=self.best_train_loss
             )
 
@@ -207,6 +201,9 @@ class EarlyStopping:
         train_fall = delta_train_loss < -min_delta_train
         if train_fall:
             self.update_best_train(train_loss)
+        if delta_train_loss < min_delta_train:
+            self.recalculate_delta_train()
+
         rise = delta_val_loss > min_delta_val
         if rise:
             self.rise_counter += 1
@@ -215,11 +212,10 @@ class EarlyStopping:
                 self.early_stop("rise", epoch)
         else:
             still = abs(delta_val_loss) < min_delta_val
+            self.recalculate_delta_val()
             if still:
                 self.forgive_rise(self.mini_forgiveness_mul)
                 still_increment = 1
-                if self.min_min_delta_val < min_delta_val:
-                    still_increment *= (1.0 - self.variance_still_tolerance)
                 if val_loss < self.val_loss_history[-1]:
                     still_increment *= (1.0 - self.rel_val_reduction_still_tolerance)
                 if val_loss < self.best_val_loss_2:
@@ -255,6 +251,12 @@ class EarlyStopping:
 
         self.epoch = epoch + 1
         return self.stopped
+
+    def recalculate_delta_val(self):
+        mid_val_loss, self.min_delta_val = self.calculate_interval(val=True)
+
+    def recalculate_delta_train(self):
+        mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
 
     def update_state(self):
         self.best_state = self.model.state_dict()
