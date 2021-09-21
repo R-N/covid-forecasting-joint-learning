@@ -274,8 +274,9 @@ class EarlyStopping:
             self.update_best_val_2(val_loss)
 
     def stop(self):
-        self.model.load_state_dict(self.best_state)
-        self.stopped = True
+        if not self.stopped:
+            self.model.load_state_dict(self.best_state)
+            self.stopped = True
 
     def early_stop(self, reason="idk", epoch=None):
         if not self.active:

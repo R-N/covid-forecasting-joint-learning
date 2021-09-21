@@ -940,7 +940,7 @@ def make_objective(
                             raise
                     early_stopping(train_loss_target, val_loss_target)
 
-
+                early_stopping.stop()  # just in case
                 sum_val_loss_target_group += early_stopping.best_val_loss_2
 
                 if model_dir:
