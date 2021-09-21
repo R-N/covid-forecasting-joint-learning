@@ -19,6 +19,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
+        mini_forgiveness_mul=0.1,
         wait_forgive_count=1,
         rel_val_reduction_still_tolerance=0.1,
         val_reduction_still_tolerance=0.35,
@@ -65,6 +66,7 @@ class EarlyStopping:
 
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
+        self.mini_forgiveness_mul = mini_forgiveness_mul
         self.wait_forgive_count = wait_forgive_count
         self.rel_val_reduction_still_tolerance = rel_val_reduction_still_tolerance
         self.val_reduction_still_tolerance = val_reduction_still_tolerance
@@ -208,14 +210,14 @@ class EarlyStopping:
         rise = delta_val_loss > min_delta_val
         if rise:
             self.rise_counter += 1
-            self.still_counter -= 1  # It will need time to go down
+            self.forgive_still(self.mini_forgiveness_mul)  # It will need time to go down
             if self.rise_counter >= self.rise_patience:
                 self.early_stop("rise", epoch)
         else:
             still = abs(delta_val_loss) < min_delta_val
             self.recalculate_delta_val()
             if still:
-                self.rise_counter -= 1
+                self.forgive_rise(self.mini_forgiveness_mul)
                 still_increment = 1
                 if val_loss < self.val_loss_history[-1]:
                     still_increment *= (1.0 - self.rel_val_reduction_still_tolerance)
