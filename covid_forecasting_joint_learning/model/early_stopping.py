@@ -11,7 +11,7 @@ class EarlyStopping:
         wait=50, wait_train_below_val=20,
         rise_patience=25, still_patience=8,
         interval_percent=0.05,
-        min_delta_val=1e-1, min_delta_train=2e-2,
+        min_delta_val=2e-1, min_delta_train=5e-2,
         min_delta_val_percent=0.15, min_delta_train_percent=0.025,
         min_min_delta_val=1e-3, min_min_delta_train=1e-4,
         history_length=None,
