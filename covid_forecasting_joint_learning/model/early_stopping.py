@@ -254,6 +254,8 @@ class EarlyStopping:
 
     def recalculate_delta_val(self):
         mid_val_loss, self.min_delta_val = self.calculate_interval(val=True)
+        if self.best_val_loss_2 - self.best_val_loss < -self.min_delta_val:
+            self.best_val_loss = self.best_val_loss_2
 
     def recalculate_delta_train(self):
         mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
