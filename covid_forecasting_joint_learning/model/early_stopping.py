@@ -204,13 +204,13 @@ class EarlyStopping:
         rise = delta_val_loss > min_delta_val
         if rise:
             self.rise_counter += 1
-            # self.forgive_still()  # It will need time to go down
+            self.forgive_still(0.5)  # It will need time to go down
             if self.rise_counter >= self.rise_patience:
                 self.early_stop("rise", epoch)
         else:
-            self.forgive_rise()
             still = abs(delta_val_loss) < min_delta_val
             if still:
+                self.forgive_rise(0.5)
                 still_increment = 1
                 if self.min_min_delta_val < min_delta_val:
                     still_increment *= (1.0 - self.variance_still_tolerance)
@@ -226,6 +226,7 @@ class EarlyStopping:
                     self.early_stop("still", epoch)
             else:
                 self.update_best(train_loss, val_loss)
+                self.forgive_rise()
                 self.forgive_still()
 
         still_percent = self.still_counter / self.still_patience
@@ -278,11 +279,11 @@ class EarlyStopping:
     def calculate_forgiveness(self, counter, forgiveness, patience):
         return max(0, counter - forgiveness * patience)
 
-    def forgive_rise(self):
-        self.rise_counter = self.calculate_forgiveness(self.rise_counter, self.rise_forgiveness, self.rise_counter)
+    def forgive_rise(self, mul=1):
+        self.rise_counter = self.calculate_forgiveness(self.rise_counter, mul * self.rise_forgiveness, self.rise_counter)
 
-    def forgive_still(self):
-        self.still_counter = self.calculate_forgiveness(self.still_counter, self.still_forgiveness, self.still_counter)
+    def forgive_still(self, mul=1):
+        self.still_counter = self.calculate_forgiveness(self.still_counter, mul * self.still_forgiveness, self.still_counter)
 
     def forgive_wait(self):
         if self.debug >= 2:
