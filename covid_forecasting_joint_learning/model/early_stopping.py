@@ -204,7 +204,7 @@ class EarlyStopping:
         rise = delta_val_loss > min_delta_val
         if rise:
             self.rise_counter += 1
-            self.forgive_still()  # It will need time to go down
+            # self.forgive_still()  # It will need time to go down
             if self.rise_counter >= self.rise_patience:
                 self.early_stop("rise", epoch)
         else:
