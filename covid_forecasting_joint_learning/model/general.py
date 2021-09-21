@@ -928,6 +928,7 @@ def make_objective(
                     max_epoch=max_epoch
                 )
 
+                best_loss = np.inf
                 while not early_stopping.stopped:
                     train_loss_target, val_loss_target = np.nan, np.nan
                     try:
@@ -935,14 +936,13 @@ def make_objective(
                         train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
                         val_loss, val_loss_target, val_loss_targets = model.val()
                         val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+                        best_loss = min(best_loss, val_loss_target)
                     except NaNPredException:
                         if not early_stopping.step_nan():
                             raise
                     early_stopping(train_loss_target, val_loss_target)
 
-                early_stopping.stop()  # just in case
-                sum_val_loss_target_group += early_stopping.best_val_loss_2
-
+                sum_val_loss_target_group += best_loss
                 if model_dir:
                     model.posttrain_save_model()
 
