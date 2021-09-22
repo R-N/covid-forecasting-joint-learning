@@ -159,7 +159,7 @@ class ClusterModel:
         self.optimizer = self.create_optimizer()
         self.min_epoch = min_epoch
         self.grad_scaler = grad_scaler
-        self.scheduler = OneCycleLR(self.optimizer, lr=self.lr, steps_per_epoch=len(self.target.datasets[0]), epochs=self.min_epoch)
+        self.scheduler = OneCycleLR(self.optimizer, lr=self.lr, steps_per_epoch=len(self.target.datasets[0]), epochs=int(0.5*self.min_epoch))
 
     def clip_grad_norm(self):
         torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
