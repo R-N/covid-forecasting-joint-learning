@@ -18,7 +18,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
-        decent_forgiveness_mul=0.67,
+        decent_forgiveness_mul=0.6,
         small_forgiveness_mul=0.4,
         mini_forgiveness_mul=0.2,
         debug=0,
@@ -208,6 +208,7 @@ class EarlyStopping:
         train_fall = delta_train_loss < -min_delta_train
         val_rise = delta_val_loss > min_delta_val
         val_still = abs(delta_val_loss) < min_delta_val
+        val_fall = delta_val_loss < -min_delta_val
         val_fall_1 = val_loss < self.best_val_loss_2
 
         mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
@@ -232,7 +233,7 @@ class EarlyStopping:
 
             self.rise_counter += rise_increment
         else:
-            self.recalculate_delta_val()
+            self.recalculate_delta_val(fall=val_fall)
             if val_still:
                 self.forgive_rise(self.small_forgiveness_mul)
                 still_increment = 1
@@ -284,12 +285,13 @@ class EarlyStopping:
         self.epoch = epoch + 1
         return self.epoch
 
-    def recalculate_delta_val(self):
+    def recalculate_delta_val(self, fall=False):
         self.mid_val_loss, self.min_delta_val = self.calculate_interval(val=True)
-        if self.best_val_loss_2 - self.best_val_loss < -self.min_delta_val:
+        if (self.best_val_loss_2 - self.best_val_loss) < -self.min_delta_val:
             self.update_best_val(self.best_val_loss_2)
-            self.forgive_still(self.decent_forgiveness_mul)
-            self.forgive_rise(self.decent_forgiveness_mul)
+            if not fall:
+                self.forgive_still(self.decent_forgiveness_mul)
+                self.forgive_rise(self.decent_forgiveness_mul)
 
     def recalculate_delta_train(self):
         self.mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
