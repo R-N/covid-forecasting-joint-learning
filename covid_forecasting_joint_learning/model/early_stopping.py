@@ -61,7 +61,6 @@ class EarlyStopping:
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
         self.mini_forgiveness_mul = mini_forgiveness_mul
-        self.wait_forgive_count = wait_forgive_count
         self.rel_val_reduction_still_tolerance = rel_val_reduction_still_tolerance
 
         self.max_epoch = max_epoch
@@ -314,4 +313,6 @@ class EarlyStopping:
                 self.wait_counter += 1
             self.increment_epoch(epoch)
             return True
-        return False
+        else:
+            self.increment_epoch(epoch)
+            return False
