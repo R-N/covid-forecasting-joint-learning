@@ -149,17 +149,17 @@ class EarlyStopping:
             self.best_loss_2_writer.add_scalar(self.label + label, best_loss_2, global_step=epoch)
             self.best_loss_2_writer.flush()
 
-    def __call__(self, train_loss_0, val_loss_0, epoch=None):
+    def __call__(self, train_loss, val_loss, epoch=None):
         epoch = epoch if epoch is not None else self.epoch
 
-        self.train_loss_history = [*self.train_loss_history, train_loss_0][-self.history_length:]
-        self.val_loss_history = [*self.val_loss_history, val_loss_0][-self.history_length:]
+        val_loss_0, train_loss_0 = val_loss, train_loss
+
+        self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
+        self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
 
         if self.val_loss is not None:
             self.train_loss = train_loss = progressive_smooth(self.train_loss, self.smoothing, train_loss_0)
             self.val_loss = val_loss = progressive_smooth(self.val_loss, self.smoothing, val_loss_0)
-        else:
-            train_loss, val_loss = train_loss_0, val_loss_0
 
         if self.wait_counter < self.wait:
             self.wait_counter += 1
