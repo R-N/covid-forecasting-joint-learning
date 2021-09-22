@@ -22,7 +22,8 @@ class EarlyStopping:
         rel_val_reduction_still_tolerance=0.1,
         debug=0,
         log_dir=None,
-        label=None
+        label=None,
+        eps=1e-3
     ):
         """
         :param patience: how many epochs to wait before stopping when loss is
@@ -75,6 +76,8 @@ class EarlyStopping:
         self.max_nan = max_nan or int(0.5 * (self.wait - self.history_length))
         self.nan_counter = 0
 
+        self.eps = eps
+
         if self.log_dir is not None:
             assert self.label is not None
 
@@ -92,7 +95,9 @@ class EarlyStopping:
             self.rise_writer = SummaryWriter(log_dir + "/rise")
 
     def calculate_interval(self, *args, **kwargs):
-        return self.interval_funcs[self.interval_mode](*args, **kwargs)
+        mid, delta = self.interval_funcs[self.interval_mode](*args, **kwargs)
+        delta = max(delta, self.eps)
+        return mid, delta
 
     def calculate_interval_0(self, val=True):
         history = self.val_loss_history if val else self.train_loss_history
