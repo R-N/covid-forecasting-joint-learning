@@ -18,7 +18,7 @@ import gc
 from ..pipeline.main import preprocessing_5, preprocessing_6
 from copy import deepcopy
 from ..data import cols as DataCol
-from .loss import MSSELoss, NaNPredException, NanLossException
+from .loss import MSSELoss, NaNPredException, NaNLossException
 import numpy as np
 
 from .util import LINE_PROFILER
@@ -934,16 +934,16 @@ def make_objective(
                     try:
                         train_loss, train_loss_target, train_loss_targets = model.train()
                         if torch.isnan(train_loss).any():
-                            raise NanLossException()
+                            raise NaNLossException()
                         train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
                         val_loss, val_loss_target, val_loss_targets = model.val()
                         if torch.isnan(val_loss).any():
-                            raise NanLossException()
+                            raise NaNLossException()
                         val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
                         best_loss = min(best_loss, val_loss_target)
 
                         early_stopping(train_loss_target, val_loss_target)
-                    except (NaNPredException, NanLossException):
+                    except (NaNPredException, NaNLossException):
                         if not early_stopping.step_nan():
                             raise
 
