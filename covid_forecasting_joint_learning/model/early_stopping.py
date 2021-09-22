@@ -18,6 +18,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
+        decent_forgiveness_mul=0.67,
         small_forgiveness_mul=0.4,
         mini_forgiveness_mul=0.2,
         debug=0,
@@ -61,6 +62,7 @@ class EarlyStopping:
 
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
+        self.decent_forgiveness_mul = decent_forgiveness_mul
         self.small_forgiveness_mul = small_forgiveness_mul
         self.mini_forgiveness_mul = mini_forgiveness_mul
 
@@ -286,8 +288,8 @@ class EarlyStopping:
         self.mid_val_loss, self.min_delta_val = self.calculate_interval(val=True)
         if self.best_val_loss_2 - self.best_val_loss < -self.min_delta_val:
             self.update_best_val(self.best_val_loss_2)
-            self.forgive_still(self.small_forgiveness_mul)
-            self.forgive_rise(self.small_forgiveness_mul)
+            self.forgive_still(self.decent_forgiveness_mul)
+            self.forgive_rise(self.decent_forgiveness_mul)
 
     def recalculate_delta_train(self):
         self.mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
