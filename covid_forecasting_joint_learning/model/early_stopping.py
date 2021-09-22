@@ -19,10 +19,7 @@ class EarlyStopping:
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
         mini_forgiveness_mul=0.12,
-        wait_forgive_count=1,
         rel_val_reduction_still_tolerance=0.1,
-        # val_reduction_still_tolerance=0.35,
-        # train_reduction_still_tolerance=0.25,
         debug=0,
         log_dir=None,
         label=None
@@ -66,8 +63,6 @@ class EarlyStopping:
         self.mini_forgiveness_mul = mini_forgiveness_mul
         self.wait_forgive_count = wait_forgive_count
         self.rel_val_reduction_still_tolerance = rel_val_reduction_still_tolerance
-        # self.val_reduction_still_tolerance = val_reduction_still_tolerance
-        # self.train_reduction_still_tolerance = train_reduction_still_tolerance
 
         self.max_epoch = max_epoch
         self.log_dir = log_dir
@@ -166,9 +161,8 @@ class EarlyStopping:
             self.wait_train_below_val_counter += 1
         elif not self.active:
             self.active = True
-            for i in range(self.wait_forgive_count):
-                self.forgive_still()
-                self.forgive_rise()
+            self.forgive_still(self.mini_forgiveness_mul)
+            self.forgive_rise(self.mini_forgiveness_mul)
             print(f"INFO: Early stopping active at epoch {epoch} after skipping {self.nan_counter}/{self.max_nan} NaN epochs and waiting {self.wait_train_below_val_counter}/{self.wait_train_below_val} epochs for train to get below val")
 
         if self.best_val_loss is None:
@@ -228,12 +222,10 @@ class EarlyStopping:
 
         if rise or still:
             if val_loss < self.best_val_loss_2:
-                # still_increment *= (1.0 - self.val_reduction_still_tolerance)
                 self.forgive_still(self.mini_forgiveness_mul)
                 self.forgive_rise(self.mini_forgiveness_mul)
                 self.update_best_val_2(val_loss)
             if train_fall:
-                # still_increment *= (1.0 - self.train_reduction_still_tolerance)
                 self.forgive_still(self.mini_forgiveness_mul)
                 self.forgive_rise(self.mini_forgiveness_mul)
 
