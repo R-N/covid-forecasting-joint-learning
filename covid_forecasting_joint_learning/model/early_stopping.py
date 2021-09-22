@@ -241,16 +241,19 @@ class EarlyStopping:
             self.still_writer.flush()
             self.rise_writer.flush()
 
-        # stilling = still_percent >= (1.0 - self.still_forgiveness)
-        # rising = rise_percent >= (1.0 - self.rise_forgiveness)
+        self.increment_epoch(epoch)
 
-        if self.max_epoch and epoch >= self.max_epoch and (rise or still):
+        return self.stopped
+
+    def increment_epoch(self, epoch=None):
+        epoch = epoch if epoch is not None else self.epoch
+        if self.max_epoch and epoch >= self.max_epoch:
             self.stop()
             if self.debug >= 1:
                 print(f"INFO: Stopping at max epoch {epoch}")
 
         self.epoch = epoch + 1
-        return self.stopped
+        return self.epoch
 
     def recalculate_delta_val(self):
         mid_val_loss, self.min_delta_val = self.calculate_interval(val=True)
@@ -304,10 +307,11 @@ class EarlyStopping:
         if self.debug >= 2:
             print(f"INFO: Early stopping forgiven due to wait")
 
-    def step_nan(self):
+    def step_nan(self, epoch=None):
         if self.nan_counter < self.max_nan:
             self.nan_counter += 1
             if self.wait_counter < self.wait:
                 self.wait_counter += 1
+            self.increment_epoch(epoch)
             return True
         return False

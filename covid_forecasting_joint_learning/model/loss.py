@@ -7,6 +7,10 @@ class NaNPredException(TrialPruned):
     def __init__(self):
         super(NaNPredException, self).__init__("Pred has NaN!")
 
+class NaNLossException(TrialPruned):
+    def __init__(self):
+        super(NaNLossException, self).__init__("Loss is NaN!")
+
 def mse(err):
     return torch.mean(torch.square(err), dim=-2)
 
