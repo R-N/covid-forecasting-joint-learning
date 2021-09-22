@@ -11,7 +11,7 @@ class EarlyStopping:
         wait=50, wait_train_below_val=20,
         rise_patience=25, still_patience=13,
         interval_percent=0.05,
-        history_length=None,
+        history_length=6,
         smoothing=0.25,
         interval_mode=2,
         max_epoch=100,
