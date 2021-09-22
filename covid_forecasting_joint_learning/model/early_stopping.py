@@ -12,13 +12,13 @@ class EarlyStopping:
         rise_patience=25, still_patience=13,
         interval_percent=0.05,
         history_length=None,
-        smoothing=0.25,
+        smoothing=0.05,
         interval_mode=2,
         max_epoch=100,
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
-        mini_forgiveness_mul=0.12,
+        mini_forgiveness_mul=0.2,
         rel_val_reduction_still_tolerance=0.1,
         debug=0,
         log_dir=None,
@@ -68,6 +68,9 @@ class EarlyStopping:
         self.label = label
         self.epoch = 0
         self.active = False
+
+        self.train_loss = None
+        self.val_loss = None
 
         self.max_nan = max_nan or int(0.5 * (self.wait - self.history_length))
         self.nan_counter = 0
@@ -146,13 +149,15 @@ class EarlyStopping:
             self.best_loss_2_writer.add_scalar(self.label + label, best_loss_2, global_step=epoch)
             self.best_loss_2_writer.flush()
 
-    def __call__(self, train_loss, val_loss, epoch=None):
+    def __call__(self, train_loss_0, val_loss_0, epoch=None):
         epoch = epoch if epoch is not None else self.epoch
-        if len(self.val_loss_history):
-            train_loss = progressive_smooth(self.train_loss_history[-1], self.smoothing, train_loss)
-            val_loss = progressive_smooth(self.val_loss_history[-1], self.smoothing, val_loss)
-        self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
-        self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
+
+        self.train_loss_history = [*self.train_loss_history, train_loss_0][-self.history_length:]
+        self.val_loss_history = [*self.val_loss_history, val_loss_0][-self.history_length:]
+
+        if self.val_loss is not None:
+            self.train_loss = train_loss = progressive_smooth(self.train_loss, self.smoothing, train_loss_0)
+            self.val_loss = val_loss = progressive_smooth(self.val_loss, self.smoothing, val_loss_0)
 
         if self.wait_counter < self.wait:
             self.wait_counter += 1
