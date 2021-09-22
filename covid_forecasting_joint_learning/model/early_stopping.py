@@ -13,7 +13,7 @@ class EarlyStopping:
         interval_percent=0.05,
         min_delta_val_percent=0.15, min_delta_train_percent=0.025,
         history_length=None,
-        smoothing=0.1,
+        smoothing=0.25,
         interval_mode=2,
         max_epoch=100,
         max_nan=None,
@@ -54,7 +54,7 @@ class EarlyStopping:
         self.best_train_loss = None
         self.best_val_loss_2 = None
         self.stopped = False
-        self.smoothing = min(1.0, max(0, 1.0 - smoothing))
+        self.smoothing = min(1.0, max(0, smoothing))
         self.interval_percent = interval_percent
         self.debug = debug
         self.interval_funcs = [
