@@ -11,7 +11,6 @@ class EarlyStopping:
         wait=50, wait_train_below_val=20,
         rise_patience=20, still_patience=12,
         interval_percent=0.05,
-        min_delta_val_percent=0.15, min_delta_train_percent=0.025,
         history_length=None,
         smoothing=0.25,
         interval_mode=2,
@@ -19,7 +18,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
-        mini_forgiveness_mul=0.1,
+        mini_forgiveness_mul=0.15,
         wait_forgive_count=1,
         rel_val_reduction_still_tolerance=0.1,
         val_reduction_still_tolerance=0.35,
@@ -43,8 +42,6 @@ class EarlyStopping:
         self.still_patience = still_patience
         self.min_delta_val = 0
         self.min_delta_train = 0
-        self.min_delta_val_percent = min_delta_val_percent
-        self.min_delta_train_percent = min_delta_train_percent
         self.rise_counter = 0
         self.still_counter = 0
         self.history_length = history_length or min(rise_patience, still_patience)
