@@ -19,7 +19,6 @@ class EarlyStopping:
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
         mini_forgiveness_mul=0.2,
-        rel_val_reduction_still_tolerance=0.1,
         debug=0,
         log_dir=None,
         label=None,
@@ -62,7 +61,6 @@ class EarlyStopping:
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
         self.mini_forgiveness_mul = mini_forgiveness_mul
-        self.rel_val_reduction_still_tolerance = rel_val_reduction_still_tolerance
 
         self.max_epoch = max_epoch
         self.log_dir = log_dir
@@ -204,41 +202,57 @@ class EarlyStopping:
         delta_train_loss = train_loss - self.best_train_loss
 
         train_fall = delta_train_loss < -min_delta_train
+        val_rise = delta_val_loss > min_delta_val
+        val_still = abs(delta_val_loss) < min_delta_val
+        val_fall_1 = val_loss < self.best_val_loss_2
+
+        mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
+        delta_val_loss_2 = val_loss - mean_val_loss
+        val_fall_2 = delta_val_loss_2 < -min_delta_val_2
+        val_still_2 = abs(delta_val_loss_2) < min_delta_val_2
+
         if train_fall:
             self.update_best_train(train_loss)
         if delta_train_loss < min_delta_train:
             self.recalculate_delta_train()
 
-        rise = delta_val_loss > min_delta_val
-        if rise:
-            self.rise_counter += 1
-            self.forgive_still(self.mini_forgiveness_mul)  # It will need time to go down
-            if self.rise_counter >= self.rise_patience:
-                self.early_stop("rise", epoch)
+        if val_rise:
+            rise_increment = 1
+            if val_still_2:
+                self.still_counter += 1
+                rise_increment *= (1.0 - 0.25)
+            else:
+                self.forgive_still(self.mini_forgiveness_mul)
+                if val_fall_2:
+                    rise_increment *= (1.0 - 0.5)
+
+            self.rise_counter += rise_increment
         else:
-            still = abs(delta_val_loss) < min_delta_val
             self.recalculate_delta_val()
-            if still:
+            if val_still:
                 self.forgive_rise(self.mini_forgiveness_mul)
                 still_increment = 1
                 if val_loss < self.val_loss_history[-1]:
-                    still_increment *= (1.0 - self.rel_val_reduction_still_tolerance)
+                    still_increment *= (1.0 - 0.1)
                 self.still_counter += still_increment
-                if self.still_counter >= self.still_patience:
-                    self.early_stop("still", epoch)
             else:
                 self.update_best_val(val_loss)
                 self.forgive_rise()
                 self.forgive_still()
 
-        if rise or still:
-            if val_loss < self.best_val_loss_2:
+        if val_rise or val_still:
+            if val_fall_1:
                 self.forgive_still(self.mini_forgiveness_mul)
                 self.forgive_rise(self.mini_forgiveness_mul)
                 self.update_best_val_2(val_loss)
             if train_fall:
                 self.forgive_still(self.mini_forgiveness_mul)
                 self.forgive_rise(self.mini_forgiveness_mul)
+
+        if self.rise_counter >= self.rise_patience:
+            self.early_stop("rise", epoch)
+        if self.still_counter >= self.still_patience:
+            self.early_stop("still", epoch)
 
         self.rise_counter = max(0, min(self.rise_patience, self.rise_counter))
         self.still_counter = max(0, min(self.still_patience, self.still_counter))
@@ -267,14 +281,14 @@ class EarlyStopping:
         return self.epoch
 
     def recalculate_delta_val(self):
-        mid_val_loss, self.min_delta_val = self.calculate_interval(val=True)
+        self.mid_val_loss, self.min_delta_val = self.calculate_interval(val=True)
         if self.best_val_loss_2 - self.best_val_loss < -self.min_delta_val:
             self.update_best_val(self.best_val_loss_2)
             self.forgive_still(self.mini_forgiveness_mul)
             self.forgive_rise(self.mini_forgiveness_mul)
 
     def recalculate_delta_train(self):
-        mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
+        self.mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
 
     def update_state(self):
         self.best_state = self.model.state_dict()
