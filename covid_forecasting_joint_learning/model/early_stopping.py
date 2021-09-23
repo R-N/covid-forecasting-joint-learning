@@ -246,7 +246,7 @@ class EarlyStopping:
             else:
                 self.forgive_still(self.small_forgiveness_mul)
                 if val_fall_2:
-                    rise_increment *= (1.0 - 0.4)
+                    rise_increment *= (1.0 - 0.5)
 
             self.rise_counter += rise_increment
         else:
