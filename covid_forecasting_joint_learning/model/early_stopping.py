@@ -13,7 +13,7 @@ class EarlyStopping:
         interval_percent=0.05,
         history_length=10,
         smoothing=0.05,
-        interval_mode=2,
+        interval_mode=1,
         max_epoch=100,
         max_nan=None,
         rise_forgiveness=0.6,
@@ -55,8 +55,7 @@ class EarlyStopping:
         self.debug = debug
         self.interval_funcs = [
             self.calculate_interval_0,
-            self.calculate_interval_1,
-            self.calculate_interval_2
+            self.calculate_interval_1
         ]
         self.interval_mode = interval_mode
 
@@ -100,29 +99,22 @@ class EarlyStopping:
             self.still_writer = SummaryWriter(log_dir + "/still")
             self.rise_writer = SummaryWriter(log_dir + "/rise")
 
-    def calculate_interval(self, *args, **kwargs):
-        mid, delta = self.interval_funcs[self.interval_mode](*args, **kwargs)
+    def calculate_interval(self, val=None, history=None, *args, **kwargs):
+        assert val is not None or history is not None
+        if history is None:
+            history = self.val_loss_history if val else self.train_loss_history
+        mid, delta = self.interval_funcs[self.interval_mode](history, *args, **kwargs)
         delta = max(delta, self.eps)
         return mid, delta
 
-    def calculate_interval_0(self, val=True):
-        history = self.val_loss_history if val else self.train_loss_history
-        percent = self.min_delta_val_percent if val else self.min_delta_train_percent
-        max_val = max(history)
-        delta = percent * max_val
-        mid = history[-2]
-        return mid, delta
-
-    def calculate_interval_1(self, val=True):
-        history = self.val_loss_history if val else self.train_loss_history
+    def calculate_interval_0(self, history):
         min_val = min(history)
         max_val = max(history)
         delta = 0.5 * (1.0 - self.interval_percent) * (max_val - min_val)
         mid = 0.5 * (min_val + max_val)
         return mid, delta
 
-    def calculate_interval_2(self, val=True):
-        history = self.val_loss_history if val else self.train_loss_history
+    def calculate_interval_1(self, history):
         mean = sum(history) / self.history_length
         sum_err = sum([(mean - x)**2 for x in history])
         stdev = sqrt(1 / (self.history_length - 2) * sum_err)
@@ -169,6 +161,9 @@ class EarlyStopping:
 
         val_loss_0, train_loss_0 = val_loss, train_loss
 
+        mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
+        # min_delta_val_2 *= 0.75
+
         self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
         self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
 
@@ -196,7 +191,6 @@ class EarlyStopping:
         min_delta_val = self.min_delta_val
         min_delta_train = self.min_delta_train
 
-        mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
 
         if self.log_dir:
             self.log_stop(
@@ -233,7 +227,7 @@ class EarlyStopping:
         if val_rise:
             rise_increment = 1
             if val_still_2:
-                self.still_counter += 0.7
+                self.still_counter += 1
                 rise_increment *= (1.0 - 0.1)
             else:
                 self.forgive_still(self.small_forgiveness_mul)
