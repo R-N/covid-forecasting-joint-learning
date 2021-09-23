@@ -9,7 +9,7 @@ class EarlyStopping:
         self,
         model,
         wait=50, wait_train_below_val=0,
-        rise_patience=16, still_patience=13,
+        rise_patience=13, still_patience=13,
         interval_percent=0.05,
         history_length=10,
         smoothing=0.05,
