@@ -82,14 +82,11 @@ class EarlyStopping:
 
         if self.log_dir is not None:
             assert self.label is not None
-
-            self.min_percent_high_writer = SummaryWriter(log_dir + "/min_percent_high")
-            self.min_percent_low_writer = SummaryWriter(log_dir + "/min_percent_low")
-
             self.min_high_writer = SummaryWriter(log_dir + "/min_high")
             self.min_low_writer = SummaryWriter(log_dir + "/min_low")
 
             self.mean_loss_writer = SummaryWriter(log_dir + "mean_loss")
+            self.mean_loss_half_writer = SummaryWriter(log_dir + "mean_loss_half")
             self.min_high_mean_writer = SummaryWriter(log_dir + "min_high_mean")
             self.min_low_mean_writer = SummaryWriter(log_dir + "mean_low_mean")
 
@@ -127,8 +124,9 @@ class EarlyStopping:
         self,
         label, epoch,
         loss,
-        min_delta=None,
-        best_loss=None, best_loss_2=None, mean_loss=None
+        min_delta=None, min_delta_2=None,
+        best_loss=None, best_loss_2=None,
+        mean_loss=None, mean_loss_half=None
     ):
         self.loss_writer.add_scalar(self.label + label, loss, global_step=epoch)
         self.loss_writer.flush()
@@ -137,9 +135,13 @@ class EarlyStopping:
             self.mean_loss_writer.add_scalar(self.label + label, mean_loss, global_step=epoch)
             self.mean_loss_writer.flush()
 
-        if mean_loss is not None and min_delta is not None:
-            self.min_high_mean_writer.add_scalar(self.label + label, mean_loss + min_delta, global_step=epoch)
-            self.min_low_mean_writer.add_scalar(self.label + label, mean_loss - min_delta, global_step=epoch)
+        if mean_loss_half is not None:
+            self.mean_loss_half_writer.add_scalar(self.label + label, mean_loss_half, global_step=epoch)
+            self.mean_loss_half_writer.flush()
+
+        if mean_loss is not None and min_delta_2 is not None:
+            self.min_high_mean_writer.add_scalar(self.label + label, mean_loss + min_delta_2, global_step=epoch)
+            self.min_low_mean_writer.add_scalar(self.label + label, mean_loss - min_delta_2, global_step=epoch)
             self.min_high_mean_writer.flush()
             self.min_low_mean_writer.flush()
 
@@ -200,8 +202,8 @@ class EarlyStopping:
         if self.log_dir:
             self.log_stop(
                 label="val_stop", epoch=epoch,
-                loss=val_loss, mean_loss=mean_val_loss,
-                min_delta=self.min_delta_val,
+                loss=val_loss, mean_loss=mean_val_loss, mean_loss_half=mean_val_loss_half,
+                min_delta=self.min_delta_val, min_delta_2=min_delta_val_2,
                 best_loss=self.best_val_loss, best_loss_2=self.best_val_loss_2
             )
             self.log_stop(
