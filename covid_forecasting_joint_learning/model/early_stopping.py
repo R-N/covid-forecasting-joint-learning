@@ -252,7 +252,7 @@ class EarlyStopping:
             else:
                 self.forgive_still(self.small_forgiveness_mul)
                 if val_fall_2:
-                    self.forgive_rise(self.mini_forgiveness_mul)
+                    self.both_counter -= self.forgive_rise(self.mini_forgiveness_mul)
                     rise_increment = 0
 
             self.rise_counter += rise_increment
@@ -274,14 +274,11 @@ class EarlyStopping:
 
         if val_rise or val_still:
             if val_fall_1 or train_fall:
-                self.forgive_both(
-                    mul=self.mini_forgiveness_mul,
-                    min_forgiveness=self.forgive_still(
-                        self.mini_forgiveness_mul
-                    ) + self.forgive_rise(
-                        self.mini_forgiveness_mul
-                    )
-                )
+                self.both_counter -= max(self.forgive_still(
+                    self.mini_forgiveness_mul
+                ), self.forgive_rise(
+                    self.mini_forgiveness_mul
+                ))
             if val_fall_1:
                 self.update_best_val_2(val_loss)
 
