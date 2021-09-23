@@ -261,7 +261,7 @@ class EarlyStopping:
                     rise_increment = 0
 
             self.rise_counter += rise_increment
-            self.both_counter += max(rise_increment, still_increment)
+            self.both_counter += max(rise_increment, still_increment, 0.7225)
         else:
             self.recalculate_delta_val(fall=val_fall)
             if val_still:
