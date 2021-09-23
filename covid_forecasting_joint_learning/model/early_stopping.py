@@ -9,7 +9,7 @@ class EarlyStopping:
         self,
         model,
         wait=50, wait_train_below_val=0,
-        rise_patience=13, still_patience=13,
+        rise_patience=13, still_patience=13, both_patience=26,
         interval_percent=0.05,
         history_length=10,
         smoothing=0.05,
@@ -18,6 +18,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
+        both_forgiveness=None,
         decent_forgiveness_mul=0.6,
         small_forgiveness_mul=0.4,
         mini_forgiveness_mul=0.2,
@@ -39,10 +40,12 @@ class EarlyStopping:
         self.wait_train_below_val_counter = 0
         self.rise_patience = rise_patience
         self.still_patience = still_patience
+        self.both_patience = both_patience
         self.min_delta_val = 0
         self.min_delta_train = 0
         self.rise_counter = 0
         self.still_counter = 0
+        self.both_counter = 0
         self.history_length = history_length or min(rise_patience, still_patience)
         self.half_history_length = int(self.history_length / 2)
         self.train_loss_history = []
@@ -62,6 +65,7 @@ class EarlyStopping:
 
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
+        self.both_forgiveness = both_forgiveness or max(rise_patience, still_patience) / (both_patience - 1)
         self.decent_forgiveness_mul = decent_forgiveness_mul
         self.small_forgiveness_mul = small_forgiveness_mul
         self.mini_forgiveness_mul = mini_forgiveness_mul
@@ -96,6 +100,7 @@ class EarlyStopping:
 
             self.still_writer = SummaryWriter(log_dir + "/still")
             self.rise_writer = SummaryWriter(log_dir + "/rise")
+            self.both_writer = SummaryWriter(log_dir + "/both")
 
     def calculate_interval(self, val=None, history=None, *args, **kwargs):
         assert val is not None or history is not None
@@ -235,6 +240,7 @@ class EarlyStopping:
 
         if val_rise:
             rise_increment = 1
+            still_increment = 0
             if val_still_2:
                 still_increment = 0.85
                 if val_decrease:
@@ -247,9 +253,10 @@ class EarlyStopping:
                 self.forgive_still(self.small_forgiveness_mul)
                 if val_fall_2:
                     self.forgive_rise(self.mini_forgiveness_mul)
-                    rise_increment *= (1.0 - 1.0)
+                    rise_increment = 0
 
             self.rise_counter += rise_increment
+            self.both_counter += max(rise_increment, still_increment)
         else:
             self.recalculate_delta_val(fall=val_fall)
             if val_still:
@@ -258,19 +265,25 @@ class EarlyStopping:
                 if val_decrease:
                     still_increment *= (1.0 - 0.15)
                 self.still_counter += still_increment
+                self.both_counter += still_increment
             else:
                 self.update_best_val(val_loss)
-                self.forgive_rise()
-                self.forgive_still()
+                self.forgive_both(
+                    min_forgiveness=self.forgive_rise() + self.forgive_still()
+                )
 
         if val_rise or val_still:
+            if val_fall_1 or train_fall:
+                self.forgive_both(
+                    mul=self.mini_forgiveness_mul,
+                    min_forgiveness=self.forgive_still(
+                        self.mini_forgiveness_mul
+                    ) + self.forgive_rise(
+                        self.mini_forgiveness_mul
+                    )
+                )
             if val_fall_1:
-                self.forgive_still(self.mini_forgiveness_mul)
-                self.forgive_rise(self.mini_forgiveness_mul)
                 self.update_best_val_2(val_loss)
-            if train_fall:
-                self.forgive_still(self.mini_forgiveness_mul)
-                self.forgive_rise(self.mini_forgiveness_mul)
 
         if self.rise_counter >= self.rise_patience:
             self.early_stop("rise", epoch)
@@ -279,15 +292,19 @@ class EarlyStopping:
 
         self.rise_counter = max(0, min(self.rise_patience, self.rise_counter))
         self.still_counter = max(0, min(self.still_patience, self.still_counter))
+        self.both_counter = max(0, min(self.both_patience, self.both_counter))
         still_percent = self.still_counter / self.still_patience
         rise_percent = self.rise_counter / self.rise_patience
+        both_percent = self.both_counter / self.both_patience
 
         if self.log_dir:
             self.still_writer.add_scalar(self.label + "patience", still_percent, global_step=epoch)
             self.rise_writer.add_scalar(self.label + "patience", rise_percent, global_step=epoch)
+            self.both_writer.add_scalar(self.label + "patience", both_percent, global_step=epoch)
 
             self.still_writer.flush()
             self.rise_writer.flush()
+            self.both_writer.flush()
 
         self.train_loss = train_loss
         self.val_loss = val_loss
@@ -311,8 +328,14 @@ class EarlyStopping:
         if (self.best_val_loss_2 - self.best_val_loss) < -self.min_delta_val:
             self.update_best_val(self.best_val_loss_2)
             if not fall:
-                self.forgive_still(self.decent_forgiveness_mul)
-                self.forgive_rise(self.decent_forgiveness_mul)
+                self.forgive_both(
+                    mul=self.decent_forgiveness_mul,
+                    min_forgiveness=self.forgive_still(
+                        self.decent_forgiveness_mul
+                    ) + self.forgive_rise(
+                        self.decent_forgiveness_mul
+                    )
+                )
 
     def recalculate_delta_train(self):
         self.mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
@@ -347,13 +370,23 @@ class EarlyStopping:
             print(f"INFO: Early stopping due to {reason} at epoch {epoch}")
 
     def calculate_forgiveness(self, counter, forgiveness, patience):
-        return max(0, counter - forgiveness * patience)
+        return min(counter, forgiveness * patience)
 
     def forgive_rise(self, mul=1):
-        self.rise_counter = self.calculate_forgiveness(self.rise_counter, mul * self.rise_forgiveness, self.rise_counter)
+        forgiveness = self.calculate_forgiveness(self.rise_counter, mul * self.rise_forgiveness, self.rise_counter)
+        self.rise_counter -= forgiveness
+        return forgiveness
 
     def forgive_still(self, mul=1):
-        self.still_counter = self.calculate_forgiveness(self.still_counter, mul * self.still_forgiveness, self.still_counter)
+        forgiveness = self.calculate_forgiveness(self.still_counter, mul * self.still_forgiveness, self.still_counter)
+        self.still_counter -= forgiveness
+        return forgiveness
+
+    def forgive_both(self, mul=1, min_forgiveness=0):
+        forgiveness = self.calculate_forgiveness(self.still_counter, mul * self.both_forgiveness, self.still_counter)
+        forgiveness = max(forgiveness, min_forgiveness)
+        self.still_counter -= forgiveness
+        return forgiveness
 
     def forgive_wait(self):
         if self.debug >= 2:
