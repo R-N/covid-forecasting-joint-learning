@@ -239,9 +239,9 @@ class EarlyStopping:
                 still_increment = 0.85
                 if val_decrease:
                     still_increment *= (1.0 - 0.15)
-                    rise_increment *= (1.0 - 0.3)
+                    rise_increment *= (1.0 - 0.4)
                 else:
-                    rise_increment *= (1.0 - 0.15)
+                    rise_increment *= (1.0 - 0.2)
                 self.still_counter += still_increment
             else:
                 self.forgive_still(self.small_forgiveness_mul)
