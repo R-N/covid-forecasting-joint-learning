@@ -189,8 +189,14 @@ class EarlyStopping:
             self.wait_train_below_val_counter += 1
         elif not self.active:
             self.active = True
-            self.forgive_still(self.small_forgiveness_mul)
-            self.forgive_rise(self.small_forgiveness_mul)
+            self.forgive_both(
+                mul=self.small_forgiveness_mul,
+                mini_forgiveness_mul=self.forgive_still(
+                    self.small_forgiveness_mul
+                ) + self.forgive_rise(
+                    self.small_forgiveness_mul
+                )
+            )
             print(f"INFO: Early stopping active at epoch {epoch} after skipping {self.nan_counter}/{self.max_nan} NaN epochs and waiting {self.wait_train_below_val_counter}/{self.wait_train_below_val} epochs for train to get below val")
 
         if self.best_val_loss is None:
