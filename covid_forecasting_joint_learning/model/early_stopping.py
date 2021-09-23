@@ -92,7 +92,7 @@ class EarlyStopping:
             self.mean_loss_writer = SummaryWriter(log_dir + "mean_loss")
             self.mean_loss_half_writer = SummaryWriter(log_dir + "mean_loss_half")
             self.min_high_mean_writer = SummaryWriter(log_dir + "min_high_mean")
-            self.min_low_mean_writer = SummaryWriter(log_dir + "mean_low_mean")
+            self.min_low_mean_writer = SummaryWriter(log_dir + "min_low_mean")
 
             self.loss_writer = SummaryWriter(log_dir + "/loss")
             self.best_loss_writer = SummaryWriter(log_dir + "/best_loss")
