@@ -65,7 +65,7 @@ class EarlyStopping:
 
         self.rise_forgiveness = rise_forgiveness
         self.still_forgiveness = still_forgiveness
-        self.both_forgiveness = both_forgiveness or max(rise_patience, still_patience) / (both_patience - 1)
+        self.both_forgiveness = both_forgiveness or (max(rise_patience, still_patience) / (both_patience - 1))
         self.decent_forgiveness_mul = decent_forgiveness_mul
         self.small_forgiveness_mul = small_forgiveness_mul
         self.mini_forgiveness_mul = mini_forgiveness_mul
