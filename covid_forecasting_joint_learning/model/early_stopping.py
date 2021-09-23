@@ -18,7 +18,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
-        both_forgiveness=0.6,
+        both_forgiveness=None,
         decent_forgiveness_mul=0.6,
         small_forgiveness_mul=0.4,
         mini_forgiveness_mul=0.2,
@@ -388,7 +388,7 @@ class EarlyStopping:
         return forgiveness
 
     def forgive_both(self, mul=1, min_forgiveness=0):
-        forgiveness = self.calculate_forgiveness(self.still_counter, mul * self.both_forgiveness, self.still_counter)
+        forgiveness = self.calculate_forgiveness(self.both_counter, mul * self.both_forgiveness, self.both_counter)
         forgiveness = max(self.both_counter, max(forgiveness, min_forgiveness))
         self.both_counter -= forgiveness
         return forgiveness
