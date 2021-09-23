@@ -44,6 +44,7 @@ class EarlyStopping:
         self.rise_counter = 0
         self.still_counter = 0
         self.history_length = history_length or min(rise_patience, still_patience)
+        self.half_history_length = int(self.history_length / 2)
         self.train_loss_history = []
         self.val_loss_history = []
         self.best_val_loss = None
@@ -162,14 +163,15 @@ class EarlyStopping:
         val_loss_0, train_loss_0 = val_loss, train_loss
 
         mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
+        mean_val_loss_half = sum(self.val_loss_history[:self.half_history_length]) / self.half_history_length
         # min_delta_val_2 *= 0.75
 
         self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
         self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
 
         if self.val_loss is not None:
-            self.train_loss = train_loss = progressive_smooth(self.train_loss, self.smoothing, train_loss_0)
-            self.val_loss = val_loss = progressive_smooth(self.val_loss, self.smoothing, val_loss_0)
+            train_loss = progressive_smooth(self.train_loss, self.smoothing, train_loss_0)
+            val_loss = progressive_smooth(self.val_loss, self.smoothing, val_loss_0)
 
         if self.wait_counter < self.wait:
             self.wait_counter += 1
@@ -219,6 +221,8 @@ class EarlyStopping:
         val_fall_2 = delta_val_loss_2 < -min_delta_val_2
         val_still_2 = abs(delta_val_loss_2) < min_delta_val_2
 
+        val_decrease = val_loss < self.val_loss and val_loss < mean_val_loss_half
+
         if train_fall:
             self.update_best_train(train_loss)
         if delta_train_loss < min_delta_train:
@@ -227,12 +231,17 @@ class EarlyStopping:
         if val_rise:
             rise_increment = 1
             if val_still_2:
-                self.still_counter += 1
-                rise_increment *= (1.0 - 0.1)
+                still_increment = 0.85
+                if val_decrease:
+                    still_increment *= (1.0 - 0.15)
+                    rise_increment *= (1.0 - 0.1)
+                else:
+                    rise_increment *= (1.0 - 0.15)
+                self.still_counter += still_increment
             else:
                 self.forgive_still(self.small_forgiveness_mul)
                 if val_fall_2:
-                    rise_increment *= (1.0 - 0.5)
+                    rise_increment *= (1.0 - 0.4)
 
             self.rise_counter += rise_increment
         else:
@@ -240,8 +249,8 @@ class EarlyStopping:
             if val_still:
                 self.forgive_rise(self.small_forgiveness_mul)
                 still_increment = 1
-                if val_loss < self.val_loss_history[-1]:
-                    still_increment *= (1.0 - 0.1)
+                if val_decrease:
+                    still_increment *= (1.0 - 0.15)
                 self.still_counter += still_increment
             else:
                 self.update_best_val(val_loss)
@@ -273,6 +282,9 @@ class EarlyStopping:
 
             self.still_writer.flush()
             self.rise_writer.flush()
+
+        self.train_loss = train_loss
+        self.val_loss = val_loss
 
         self.increment_epoch(epoch)
 
