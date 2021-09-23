@@ -191,7 +191,7 @@ class EarlyStopping:
             self.active = True
             self.forgive_both(
                 mul=self.small_forgiveness_mul,
-                mini_forgiveness_mul=self.forgive_still(
+                min_forgiveness=self.forgive_still(
                     self.small_forgiveness_mul
                 ) + self.forgive_rise(
                     self.small_forgiveness_mul
