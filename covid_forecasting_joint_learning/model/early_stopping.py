@@ -169,7 +169,10 @@ class EarlyStopping:
         self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
         self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
 
-        if self.val_loss is not None:
+        if self.val_loss is None:
+            self.val_loss = val_loss
+            self.train_loss = train_loss
+        else:
             train_loss = progressive_smooth(self.train_loss, self.smoothing, train_loss_0)
             val_loss = progressive_smooth(self.val_loss, self.smoothing, val_loss_0)
 
