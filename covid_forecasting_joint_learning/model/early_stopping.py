@@ -9,7 +9,7 @@ class EarlyStopping:
         self,
         model,
         wait=50, wait_train_below_val=0,
-        rise_patience=13, still_patience=13, both_patience=26,
+        rise_patience=13, still_patience=13, both_patience=32,
         interval_percent=0.05,
         history_length=10,
         smoothing=0.05,
@@ -18,7 +18,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
-        both_forgiveness=None,
+        both_forgiveness=0.6,
         decent_forgiveness_mul=0.6,
         small_forgiveness_mul=0.4,
         mini_forgiveness_mul=0.2,
@@ -279,13 +279,13 @@ class EarlyStopping:
 
         if val_rise or val_still:
             if val_fall_1 or train_fall:
-                self.both_counter -= max(self.forgive_still(
+                max(self.forgive_still(
                     self.mini_forgiveness_mul
                 ), self.forgive_rise(
                     self.mini_forgiveness_mul
                 ))
             elif val_fall_2:
-                self.both_counter -= self.forgive_rise(self.mini_forgiveness_mul)
+                self.forgive_rise(self.mini_forgiveness_mul)
             if val_fall_1:
                 self.update_best_val_2(val_loss)
 
