@@ -18,7 +18,7 @@ class EarlyStopping:
         max_nan=None,
         rise_forgiveness=0.6,
         still_forgiveness=0.6,
-        both_forgiveness=None,
+        both_forgiveness=0.6,
         decent_forgiveness_mul=0.6,
         small_forgiveness_mul=0.4,
         mini_forgiveness_mul=0.2,
