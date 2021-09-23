@@ -289,6 +289,8 @@ class EarlyStopping:
             self.early_stop("rise", epoch)
         if self.still_counter >= self.still_patience:
             self.early_stop("still", epoch)
+        if self.both_counter >= self.both_patience:
+            self.early_stop("not falling", epoch)
 
         self.rise_counter = max(0, min(self.rise_patience, self.rise_counter))
         self.still_counter = max(0, min(self.still_patience, self.still_counter))
@@ -385,7 +387,7 @@ class EarlyStopping:
     def forgive_both(self, mul=1, min_forgiveness=0):
         forgiveness = self.calculate_forgiveness(self.still_counter, mul * self.both_forgiveness, self.still_counter)
         forgiveness = max(forgiveness, min_forgiveness)
-        self.still_counter -= forgiveness
+        self.both_counter -= forgiveness
         return forgiveness
 
     def forgive_wait(self):
