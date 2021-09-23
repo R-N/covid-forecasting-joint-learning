@@ -635,16 +635,18 @@ class ObjectiveModel:
         if device != "cpu":
             DataUtil.write_string("1", model_dir + device)
 
-    def posttrain_save_model(self, model_dir=None):
+    def posttrain_save_model(self, model_dir=None, save_state=False):
         model_dir = model_dir or self.model_dir
         if not model_dir:
             raise ValueError("Please provide or set model_dir")
 
-        torch.save(self.model.models.state_dict(), f"{model_dir}models.pt")
+        if save_state:
+            torch.save(self.model.models.state_dict(), f"{model_dir}models.pt")
         for i in range(len(self.model.targets)):
             target = self.model.targets[i]
             suffix = f"_{i}_{target.name}"
-            torch.save(target.model.state_dict(), f"{model_dir}target{suffix}.pt")
+            if save_state:
+                torch.save(target.model.state_dict(), f"{model_dir}target{suffix}.pt")
 
             input_attr = target.get_input_attr()
             input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, target.dataset_labels))
