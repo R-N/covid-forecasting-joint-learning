@@ -729,7 +729,7 @@ def make_objective(
     model_dir_id=None,
     device=None,
     write_graph=False,
-    early_stopping_interval_mode=2,
+    early_stopping_interval_mode=1,
     min_epoch=50,
     max_epoch=150,
     teacher_forcing=True,
