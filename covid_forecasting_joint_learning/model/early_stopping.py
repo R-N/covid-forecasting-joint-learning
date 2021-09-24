@@ -51,6 +51,8 @@ class EarlyStopping:
         self.half_history_length = int(self.history_length / 2)
         self.train_loss_history = []
         self.val_loss_history = []
+        self.train_loss_history_2 = []
+        self.val_loss_history_2 = []
         self.best_val_loss = None
         self.best_train_loss = None
         self.best_val_loss_2 = None
@@ -106,7 +108,7 @@ class EarlyStopping:
     def calculate_interval(self, val=None, history=None, *args, **kwargs):
         assert val is not None or history is not None
         if history is None:
-            history = self.val_loss_history if val else self.train_loss_history
+            history = self.val_loss_history_2 if val else self.train_loss_history_2
         mid, delta = self.interval_funcs[self.interval_mode](history, *args, **kwargs)
         delta = max(delta, self.eps)
         return mid, delta
@@ -167,11 +169,14 @@ class EarlyStopping:
 
         mean_train_loss, min_delta_train_2 = self.calculate_interval(val=True)
         mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
-        mean_val_loss_half = sum(self.val_loss_history[-self.half_history_length:]) / self.half_history_length
+        mean_val_loss = sum(self.val_loss_history[-self.history_length:]) / min(self.history_length, len(self.val_loss_history))
+        mean_val_loss_half = sum(self.val_loss_history[-self.half_history_length:]) / min(self.half_history_length, len(self.val_loss_history))
         # min_delta_val_2 *= 0.75
 
         self.train_loss_history = [*self.train_loss_history, train_loss][-self.history_length:]
         self.val_loss_history = [*self.val_loss_history, val_loss][-self.history_length:]
+        self.train_loss_history_2 = [*self.train_loss_history_2, train_loss][-self.history_length:]
+        self.val_loss_history_2 = [*self.val_loss_history_2, val_loss][-self.history_length:]
 
         if self.val_loss is None:
             self.val_loss = val_loss
