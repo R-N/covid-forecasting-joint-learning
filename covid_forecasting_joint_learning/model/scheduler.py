@@ -27,13 +27,17 @@ class OneCycleLR:
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.max_epochs
         )
+        self.init_state = deepcopy(self.scheduler.state_dict())
         return self.scheduler
+
+    def reset(self):
+        self.scheduler.load_state_dict(deepcopy(self.init_state))
 
     def step(self, step=1):
         ret = self.scheduler.step()
         self.epochs += 1
         if self.epochs >= self.max_epochs:
-            self.create()
+            self.reset()
         return ret
 
 class LRFinderResult:
