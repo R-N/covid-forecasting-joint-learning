@@ -8,6 +8,7 @@ from shutil import copy2, Error, copystat, rmtree
 from pathlib import Path
 from math import sqrt
 import scipy.stats as st
+from decimal import Decimal
 
 
 LINE_PROFILER = line_profiler.LineProfiler()
@@ -220,3 +221,12 @@ def calculate_prediction_interval(series, alpha=0.05, n=None):
     mul = st.norm.ppf(1.0 - alpha) if alpha >= 0 else 2 + alpha
     sigma = mul * stdev
     return mean, sigma
+
+def round_digits(x, n_digits=0):
+    if x is None:
+        return x
+    x = Decimal(x).as_tuple()
+    digits = sum([x.digits[i] * 10**(-i) for i in range(n_digits + 2)])
+    digits = round(digits, n_digits)
+    exp = x.exponent + len(x.digits) - 1
+    return digits * 10**exp

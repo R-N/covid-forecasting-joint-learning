@@ -1,12 +1,12 @@
 from torch.optim.lr_scheduler import OneCycleLR as _OneCycleLR
 from torch_lr_finder.lr_finder import ExponentialLR, LinearLR
 from copy import deepcopy
-from .util import calculate_prediction_interval
+from .util import calculate_prediction_interval, round_digits
 
 class OneCycleLR:
     def __init__(self, optimizer, max_lr, steps_per_epoch, epochs, div_factor=25):
         self.optimizer = optimizer
-        self.max_lr = max_lr
+        self.max_lr = self.max_lr
         self.div_factor = div_factor
         print("div_factor", self.div_factor)
         self.steps_per_epoch = steps_per_epoch
@@ -35,7 +35,6 @@ class OneCycleLR:
             self.create()
         return ret
 
-
 class LRFinderResult:
     def __init__(
         self,
@@ -50,6 +49,9 @@ class LRFinderResult:
         self.descend_lr_2 = descend_lr_2
         self.best_lr = best_lr
         self.last_lr = last_lr
+
+    def round_digits(self, x, n_digits=0):
+        return round_digits(x, n_digits=n_digits)
 
     @property
     def descend_lr(self):
