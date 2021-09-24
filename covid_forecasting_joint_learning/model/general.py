@@ -192,6 +192,7 @@ class ClusterModel:
             self.scheduler = self.create_scheduler()
 
     def clip_grad_norm(self, lr=None):
+        """
         lr = lr or self.lr
         autoclip_gradient(
             self.models,
@@ -199,6 +200,8 @@ class ClusterModel:
             clip_percentile=self.grad_clip_percentile,
             max_clip=max(1, min(2, 1 + log(lr, 10)))
         )
+        """
+        torch.nn.utils.clip_grad_norm_(self.models.parameters(), 1)
 
     @property
     def members(self):

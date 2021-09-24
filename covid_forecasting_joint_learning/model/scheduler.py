@@ -16,6 +16,10 @@ class OneCycleLR:
         self.scheduler = None
         self.create()
 
+    @property
+    def last_epoch(self):
+        return self.scheduler.last_epoch
+
     def get_last_lr(self):
         return self.scheduler.get_last_lr()
 

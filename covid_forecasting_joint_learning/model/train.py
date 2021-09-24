@@ -117,7 +117,7 @@ def eval(
     lr = None
     if scheduler:
         lr = scheduler.get_last_lr()[0]
-        print("lr", lr)
+        print("last_epoch", scheduler.last_epoch, "lr", lr)
     context = dummy_context if train else torch.no_grad()
     with context:
         for batch_id, samples in enumerate(joint_dataloader_enum):
@@ -177,7 +177,7 @@ def autoclip_gradient(model, grad_history, clip_percentile=10, min_clip=1, max_c
     obs_grad_norm = _get_grad_norm(model)
     grad_history.append(obs_grad_norm)
     clip_value = np.percentile(grad_history, clip_percentile)
-    clip_value_0 = clip_value
+    # clip_value_0 = clip_value
     if max_clip:
         clip_value = min(max_clip, clip_value)
     if min_clip:
