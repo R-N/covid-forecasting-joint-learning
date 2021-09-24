@@ -165,10 +165,10 @@ class ClusterModel:
         self.scheduler = None
         if lr is None:
             lr_result = self.find_lr(num_iter=int(0.5 * self.min_epoch))
-            lr = lr_result.round_digits(lr_result.best_lr)
+            lr = lr_result.best_lr
             div = lr_result.descend_lr
             if div:
-                self.div_factor = round(lr / lr_result.round_digits(div))
+                self.div_factor = lr / div
         self.set_lr(lr)
 
     def create_optimizer(self):
