@@ -35,7 +35,8 @@ class OneCycleLR:
         return self.scheduler
 
     def reset(self):
-        self.scheduler.load_state_dict(deepcopy(self.init_state))
+        # self.scheduler.load_state_dict(deepcopy(self.init_state))
+        self.last_epoch = -1
 
     def step(self, step=1):
         ret = self.scheduler.step()
