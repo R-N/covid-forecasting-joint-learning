@@ -6,7 +6,7 @@ from .util import calculate_prediction_interval, round_digits
 class OneCycleLR:
     def __init__(self, optimizer, max_lr, steps_per_epoch, epochs, div_factor=25):
         self.optimizer = optimizer
-        self.max_lr = self.max_lr
+        self.max_lr = max_lr
         self.div_factor = div_factor
         print("div_factor", self.div_factor)
         self.steps_per_epoch = steps_per_epoch
