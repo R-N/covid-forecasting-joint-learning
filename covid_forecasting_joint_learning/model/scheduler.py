@@ -144,7 +144,7 @@ class LRFinder(object):
             loss = self.objective(scheduler=lr_schedule)
 
             # Update the learning rate
-            lr = lr_schedule.get_lr()[0]
+            lr = lr_schedule.get_last_lr()
             self.lr_history.append(lr)
             # lr_schedule.step()
 
