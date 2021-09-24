@@ -176,6 +176,9 @@ class LRFinder(object):
                     if (not descended_2) and loss - first_loss < -min_delta:
                         descended_2 = True
                         self.descend_lr_2 = lr
+                else:
+                    print(f"Descended at {iteration+1} epoch")
+
                 delta = (loss - self.best_loss)
                 if min_delta_0 is None:
                     min_delta_0 = min_delta
@@ -202,7 +205,7 @@ class LRFinder(object):
 
             self.last_lr = lr
 
-        print(f"Learning rate search finished. best_lr: {self.best_lr} at {self.best_epoch} epochs with loss={self.best_loss} after {iteration+1}/{num_iter} epochs and last min_delta_0 {min_delta_0}")
+        print(f"Learning rate search finished. best_lr: {self.best_lr} at {self.best_epoch+1} epochs with loss={self.best_loss} after {iteration+1}/{num_iter} epochs and last min_delta_0 {min_delta_0}")
 
     def _set_learning_rate(self, new_lrs):
         if not isinstance(new_lrs, list):
