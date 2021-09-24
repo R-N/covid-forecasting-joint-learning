@@ -163,7 +163,7 @@ class ClusterModel:
         self.scheduler = None
         if lr is None:
             lr_result = self.find_lr(num_iter=self.min_epoch)
-            self.div_factor = lr_result.best_lr / lr_result.descend_lr
+            # self.div_factor = lr_result.best_lr / lr_result.descend_lr
             lr = lr_result.best_lr
         self.set_lr(lr)
 
@@ -205,7 +205,7 @@ class ClusterModel:
 
     def find_lr(self, loss_fn=None, **kwargs):
         def objective(scheduler):
-            return self.train(loss_fn=loss_fn)
+            return self.train(loss_fn=loss_fn)[0].item()
 
         lr_finder = LRFinder(objective, self.models, self.optimizer)
         lr_finder.range_test()

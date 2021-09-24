@@ -135,7 +135,7 @@ class LRFinder(object):
         history_length = history_length or int(num_iter * 0.25)
         descended_1, descended_2 = False, False
         rise_counter = 0
-        rise_patience = rise_patience or int(num_iter * 0.08)
+        rise_patience = rise_patience or int(num_iter * 0.1)
         min_delta_0 = None
         raw_loss_history = []
         for iteration in range(num_iter):
@@ -194,7 +194,7 @@ class LRFinder(object):
 
             self.last_lr = lr
 
-        print(f"Learning rate search finished. best_lr: {self.best_lr}. div_factor: {self.best_lr/self.result.descend_lr}")
+        print(f"Learning rate search finished. best_lr: {self.best_lr}")
 
     def _set_learning_rate(self, new_lrs):
         if not isinstance(new_lrs, list):
