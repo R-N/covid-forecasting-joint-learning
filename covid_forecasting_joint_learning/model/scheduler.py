@@ -1,5 +1,5 @@
 from torch.optim.lr_scheduler import OneCycleLR as _OneCycleLR
-from torch_lr_finder import ExponentialLR, LinearLR
+from torch_lr_finder.lr_finder import ExponentialLR, LinearLR
 from copy import deepcopy
 from .util import calculate_prediction_interval
 
