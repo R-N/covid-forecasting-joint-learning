@@ -25,10 +25,10 @@ class OneCycleLR:
         return self.scheduler
 
     def step(self, step=1):
-        if self.epochs + step > self.max_epochs:
-            self.create()
         ret = self.scheduler.step()
         self.epochs += 1
+        if self.epochs >= self.max_epochs:
+            self.create()
         return ret
 
 
