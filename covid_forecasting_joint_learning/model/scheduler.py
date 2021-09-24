@@ -202,7 +202,7 @@ class LRFinder(object):
 
             self.last_lr = lr
 
-        print(f"Learning rate search finished. best_lr: {self.best_lr} at {self.best_epoch} epochs with loss={self.best_loss} after {iteration+1}/{num_iter} epochs")
+        print(f"Learning rate search finished. best_lr: {self.best_lr} at {self.best_epoch} epochs with loss={self.best_loss} after {iteration+1}/{num_iter} epochs and last min_delta_0 {min_delta_0}")
 
     def _set_learning_rate(self, new_lrs):
         if not isinstance(new_lrs, list):
