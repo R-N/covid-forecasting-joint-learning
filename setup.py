@@ -39,6 +39,7 @@ setuptools.setup(
         "line_profiler",
         "mpld3",
         "lmfit",
-        "numdifftools"
+        "numdifftools",
+        "torch-lr-finder"
     ]
 )

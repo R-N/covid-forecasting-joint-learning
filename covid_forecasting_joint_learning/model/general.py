@@ -5,7 +5,7 @@ from .modules.main import SingleModel
 from .train import train, test
 import datetime
 from torch.utils.tensorboard import SummaryWriter
-from .scheduler import OneCycleLR
+from .scheduler import OneCycleLR, LRFinder
 from torch.optim import AdamW
 from contextlib import suppress
 from pathlib import Path
@@ -72,6 +72,7 @@ class ClusterModel:
         shared_mode=SharedMode.SHARED,
         optimizer_fn=AdamW,
         lr=1e-5,
+        div_factor=25,
         max_grad_norm=1.0,
         optimizer_kwargs={},
         train_kwargs={},
@@ -150,16 +151,39 @@ class ClusterModel:
         self._device = "cpu"
         self.to(device)
         self.optimizer_fn = optimizer_fn
-        self.lr = lr
-        optimizer_kwargs["lr"] = lr
         self.optimizer_kwargs = optimizer_kwargs
         self.train_kwargs = train_kwargs
 
         self.max_grad_norm = max_grad_norm
-        self.optimizer = self.create_optimizer()
         self.min_epoch = min_epoch
         self.grad_scaler = grad_scaler
-        self.scheduler = OneCycleLR(self.optimizer, lr=self.lr, steps_per_epoch=len(self.target.datasets[0]), epochs=int(0.5*self.min_epoch))
+        self.div_factor = div_factor
+        self.lr = None
+        if lr is None:
+            lr_result = self.find_lr(num_iter=self.min_epoch)
+            self.div_factor = lr_result.best_lr / lr_result.descend_lr
+            self.set_lr(lr_result.best_lr)
+        self.set_lr(lr)
+
+    def create_optimizer(self):
+        return self.optimizer_fn(self.models.parameters(), **self.optimizer_kwargs)
+
+    def create_scheduler(self):
+        return OneCycleLR(
+            self.optimizer,
+            max_lr=self.lr,
+            div_factor=self.div_factor,
+            steps_per_epoch=len(self.target.datasets[0]),
+            epochs=int(0.5 * self.min_epoch)
+        )
+
+    def set_lr(self, lr):
+        if lr != self.lr:
+            self.lr = lr
+            if self.optimizer_kwargs:
+                self.optimizer_kwargs["lr"] = lr
+            self.optimizer = self.create_optimizer()
+            self.scheduler = self.create_scheduler()
 
     def clip_grad_norm(self):
         torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
@@ -168,8 +192,6 @@ class ClusterModel:
     def members(self):
         return self.sources + self.targets
 
-    def create_optimizer(self):
-        return self.optimizer_fn(self.models.parameters(), **self.optimizer_kwargs)
 
     def freeze_shared(self, freeze=True):
         for k in self.members:
@@ -179,7 +201,16 @@ class ClusterModel:
         for k in self.members:
             self.k.model.freeze_private(freeze)
 
-    def train(self, grad_scaler=None, loss_fn=None):
+    def find_lr(self, loss_fn=None, **kwargs):
+        def objective():
+            return self.train(loss_fn=loss_fn)
+
+        lr_finder = LRFinder(objective, self.models, self.optimizer)
+        lr_finder.range_test()
+        lr_finder.reset_state()
+        return lr_finder.result
+
+    def train(self, grad_scaler=None, loss_fn=None, use_scheduler=True):
         grad_scaler = grad_scaler or self.grad_scaler
         # optimizer = self.create_optimizer()
         train_kwargs = self.train_kwargs
@@ -189,7 +220,7 @@ class ClusterModel:
             self.sources,
             self.targets,
             optimizer=self.optimizer,
-            scheduler=self.scheduler,
+            scheduler=self.scheduler if use_scheduler else None,
             key=lambda k: k.dataloaders[0],
             clip_grad_norm=self.clip_grad_norm,
             grad_scaler=grad_scaler,
@@ -570,6 +601,12 @@ class ObjectiveModel:
         writer.flush()
 
 
+    def set_lr(self, lr):
+        return self.model.set_lr(lr)
+
+    def find_lr(self):
+        return self.model.find_lr()
+
     def train(self, epoch=None, loss_fn=None):
         loss = self.model.train(loss_fn=loss_fn)
         epoch = epoch if epoch is not None else self.train_epoch
@@ -751,7 +788,7 @@ def make_objective(
     w0_means=(0.0, 1.0),
     w0_stds=(0.0, 0.5),
     booleans=(0, 1),
-    lrs=(1e-5, 1e-2),
+    # lrs=(1e-5, 1e-2),
     source_weights=(0.5, 1.0),
     batch_sizes=(0, 5),
     additional_past_lengths=(0, 4),
@@ -802,7 +839,7 @@ def make_objective(
             "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
             "residual_activation": trial.suggest_categorical("residual_activation", activation_keys),
             "combine_head_depth": trial.suggest_int("combine_head_depth", normal_fc_depths),
-            "lr": trial.suggest_float("lr", lrs),
+            # "lr": trial.suggest_float("lr", lrs),
             "batch_size": trial.suggest_int("batch_size", batch_sizes),
             "additional_past_length": trial.suggest_int("additional_past_length", additional_past_lengths),
             "seed_length": trial.suggest_int("seed_length", seed_lengths),

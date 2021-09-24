@@ -1,7 +1,8 @@
-from .util import progressive_smooth
+from .util import progressive_smooth, calculate_prediction_interval
 import scipy.stats as st
 from math import sqrt
 from torch.utils.tensorboard import SummaryWriter
+from copy import deepcopy
 
 
 class EarlyStopping:
@@ -118,12 +119,7 @@ class EarlyStopping:
         return mid, delta
 
     def calculate_interval_1(self, history):
-        mean = sum(history) / self.history_length
-        sum_err = sum([(mean - x)**2 for x in history])
-        stdev = sqrt(1 / (self.history_length - 2) * sum_err)
-        mul = st.norm.ppf(1.0 - self.interval_percent) if self.interval_percent >= 0 else 2 + self.interval_percent
-        sigma = mul * stdev
-        return mean, sigma
+        return calculate_prediction_interval(history, self.interval_percent)
 
     def log_stop(
         self,
@@ -347,7 +343,10 @@ class EarlyStopping:
         self.mid_train_loss, self.min_delta_train = self.calculate_interval(val=False)
 
     def update_state(self):
-        self.best_state = self.model.state_dict()
+        self.best_state = deepcopy(self.model.state_dict())
+
+    def load_best_state(self):
+        self.model.load_state_dict(deepcopy(self.best_state))
 
     def update_best_val_2(self, val_loss):
         self.best_val_loss_2 = val_loss

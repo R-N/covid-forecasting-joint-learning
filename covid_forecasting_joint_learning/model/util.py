@@ -6,6 +6,8 @@ import line_profiler
 import os
 from shutil import copy2, Error, copystat, rmtree
 from pathlib import Path
+from math import sqrt
+import scipy.stats as st
 
 
 LINE_PROFILER = line_profiler.LineProfiler()
@@ -209,3 +211,12 @@ def prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=False):
         if mkdir:
             Path(model_dir).mkdir(parents=True, exist_ok=True)
     return log_dir, model_dir
+
+def calculate_prediction_interval(series, alpha=0.05, n=None):
+    n = (n or len(series))
+    mean = sum(series) / n
+    sum_err = sum([(mean - x)**2 for x in series])
+    stdev = sqrt(1 / max(1, n - 2) * sum_err)
+    mul = st.norm.ppf(1.0 - alpha) if alpha >= 0 else 2 + alpha
+    sigma = mul * stdev
+    return mean, sigma
