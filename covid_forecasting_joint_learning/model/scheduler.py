@@ -146,6 +146,7 @@ class LRFinder(object):
         min_delta_0 = None
         raw_loss_history = []
         printed = False
+        wait = max(3, int(0.5 * history_length))
         for iteration in range(num_iter):
             # Train on batch and retrieve loss
             loss = self.objective(scheduler=lr_schedule)
@@ -170,7 +171,7 @@ class LRFinder(object):
 
                 mean, min_delta = calculate_prediction_interval(raw_loss_history[:history_length])
                 descended = descended_1 and descended_2
-                if not descended and iteration >= history_length:
+                if not descended and iteration >= wait:
                     if (not descended_1) and loss - mean < -min_delta:
                         descended_1 = True
                         self.descend_lr_1 = lr
@@ -187,7 +188,7 @@ class LRFinder(object):
                     rise = False
                 else:
                     rise = delta > min_delta_0
-                    if descended and rise and iteration >= history_length:
+                    if descended and rise and iteration >= wait:
                         rise_counter += 1
                     elif (not descended) or abs(delta) < min_delta_0:
                         min_delta_0 = min_delta
