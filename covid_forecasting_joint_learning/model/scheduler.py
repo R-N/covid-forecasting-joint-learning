@@ -172,10 +172,10 @@ class LRFinder(object):
                 if not descended and iteration >= 3:
                     if (not descended_1) and loss - mean < -min_delta:
                         self.descend_lr_1 = lr
-                        descended_1 = True
+                        descended_1 = iteration
                     if (not descended_2) and loss - first_loss < -min_delta:
                         self.descend_lr_2 = lr
-                        descended_2 = True
+                        descended_2 = iteration
                 if descended and not printed:
                     print(f"Descended at {iteration+1} epoch")
                     printed = True
@@ -207,6 +207,11 @@ class LRFinder(object):
             # Check if the loss has diverged; if it has, stop the test
 
             self.last_lr = lr
+
+        if descended_1 > self.best_epoch:
+            self.descend_lr_1 = None
+        if descended_2 > self.best_epoch:
+            self.descend_lr_2 = None
 
         print(f"Learning rate search finished. best_lr: {self.best_lr} at {self.best_epoch+1} epochs with loss={self.best_loss} after {iteration+1}/{num_iter} epochs and last min_delta_0 {min_delta_0}")
 
