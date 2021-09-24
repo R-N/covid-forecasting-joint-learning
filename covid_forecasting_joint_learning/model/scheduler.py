@@ -145,6 +145,7 @@ class LRFinder(object):
         rise_patience = rise_patience or int(num_iter * 0.075)
         min_delta_0 = None
         raw_loss_history = []
+        printed = False
         for iteration in range(num_iter):
             # Train on batch and retrieve loss
             loss = self.objective(scheduler=lr_schedule)
@@ -176,8 +177,9 @@ class LRFinder(object):
                     if (not descended_2) and loss - first_loss < -min_delta:
                         descended_2 = True
                         self.descend_lr_2 = lr
-                else:
+                elif not printed:
                     print(f"Descended at {iteration+1} epoch")
+                    printed = True
 
                 delta = (loss - self.best_loss)
                 if min_delta_0 is None:
