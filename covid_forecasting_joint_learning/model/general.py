@@ -374,6 +374,7 @@ class ObjectiveModel:
         shared_mode=SharedMode.SHARED,
         optimizer_fn=AdamW,
         lr=1e-5,
+        weight_decay=0.00975,
         loss_fn=MSSELoss(),
         source_weight=1.0,
         teacher_forcing=True,
@@ -587,7 +588,7 @@ class ObjectiveModel:
             lr=lr,
             min_epoch=min_epoch,
             optimizer_kwargs={
-                "weight_decay": 0.00975
+                "weight_decay": weight_decay
             },
             train_kwargs={
                 "loss_fn": loss_fn,
@@ -822,6 +823,7 @@ def make_objective(
     booleans=(0, 1),
     onecycles=0,
     lrs=(1e-5, 1e-2),
+    weight_decays=(0, 0.3),
     source_weights=(0.5, 1.0),
     batch_sizes=(0, 5),
     additional_past_lengths=(0, 4),
@@ -879,7 +881,8 @@ def make_objective(
             "past_cols": trial.suggest_int("past_cols", (0, len(past_cols) - 1)),
             "future_exo_cols": trial.suggest_int("future_exo_cols", (0, len(future_exo_cols) - 1)),
             "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing),
-            "update_hx": trial.suggest_categorical("update_hx", update_hx)
+            "update_hx": trial.suggest_categorical("update_hx", update_hx),
+            "weight_decay": trial.suggest_float("weight_decay", weight_decays),
         }
 
         onecycle = trial.suggest_categorical("onecycle", onecycles)
