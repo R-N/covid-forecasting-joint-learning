@@ -175,15 +175,15 @@ class LRFinder(object):
                     if (not descended_2) and loss - first_loss < -min_delta:
                         descended_2 = True
                         self.descend_lr_2 = lr
-
+                delta = (loss - self.best_loss)
                 if min_delta_0 is None:
                     min_delta_0 = min_delta
                     rise = False
                 else:
-                    rise = (loss - self.best_loss) > min_delta
+                    rise = delta > min_delta_0
                     if rise:
                         rise_counter += 1
-                    else:
+                    elif not (descended_1 and descended_2) or abs(delta) < min_delta_0:
                         min_delta_0 = min_delta
 
             if loss < self.best_loss:
