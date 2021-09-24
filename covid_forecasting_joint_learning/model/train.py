@@ -116,7 +116,7 @@ def eval(
 
     lr = None
     if scheduler:
-        lr = scheduler.get_lr()[0]
+        lr = scheduler.get_last_lr()[0]
     context = dummy_context if train else torch.no_grad()
     with context:
         for batch_id, samples in enumerate(joint_dataloader_enum):
