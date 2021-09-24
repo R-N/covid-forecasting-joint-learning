@@ -110,7 +110,7 @@ class LRFinder(object):
     def range_test(
         self,
         start_lr=None,
-        end_lr=100,
+        end_lr=10,
         num_iter=25,
         step_mode="exp",
         smooth_f=0.05,
