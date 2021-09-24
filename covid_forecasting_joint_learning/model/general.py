@@ -189,12 +189,13 @@ class ClusterModel:
             self.optimizer = self.create_optimizer()
             self.scheduler = self.create_scheduler()
 
-    def clip_grad_norm(self):
+    def clip_grad_norm(self, lr=None):
+        lr = lr or self.lr
         autoclip_gradient(
             self.models,
             self.grad_history,
             clip_percentile=self.grad_clip_percentile,
-            max_clip=max(10, self.lr)
+            max_clip=max(10, lr)
         )
 
     @property

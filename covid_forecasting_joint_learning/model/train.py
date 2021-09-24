@@ -22,6 +22,7 @@ def __eval(
     train=False,
     clip_grad_norm=None,
     grad_scaler=None,
+    lr=None
 ):
     if train:
         optimizer.zero_grad(set_to_none=True)
@@ -55,7 +56,7 @@ def __eval(
             loss.backward()
 
         if clip_grad_norm:
-            clip_grad_norm()
+            clip_grad_norm(lr=lr)
 
     target_losses = [target_losses[i + 1].detach().item() for i in range(len(target_losses))]
     return loss, target_loss, target_losses
@@ -113,10 +114,12 @@ def eval(
 
     stepped = False
 
+    lr = None
+    if scheduler:
+        lr = scheduler.get_lr()[0]
     context = dummy_context if train else torch.no_grad()
     with context:
         for batch_id, samples in enumerate(joint_dataloader_enum):
-
             loss_s, target_loss_s, target_losses = __eval(
                 samples,
                 loss_fn,
@@ -125,7 +128,8 @@ def eval(
                 train=train,
                 optimizer=optimizer,
                 clip_grad_norm=clip_grad_norm,
-                grad_scaler=grad_scaler
+                grad_scaler=grad_scaler,
+                lr=lr
             )
 
             avg_loss += loss_s
