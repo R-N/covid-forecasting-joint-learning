@@ -4,7 +4,7 @@ from copy import deepcopy
 from .util import calculate_prediction_interval, round_digits
 
 class OneCycleLR:
-    def __init__(self, optimizer, max_lr, steps_per_epoch, epochs, div_factor=25):
+    def __init__(self, optimizer, max_lr, steps_per_epoch, epochs, div_factor=25, autodecay=0.317):
         self.optimizer = optimizer
         self.max_lr = max_lr
         print("max_lr", self.max_lr)
@@ -14,6 +14,7 @@ class OneCycleLR:
         self.max_epochs = epochs
         self.epochs = 0
         self.scheduler = None
+        self.autodecay = autodecay
         self.create()
 
     @property
@@ -23,13 +24,25 @@ class OneCycleLR:
     def get_last_lr(self):
         return self.scheduler.get_last_lr()
 
-    def create(self):
+    def update_max_lf(self, max_lr, initial_lr=None, div_factor=None):
+        if div_factor:
+            self.div_factor = div_factor
+        elif initial_lr:
+            self.div_factor = max_lr / initial_lr
+        elif self.max_lr / div_factor < max_lr:
+            self.div_factor = max_lr / (self.max_lr / div_factor)
+        else:
+            self.div_factor = 25
+        self.max_lr = max_lr
+
+    def create(self, last_epoch=-1):
         self.scheduler = _OneCycleLR(
             self.optimizer,
             max_lr=self.max_lr,
             div_factor=self.div_factor,
             steps_per_epoch=self.steps_per_epoch,
-            epochs=self.max_epochs
+            epochs=self.max_epochs,
+            last_epoch=last_epoch
         )
         return self.scheduler
 
@@ -40,6 +53,8 @@ class OneCycleLR:
         """
         self.create()
         self.epochs = 0
+        if self.autodecay:
+            self.max_lr *= self.autodecay
 
     def step(self):
         ret = self.scheduler.step()
