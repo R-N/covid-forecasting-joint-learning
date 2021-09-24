@@ -99,6 +99,7 @@ class LRFinder(object):
         self.descend_lr_2 = None
         self.best_lr = None
         self.last_lr = None
+        self.best_epoch = None
 
     def range_test(
         self,
@@ -182,6 +183,7 @@ class LRFinder(object):
             if loss < self.best_loss:
                 self.best_lr = lr
                 self.best_loss = loss
+                self.best_epoch = iteration
 
             raw_loss_history.append(loss_0)
             self.loss_history.append(loss)
@@ -194,7 +196,7 @@ class LRFinder(object):
 
             self.last_lr = lr
 
-        print(f"Learning rate search finished. best_lr: {self.best_lr} after {iteration+1}/{num_iter} epochs with loss={self.best_loss}")
+        print(f"Learning rate search finished. best_lr: {self.best_lr} at {self.best_epoch} epochs with loss={self.best_loss} after {iteration+1}/{num_iter} epochs")
 
     def _set_learning_rate(self, new_lrs):
         if not isinstance(new_lrs, list):
