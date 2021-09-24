@@ -99,7 +99,7 @@ class LRFinder(object):
         self.descend_lr_2 = None
         self.best_lr = None
         self.last_lr = None
-        self.best_epoch = None
+        self.best_epoch = 0
 
     def range_test(
         self,
