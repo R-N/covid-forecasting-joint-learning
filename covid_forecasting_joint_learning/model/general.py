@@ -195,7 +195,7 @@ class ClusterModel:
             self.models,
             self.grad_history,
             clip_percentile=self.grad_clip_percentile,
-            max_clip=max(10, lr)
+            max_clip=max(1, min(10, lr))
         )
 
     @property
