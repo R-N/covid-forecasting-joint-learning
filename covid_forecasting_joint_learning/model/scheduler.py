@@ -114,7 +114,7 @@ class LRFinder(object):
         diverge_th=5,
         accumulation_steps=1,
         history_length=None,
-        rise_patience=None
+        rise_patience=1
     ):
         self._clear_history()
 
