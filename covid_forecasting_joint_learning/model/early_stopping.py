@@ -236,10 +236,11 @@ class EarlyStopping:
         val_fall_2 = delta_val_loss_2 < -min_delta_val_2
         val_still_2 = abs(delta_val_loss_2) < min_delta_val_2
 
-        if not train_still_2:
-            del self.train_loss_history[-1]
-        if not val_still_2:
-            del self.val_loss_history[-1]
+        if self.wait_counter > 3:
+            if not train_still_2:
+                del self.train_loss_history[-1]
+            if not val_still_2:
+                del self.val_loss_history[-1]
 
         val_decrease = val_loss < self.val_loss and val_loss < mean_val_loss_half
 
