@@ -140,12 +140,12 @@ class LRFinder(object):
         raw_loss_history = []
         for iteration in range(num_iter):
             # Train on batch and retrieve loss
-            loss = self.objective()
+            loss = self.objective(scheduler=lr_schedule)
 
             # Update the learning rate
             lr = lr_schedule.get_lr()[0]
             self.lr_history.append(lr)
-            lr_schedule.step()
+            # lr_schedule.step()
 
             # Track the best loss and smooth it if smooth_f is specified
             loss_0 = loss

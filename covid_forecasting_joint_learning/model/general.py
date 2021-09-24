@@ -160,6 +160,7 @@ class ClusterModel:
         self.div_factor = div_factor
         self.lr = None
         self.optimizer = self.create_optimizer()
+        self.scheduler = self.create_scheduler()
         if lr is None:
             lr_result = self.find_lr(num_iter=self.min_epoch)
             self.div_factor = lr_result.best_lr / lr_result.descend_lr
@@ -203,7 +204,7 @@ class ClusterModel:
             self.k.model.freeze_private(freeze)
 
     def find_lr(self, loss_fn=None, **kwargs):
-        def objective():
+        def objective(scheduler):
             return self.train(loss_fn=loss_fn)
 
         lr_finder = LRFinder(objective, self.models, self.optimizer)
@@ -211,8 +212,9 @@ class ClusterModel:
         lr_finder.reset_state()
         return lr_finder.result
 
-    def train(self, grad_scaler=None, loss_fn=None, use_scheduler=True):
+    def train(self, grad_scaler=None, loss_fn=None, scheduler=None):
         grad_scaler = grad_scaler or self.grad_scaler
+        scheduler = scheduler or self.scheduler
         # optimizer = self.create_optimizer()
         train_kwargs = self.train_kwargs
         if loss_fn:
@@ -221,7 +223,7 @@ class ClusterModel:
             self.sources,
             self.targets,
             optimizer=self.optimizer,
-            scheduler=self.scheduler if use_scheduler else None,
+            scheduler=scheduler,
             key=lambda k: k.dataloaders[0],
             clip_grad_norm=self.clip_grad_norm,
             grad_scaler=grad_scaler,
