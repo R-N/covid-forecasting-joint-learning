@@ -37,8 +37,12 @@ class OneCycleLR:
     def reset(self):
         # self.scheduler.load_state_dict(deepcopy(self.init_state))
         self.scheduler.last_epoch = -1
+        print(self.scheduler._step_count)
+        self.scheduler._step_count = 0
+        self.scheduler.optimizer._step_count = 0
+        self.step()
 
-    def step(self, step=1):
+    def step(self):
         ret = self.scheduler.step()
         self.epochs += 1
         if self.epochs >= self.max_epochs:
