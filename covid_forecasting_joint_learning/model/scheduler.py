@@ -58,14 +58,14 @@ class OneCycleLR:
         self.scheduler.last_epoch = -1
         self.scheduler.step()
         """
-        self.create()
-        self.epochs = 0
         if self.autodecay:
             self.update_max_lr(
                 self.initial_lr * (
                     self.div_factor ** self.autodecay
                 )
             )
+        self.create()
+        self.epochs = 0
 
     def step(self):
         ret = self.scheduler.step()
