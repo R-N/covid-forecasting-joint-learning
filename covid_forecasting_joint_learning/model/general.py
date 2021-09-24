@@ -179,7 +179,7 @@ class ClusterModel:
             max_lr=self.lr,
             div_factor=self.div_factor,
             steps_per_epoch=len(self.target.datasets[0]),
-            epochs=int(0.5 * self.min_epoch)
+            epochs=int(self.min_epoch)
         )
 
     def set_lr(self, lr):
