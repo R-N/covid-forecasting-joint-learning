@@ -104,7 +104,7 @@ class LRFinder(object):
     def range_test(
         self,
         start_lr=None,
-        end_lr=10,
+        end_lr=1000,
         num_iter=25,
         step_mode="exp",
         smooth_f=0.05,
@@ -136,7 +136,7 @@ class LRFinder(object):
         history_length = history_length or int(num_iter * 0.25)
         descended_1, descended_2 = False, False
         rise_counter = 0
-        rise_patience = rise_patience or int(num_iter * 0.1)
+        rise_patience = rise_patience or int(num_iter * 0.075)
         min_delta_0 = None
         raw_loss_history = []
         for iteration in range(num_iter):
@@ -189,7 +189,6 @@ class LRFinder(object):
             self.loss_history.append(loss)
 
             if rise_counter >= rise_patience or loss > diverge_th * self.best_loss:
-                print("Stopping early, the loss has diverged")
                 break
 
             # Check if the loss has diverged; if it has, stop the test

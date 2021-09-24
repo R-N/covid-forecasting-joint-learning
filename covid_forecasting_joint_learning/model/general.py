@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from .modules.representation import check_conv_kwargs
 from .modules.main import SingleModel
-from .train import train, test
+from .train import train, test, autoclip_gradient
 import datetime
 from torch.utils.tensorboard import SummaryWriter
 from .scheduler import OneCycleLR, LRFinder
@@ -73,7 +73,7 @@ class ClusterModel:
         optimizer_fn=AdamW,
         lr=1e-5,
         div_factor=25,
-        max_grad_norm=1.0,
+        grad_clip_percentile=10,
         optimizer_kwargs={},
         train_kwargs={},
         grad_scaler=None,
@@ -154,7 +154,8 @@ class ClusterModel:
         self.optimizer_kwargs = optimizer_kwargs
         self.train_kwargs = train_kwargs
 
-        self.max_grad_norm = max_grad_norm
+        self.grad_history = []
+        self.grad_clip_percentile = grad_clip_percentile
         self.min_epoch = min_epoch
         self.grad_scaler = grad_scaler
         self.div_factor = div_factor
@@ -163,7 +164,8 @@ class ClusterModel:
         self.scheduler = None
         if lr is None:
             lr_result = self.find_lr(num_iter=self.min_epoch)
-            # self.div_factor = lr_result.best_lr / lr_result.descend_lr
+            if lr_result.descend_lr:
+                self.div_factor = lr_result.best_lr / lr_result.descend_lr
             lr = lr_result.best_lr
         self.set_lr(lr)
 
@@ -188,7 +190,7 @@ class ClusterModel:
             self.scheduler = self.create_scheduler()
 
     def clip_grad_norm(self):
-        torch.nn.utils.clip_grad_norm_(self.models.parameters(), self.max_grad_norm)
+        autoclip_gradient(self.models, self.grad_history, clip_percentile=self.grad_clip_percentile)
 
     @property
     def members(self):
@@ -205,14 +207,18 @@ class ClusterModel:
 
     def find_lr(self, loss_fn=None, **kwargs):
         def objective(scheduler):
-            return self.train(loss_fn=loss_fn)[0].item()
+            return self.train(
+                loss_fn=loss_fn,
+                scheduler=scheduler,
+                clip_grad_norm=False
+            )[0].item()
 
         lr_finder = LRFinder(objective, self.models, self.optimizer)
         lr_finder.range_test(**kwargs)
         lr_finder.reset_state()
         return lr_finder.result
 
-    def train(self, grad_scaler=None, loss_fn=None, scheduler=None):
+    def train(self, grad_scaler=None, loss_fn=None, scheduler=None, clip_grad_norm=True):
         grad_scaler = grad_scaler or self.grad_scaler
         scheduler = scheduler or self.scheduler
         # optimizer = self.create_optimizer()
@@ -225,7 +231,7 @@ class ClusterModel:
             optimizer=self.optimizer,
             scheduler=scheduler,
             key=lambda k: k.dataloaders[0],
-            clip_grad_norm=self.clip_grad_norm,
+            clip_grad_norm=self.clip_grad_norm if clip_grad_norm else None,
             grad_scaler=grad_scaler,
             **train_kwargs
         )

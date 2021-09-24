@@ -3,6 +3,7 @@ from torch import nn
 import contextlib
 from .loss import MSSELoss
 from .util import LINE_PROFILER
+import numpy as np
 
 
 dummy_context = contextlib.nullcontext()
@@ -156,3 +157,19 @@ def train(*args, **kwargs):
 
 def test(*args, **kwargs):
     return eval(*args, train=False, **kwargs)
+
+def _get_grad_norm(model):
+    total_norm = 0
+    for p in model.parameters():
+        if p.grad is not None:
+            param_norm = p.grad.data.norm(2)
+            total_norm += param_norm.item() ** 2
+    total_norm = total_norm ** (1. / 2)
+    return total_norm
+
+# https://github.com/pseeth/autoclip
+def autoclip_gradient(model, grad_history, clip_percentile=10):
+    obs_grad_norm = _get_grad_norm(model)
+    grad_history.append(obs_grad_norm)
+    clip_value = np.percentile(grad_history, clip_percentile)
+    torch.nn.utils.clip_grad_norm_(model.parameters(), clip_value)
