@@ -75,7 +75,9 @@ class ClusterModel:
         lr=1e-5,
         div_factor=25,
         grad_clip_percentile=10,
-        optimizer_kwargs={},
+        optimizer_kwargs={
+            "weight_decay": 0.00975
+        },
         train_kwargs={},
         grad_scaler=None,
         min_epoch=50,
@@ -172,7 +174,10 @@ class ClusterModel:
         self.set_lr(lr)
 
     def create_optimizer(self):
-        return self.optimizer_fn(self.models.parameters(), **self.optimizer_kwargs)
+        return self.optimizer_fn(
+            self.models.parameters(),
+            **self.optimizer_kwargs
+        )
 
     def create_scheduler(self):
         return OneCycleLR(
@@ -361,7 +366,7 @@ class ObjectiveModel:
         source_pick=SourcePick.ALL,
         private_mode=SharedMode.PRIVATE,
         shared_mode=SharedMode.SHARED,
-        optimizer_fn=torch.optim.Adam,
+        optimizer_fn=AdamW,
         lr=1e-5,
         loss_fn=MSSELoss(),
         source_weight=1.0,
@@ -576,6 +581,7 @@ class ObjectiveModel:
             lr=lr,
             min_epoch=min_epoch,
             optimizer_kwargs={
+                "weight_decay": 0.00975
             },
             train_kwargs={
                 "loss_fn": loss_fn,
