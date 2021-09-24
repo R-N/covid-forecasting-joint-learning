@@ -165,6 +165,7 @@ class EarlyStopping:
 
         val_loss_0, train_loss_0 = val_loss, train_loss
 
+        mean_train_loss, min_delta_train_2 = self.calculate_interval(val=True)
         mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
         mean_val_loss_half = sum(self.val_loss_history[-self.half_history_length:]) / self.half_history_length
         # min_delta_val_2 *= 0.75
@@ -229,9 +230,16 @@ class EarlyStopping:
         val_fall = delta_val_loss < -min_delta_val
         val_fall_1 = val_loss < self.best_val_loss_2
 
+        delta_train_loss_2 = train_loss - mean_train_loss
+        train_still_2 = (delta_train_loss_2) < min_delta_train_2
         delta_val_loss_2 = val_loss - mean_val_loss
         val_fall_2 = delta_val_loss_2 < -min_delta_val_2
         val_still_2 = abs(delta_val_loss_2) < min_delta_val_2
+
+        if not train_still_2:
+            del self.train_loss_history[-1]
+        if not val_still_2:
+            del self.val_loss_history[-1]
 
         val_decrease = val_loss < self.val_loss and val_loss < mean_val_loss_half
 
