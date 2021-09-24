@@ -372,7 +372,7 @@ class EarlyStopping:
         epoch = epoch if epoch is not None else self.epoch
         self.stop()
         if self.debug >= 1:
-            print(f"INFO: Early stopping due to {reason} at epoch {epoch}")
+            print(f"INFO: Early stopping due to {reason} at epoch {epoch} with best_loss_2={self.best_loss_2}")
 
     def calculate_forgiveness(self, counter, forgiveness, patience):
         return min(counter, forgiveness * patience)
