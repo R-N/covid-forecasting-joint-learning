@@ -40,7 +40,7 @@ class OneCycleLR:
         print(self.scheduler._step_count)
         self.scheduler._step_count = 0
         self.scheduler.optimizer._step_count = 0
-        self.step()
+        self.scheduler.step()
 
     def step(self):
         ret = self.scheduler.step()
