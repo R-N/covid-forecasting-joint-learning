@@ -208,7 +208,7 @@ class ClusterModel:
             return self.train(loss_fn=loss_fn)[0].item()
 
         lr_finder = LRFinder(objective, self.models, self.optimizer)
-        lr_finder.range_test()
+        lr_finder.range_test(**kwargs)
         lr_finder.reset_state()
         return lr_finder.result
 
