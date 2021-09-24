@@ -20,6 +20,7 @@ from copy import deepcopy
 from ..data import cols as DataCol
 from .loss import MSSELoss, NaNPredException, NaNLossException
 import numpy as np
+from math import sqrt, log
 
 from .util import LINE_PROFILER
 
@@ -163,7 +164,7 @@ class ClusterModel:
         self.optimizer = self.create_optimizer()
         self.scheduler = None
         if lr is None:
-            lr_result = self.find_lr(num_iter=self.min_epoch)
+            lr_result = self.find_lr(num_iter=int(0.5 * self.min_epoch))
             lr = lr_result.round_digits(lr_result.best_lr)
             div = lr_result.descend_lr
             if div:
@@ -178,7 +179,7 @@ class ClusterModel:
             self.optimizer,
             max_lr=self.lr,
             div_factor=self.div_factor,
-            steps_per_epoch=len(self.target.datasets[0]),
+            steps_per_epoch=len(self.target.dataloders[0]),
             epochs=int(self.min_epoch)
         )
 
@@ -196,7 +197,7 @@ class ClusterModel:
             self.models,
             self.grad_history,
             clip_percentile=self.grad_clip_percentile,
-            max_clip=max(1, min(2, lr))
+            max_clip=max(1, min(2, 1 + log(lr, 10)))
         )
 
     @property
