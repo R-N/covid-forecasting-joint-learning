@@ -840,6 +840,7 @@ def make_objective(
             "residual_activation": trial.suggest_categorical("residual_activation", activation_keys),
             "combine_head_depth": trial.suggest_int("combine_head_depth", normal_fc_depths),
             # "lr": trial.suggest_float("lr", lrs),
+            "lr": None,
             "batch_size": trial.suggest_int("batch_size", batch_sizes),
             "additional_past_length": trial.suggest_int("additional_past_length", additional_past_lengths),
             "seed_length": trial.suggest_int("seed_length", seed_lengths),
