@@ -820,6 +820,7 @@ def make_objective(
     w0_means=(0.0, 1.0),
     w0_stds=(0.0, 0.5),
     booleans=(0, 1),
+    onecycles=0,
     lrs=(1e-5, 1e-2),
     source_weights=(0.5, 1.0),
     batch_sizes=(0, 5),
@@ -881,8 +882,7 @@ def make_objective(
             "update_hx": trial.suggest_categorical("update_hx", update_hx)
         }
 
-        onecycle = trial.suggest_categorical("onecycle", booleans)
-        onecycle = 0
+        onecycle = trial.suggest_categorical("onecycle", onecycles)
         if onecycle:
             params["lr"] = None
         else:
