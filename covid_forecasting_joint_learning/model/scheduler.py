@@ -139,7 +139,7 @@ class LRFinder(object):
         if smooth_f < 0 or smooth_f >= 1:
             raise ValueError("smooth_f is outside the range [0, 1[")
 
-        history_length = history_length or int(num_iter * 0.25)
+        history_length = history_length or int(num_iter * 0.2)
         descended_1, descended_2 = False, False
         rise_counter = 0
         rise_patience = rise_patience or int(num_iter * 0.075)
@@ -163,21 +163,19 @@ class LRFinder(object):
                 self.best_loss = loss
                 self.best_loss_1 = loss
                 first_loss = loss
-                self.loss_history.append(loss)
             else:
                 if smooth_f > 0:
                     loss = smooth_f * loss + (1 - smooth_f) * self.loss_history[-1]
-                self.loss_history.append(loss)
 
                 mean, min_delta = calculate_prediction_interval(raw_loss_history[:history_length])
                 descended = descended_1 and descended_2
-                if not descended and iteration >= wait:
+                if not descended and iteration >= 3:
                     if (not descended_1) and loss - mean < -min_delta:
-                        descended_1 = True
                         self.descend_lr_1 = lr
+                        descended_1 = True
                     if (not descended_2) and loss - first_loss < -min_delta:
-                        descended_2 = True
                         self.descend_lr_2 = lr
+                        descended_2 = True
                 if descended and not printed:
                     print(f"Descended at {iteration+1} epoch")
                     printed = True
@@ -192,6 +190,8 @@ class LRFinder(object):
                         rise_counter += 1
                     elif (not descended) or abs(delta) < min_delta_0:
                         min_delta_0 = min_delta
+                    else:
+                        min_delta_0 = min(min_delta_0, min_delta)
 
             if loss < self.best_loss:
                 self.best_lr = lr
