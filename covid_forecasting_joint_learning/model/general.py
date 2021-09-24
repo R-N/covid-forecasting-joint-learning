@@ -821,7 +821,7 @@ def make_objective(
     w0_means=(0.0, 1.0),
     w0_stds=(0.0, 0.5),
     booleans=(0, 1),
-    onecycles=0,
+    onecycles=(0, 1),
     lrs=(1e-5, 1e-2),
     weight_decays=(0, 0.3),
     source_weights=(0.5, 1.0),
