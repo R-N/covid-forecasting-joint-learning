@@ -214,7 +214,7 @@ def prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=False):
 
 def calculate_prediction_interval(series, alpha=0.05, n=None):
     n = (n or len(series))
-    mean = sum(series) / n
+    mean = sum(series) / max(1, n)
     sum_err = sum([(mean - x)**2 for x in series])
     stdev = sqrt(1 / max(1, n - 2) * sum_err)
     mul = st.norm.ppf(1.0 - alpha) if alpha >= 0 else 2 + alpha
