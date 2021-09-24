@@ -14,6 +14,9 @@ class OneCycleLR:
         self.scheduler = None
         self.create()
 
+    def get_last_lr(self):
+        return self.scheduler.get_last_lr()
+
     def create(self):
         self.scheduler = _OneCycleLR(
             self.optimizer,
