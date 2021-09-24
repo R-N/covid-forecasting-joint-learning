@@ -176,9 +176,10 @@ def autoclip_gradient(model, grad_history, clip_percentile=10, min_clip=1, max_c
     obs_grad_norm = _get_grad_norm(model)
     grad_history.append(obs_grad_norm)
     clip_value = np.percentile(grad_history, clip_percentile)
-    print("clip_value", clip_value)
+    clip_value_0 = clip_value
     if min_clip:
         clip_value = max(min_clip, clip_value)
     if max_clip:
         clip_value = min(max_clip, clip_value)
+    print("clip_value", clip_value_0, clip_value)
     torch.nn.utils.clip_grad_norm_(model.parameters(), clip_value)
