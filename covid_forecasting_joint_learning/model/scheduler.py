@@ -4,11 +4,11 @@ from copy import deepcopy
 from .util import calculate_prediction_interval, round_digits
 
 class OneCycleLR:
-    def __init__(self, optimizer, max_lr, steps_per_epoch, epochs, div_factor=25, autodecay=0.317):
+    def __init__(self, optimizer, max_lr, steps_per_epoch, epochs, div_factor=25, autodecay=0.5):
         self.optimizer = optimizer
         self.max_lr = max_lr
-        print("max_lr", self.max_lr)
         self.div_factor = max(25, div_factor)
+        print("max_lr", self.max_lr)
         print("div_factor", self.div_factor)
         self.steps_per_epoch = steps_per_epoch
         self.max_epochs = epochs
@@ -24,16 +24,19 @@ class OneCycleLR:
     def get_last_lr(self):
         return self.scheduler.get_last_lr()
 
-    def update_max_lf(self, max_lr, initial_lr=None, div_factor=None):
+    def update_max_lr(self, max_lr, initial_lr=None, div_factor=None):
         if div_factor:
             self.div_factor = div_factor
         elif initial_lr:
             self.div_factor = max_lr / initial_lr
-        elif self.max_lr / div_factor < max_lr:
-            self.div_factor = max_lr / (self.max_lr / div_factor)
+        elif self.initial_lr < max_lr:
+            self.div_factor = max_lr / self.initial_lr
+            self.div_factor = max(self.div_factor, 25)
         else:
             self.div_factor = 25
         self.max_lr = max_lr
+        print("max_lr", self.max_lr)
+        print("div_factor", self.div_factor)
 
     def create(self, last_epoch=-1):
         self.scheduler = _OneCycleLR(
@@ -46,6 +49,10 @@ class OneCycleLR:
         )
         return self.scheduler
 
+    @property
+    def initial_lr(self):
+        return self.max_lr / self.div_factor
+
     def reset(self):
         """
         self.scheduler.last_epoch = -1
@@ -54,7 +61,11 @@ class OneCycleLR:
         self.create()
         self.epochs = 0
         if self.autodecay:
-            self.max_lr *= self.autodecay
+            self.update_max_lr(
+                self.initial_lr * (
+                    self.div_factor ** self.autodecay
+                )
+            )
 
     def step(self):
         ret = self.scheduler.step()
