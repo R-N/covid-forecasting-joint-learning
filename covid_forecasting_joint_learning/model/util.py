@@ -9,6 +9,7 @@ from pathlib import Path
 from math import sqrt
 import scipy.stats as st
 from decimal import Decimal
+from math import floor
 
 
 LINE_PROFILER = line_profiler.LineProfiler()
@@ -227,6 +228,9 @@ def round_digits(x, n_digits=0):
         return x
     x = Decimal(x).as_tuple()
     digits = sum([x.digits[i] * 10**(-i) for i in range(n_digits + 2)])
-    digits = round(digits, n_digits)
+    if n_digits == 0:
+        digits = floor(digits)
+    else:
+        digits = round(digits, n_digits)
     exp = x.exponent + len(x.digits) - 1
     return digits * 10**exp
