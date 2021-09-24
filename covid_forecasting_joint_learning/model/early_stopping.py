@@ -320,7 +320,7 @@ class EarlyStopping:
         if self.max_epoch and epoch >= self.max_epoch:
             self.stop()
             if self.debug >= 1:
-                print(f"INFO: Stopping at max epoch {epoch}")
+                print(f"INFO: Stopping at max epoch {epoch} with best_val_loss_2={self.best_val_loss_2}")
 
         self.epoch = epoch + 1
         return self.epoch
