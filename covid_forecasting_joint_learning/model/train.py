@@ -172,7 +172,7 @@ def _get_grad_norm(model):
     return total_norm
 
 # https://github.com/pseeth/autoclip
-def autoclip_gradient(model, grad_history, clip_percentile=10, min_clip=1, max_clip=1000):
+def autoclip_gradient(model, grad_history, clip_percentile=10, min_clip=1, max_clip=10):
     obs_grad_norm = _get_grad_norm(model)
     grad_history.append(obs_grad_norm)
     clip_value = np.percentile(grad_history, clip_percentile)
