@@ -169,7 +169,7 @@ class LRFinder(object):
 
                 mean, min_delta = calculate_prediction_interval(raw_loss_history[:history_length])
                 descended = descended_1 and descended_2
-                if not descended:
+                if not descended and iteration >= history_length:
                     if (not descended_1) and loss - mean < -min_delta:
                         descended_1 = True
                         self.descend_lr_1 = lr
@@ -185,7 +185,7 @@ class LRFinder(object):
                     rise = False
                 else:
                     rise = delta > min_delta_0
-                    if descended and rise:
+                    if descended and rise and iteration >= history_length:
                         rise_counter += 1
                     elif (not descended) or abs(delta) < min_delta_0:
                         min_delta_0 = min_delta
