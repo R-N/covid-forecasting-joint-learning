@@ -167,11 +167,13 @@ class ClusterModel:
         self.scheduler = None
         if lr is None:
             lr_result = self.find_lr(num_iter=int(0.5 * self.min_epoch))
-            lr = lr_result.best_lr
+            lr = min(1, lr_result.best_lr)
             div = lr_result.descend_lr
             if div:
                 self.div_factor = lr / div
-        self.set_lr(lr)
+            self.set_onecycle(lr)
+        else:
+            self.set_lr(lr)
 
     def create_optimizer(self):
         return self.optimizer_fn(
@@ -193,7 +195,11 @@ class ClusterModel:
             self.lr = lr
             if self.optimizer_kwargs:
                 self.optimizer_kwargs["lr"] = lr
-            self.optimizer = self.create_optimizer()
+                self.optimizer = self.create_optimizer()
+
+    def set_onecycle(self, lr):
+        if lr != self.lr:
+            self.set_lr(lr)
             self.scheduler = self.create_scheduler()
 
     def clip_grad_norm(self, lr=None):
@@ -814,7 +820,7 @@ def make_objective(
     w0_means=(0.0, 1.0),
     w0_stds=(0.0, 0.5),
     booleans=(0, 1),
-    # lrs=(1e-5, 1e-2),
+    lrs=(1e-5, 1e-2),
     source_weights=(0.5, 1.0),
     batch_sizes=(0, 5),
     additional_past_lengths=(0, 4),
@@ -865,8 +871,6 @@ def make_objective(
             "fc_activation": trial.suggest_categorical("fc_activation", activation_keys),
             "residual_activation": trial.suggest_categorical("residual_activation", activation_keys),
             "combine_head_depth": trial.suggest_int("combine_head_depth", normal_fc_depths),
-            # "lr": trial.suggest_float("lr", lrs),
-            "lr": None,
             "batch_size": trial.suggest_int("batch_size", batch_sizes),
             "additional_past_length": trial.suggest_int("additional_past_length", additional_past_lengths),
             "seed_length": trial.suggest_int("seed_length", seed_lengths),
@@ -876,6 +880,14 @@ def make_objective(
             "teacher_forcing": trial.suggest_categorical("teacher_forcing", teacher_forcing),
             "update_hx": trial.suggest_categorical("update_hx", update_hx)
         }
+
+        onecycle = trial.suggest_categorical("onecycle", booleans)
+        onecycle = 0
+        if onecycle:
+            params["lr"] = None
+        else:
+            params["lr"] = trial.suggest_float("lr", lrs)
+
         use_exo = bool(params["future_exo_cols"])
         params["use_exo"] = use_exo
 
