@@ -143,7 +143,7 @@ def eval(
 
                 optimizer.zero_grad(set_to_none=True)
 
-    if train and scheduler and stepped and False:
+    if train and scheduler and stepped:
         scheduler.step()
 
     avg_loss /= size
