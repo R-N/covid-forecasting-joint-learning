@@ -227,7 +227,8 @@ def round_digits(x, n_digits=0):
     if x is None:
         return x
     x = Decimal(x).as_tuple()
-    digits = sum([x.digits[i] * 10**(-i) for i in range(n_digits + 2)])
+    n = min(len(x.digits), n_digits + 2)
+    digits = sum([x.digits[i] * 10**(-i) for i in range(n)])
     if n_digits == 0:
         digits = floor(digits)
     else:
