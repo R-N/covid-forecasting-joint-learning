@@ -31,15 +31,14 @@ class OneCycleLR:
             steps_per_epoch=self.steps_per_epoch,
             epochs=self.max_epochs
         )
-        self.init_state = deepcopy(self.scheduler.state_dict())
         return self.scheduler
 
     def reset(self):
-        # self.scheduler.load_state_dict(deepcopy(self.init_state))
+        """
         self.scheduler.last_epoch = -1
-        # self.scheduler._step_count = 0
-        # self.scheduler.optimizer._step_count = 0
         self.scheduler.step()
+        """
+        self.create()
         self.epochs = 0
 
     def step(self):
