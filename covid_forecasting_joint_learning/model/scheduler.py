@@ -112,7 +112,7 @@ class LRFinder(object):
         history_length=None,
         rise_patience=None
     ):
-        self.clear_history()
+        self._clear_history()
 
         # Check if the optimizer is already attached to a scheduler
         self._check_for_scheduler()
