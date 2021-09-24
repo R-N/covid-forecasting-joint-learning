@@ -179,7 +179,7 @@ class ClusterModel:
             self.optimizer,
             max_lr=self.lr,
             div_factor=self.div_factor,
-            steps_per_epoch=len(self.target.dataloders[0]),
+            steps_per_epoch=len(self.target.dataloaders[0]),
             epochs=int(self.min_epoch)
         )
 
