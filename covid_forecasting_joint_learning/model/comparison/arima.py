@@ -52,9 +52,9 @@ class ARIMAModel:
     def eval_dataset(self, dataset, loss_fn=rmsse, use_exo=False, reduction="mean"):
         sum_loss = 0
         count = 0
-        for samples in dataset:
+        for sample in dataset:
 
-            loss = self.eval_sample(samples, loss_fn=loss_fn, use_exo=use_exo)
+            loss = self.eval_sample(sample, loss_fn=loss_fn, use_exo=use_exo)
 
             sum_loss += loss
             count += 1
