@@ -75,7 +75,7 @@ def search(orders, train_set, loss_fn=msse, use_exo=False):
     for order_set in orders:
         order = order_set[0]
         seasonal_order = order_set[1] if len(order_set) > 1 else None
-        for i in [*range(2, 366), None]:
+        for i in [*range(3, 366), None]:
             model = ARIMAModel(order, seasonal_order, limit_fit=i)
             loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
             if loss < best_loss:
