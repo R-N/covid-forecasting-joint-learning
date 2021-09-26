@@ -68,12 +68,13 @@ def fit(objective, params):
 
 
 class SIRDModel:
-    def __init__(self, params_hint, n, loss_fn=rmsse, limit_past=None):
+    def __init__(self, params_hint, n, loss_fn=rmsse, limit_past=None, reduction="mean"):
         self.params_hint = params_hint
         self.n = n
         self.loss_fn = loss_fn
         self.loss = None
         self.limit_past = limit_past
+        self.reduction = reduction
         self.clear()
 
     @property
@@ -143,7 +144,8 @@ class SIRDModel:
         return self.test(past, future, loss_fn=loss_fn)
 
 
-    def eval_dataset(self, dataset, loss_fn=rmsse, reduction="mean", limit_past=None):
+    def eval_dataset(self, dataset, loss_fn=rmsse, reduction=None, limit_past=None):
+        reduction = reduction or self.reduction
         losses = [
             self.eval(past, future, loss_fn=loss_fn, limit_past=limit_past)
             for past, future, indices in dataset
