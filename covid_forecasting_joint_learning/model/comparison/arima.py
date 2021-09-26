@@ -32,7 +32,12 @@ class ARIMAModel:
         pred = self.predict(start, end, exog=exog, model=model)
         return loss_fn(past, future, pred)
 
-    def eval_sample(self, past, future, past_exo=None, future_exo=None, loss_fn=rmsse):
+    def eval_sample(self, sample, loss_fn=rmsse, use_exo=False):
+        if use_exo:
+            past, past_exo, future, future_exo = sample[:4]
+        else:
+            past, future = sample[:2]
+            past_exo, future_exo = None, None
         model = self.fit(past, exog=past_exo)
         loss = self.eval(
             start=len(past),
@@ -48,13 +53,8 @@ class ARIMAModel:
         sum_loss = 0
         count = 0
         for samples in dataset:
-            if use_exo:
-                past, past_exo, future, future_exo = samples[:4]
-            else:
-                past, future = samples[:2]
-                past_exo, future_exo = None, None
 
-            loss = self.eval_sample(past, future, past_exo=past_exo, future_exo=future_exo, loss_fn=loss_fn)
+            loss = self.eval_sample(samples, loss_fn=loss_fn, use_exo=use_exo)
 
             sum_loss += loss
             count += 1
