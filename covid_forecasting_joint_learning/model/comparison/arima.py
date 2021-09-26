@@ -1,6 +1,6 @@
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from ..loss_common import msse, rmsse, wrap_reduce
-from numpy import np
+import numpy as np
 
 
 msse = wrap_reduce(msse)
