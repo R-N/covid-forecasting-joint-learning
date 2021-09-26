@@ -3,6 +3,7 @@ from ..loss_common import msse, rmsse, wrap_reduce
 import numpy as np
 from math import sqrt, ceil
 import optuna
+import re
 
 
 msse = wrap_reduce(msse)
@@ -110,3 +111,18 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
     study = optuna.create_study()
     study.optimize(objective, n_trials=n_trials, n_jobs=1)
     return study
+
+
+ARIMA_REGEX = re.compile(r"(\(([\d]+)\, *([\d]+)\, *([\d]+)\))? *(\(([\d]+)\, *([\d]+)\, *([\d]+)\)([\d]+))?$")
+
+def _parse_arima_regex(m):
+    order = (m.group(2), m.group(3), m.group(4)) if m.group(1) else None
+    seasonal_order = (m.group(6), m.group(7), m.group(8), m.group(9)) if m.group(5) else None
+    return order, seasonal_order
+
+def parse_arima_string(s):
+    s = "(1, 2, 3)(4, 5, 6)7; (8, 9, 10)11; (12, 13, 14)"
+    s = [si.strip() for si in s.split(";")]
+    m = [ARIMA_REGEX.match(si) for si in s]
+    orders = [_parse_arima_regex(mi) for mi in m]
+    return orders
