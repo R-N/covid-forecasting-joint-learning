@@ -159,7 +159,7 @@ class SIRDModel:
             raise Exception(f"Invalid reduction \"{reduction}\"")
 
 
-def search_optuna(dataset, params_hint, n, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
+def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
     def objective(trial):
         no_limit_1 = no_limit
         if no_limit_1 is None:
@@ -180,7 +180,7 @@ def search_optuna(dataset, params_hint, n, loss_fn=msse, reduction="mean", limit
     return study
 
 
-def search_greedy(dataset, params_hint, n, loss_fn=rmsse, reduction="mean", limit_past_min=7, limit_past_max=366):
+def search_greedy(params_hint, n, dataset, loss_fn=rmsse, reduction="mean", limit_past_min=7, limit_past_max=366):
     best_model = None
     best_loss = np.inf
     for limit_past in [*range(limit_past_min, limit_past_max + 1), None]:
