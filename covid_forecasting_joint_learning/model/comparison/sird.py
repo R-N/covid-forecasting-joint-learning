@@ -134,17 +134,17 @@ class SIRDModel:
         return loss_fn(past, future, pred)
 
 
-def eval(past, future, n, params, loss_fn=rmsse, limit_past=None, limit_loss=False):
+def eval(past, future, n, params, loss_fn=rmsse, limit_past=None):
     model = SIRDModel(params_hint=params, n=n)
     past_1 = past if not limit_past else past[:limit_past]
     model.fit(past_1)
-    model.loss = model.test(past_1 if limit_loss else past, future, loss_fn=loss_fn)
+    model.loss = model.test(past, future, loss_fn=loss_fn)
     return model
 
 
-def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past=None, limit_loss=False):
+def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past=None):
     losses = [
-        eval(past, future, n, params, loss_fn=loss_fn, limit_past=limit_past, limit_loss=limit_loss).loss
+        eval(past, future, n, params, loss_fn=loss_fn, limit_past=limit_past).loss
         for past, future, indices in dataset[:2]
     ]
     sum_loss = sum(losses)
@@ -156,10 +156,14 @@ def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past
         raise Exception(f"Invalid reduction \"{reduction}\"")
 
 
-def search(dataset, n, params, loss_fn=msse, reduction="mean", limit_loss=False, n_trials=None, limit_past_min=0, limit_past_max=366):
+def search(dataset, n, params, loss_fn=msse, reduction="mean", n_trials=None, limit_past_min=1, limit_past_max=366):
     def objective(trial):
-        limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)
-        return eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past, limit_loss=limit_loss)
+        no_limit = trial.suggest_categorical("no_limit", (0, 1))
+        if no_limit:
+            return eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction)
+        else:
+            limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)
+            return eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)
 
     if n_trials is None:
         n_trials = (limit_past_max - limit_past_min + 1)
@@ -169,8 +173,8 @@ def search(dataset, n, params, loss_fn=msse, reduction="mean", limit_loss=False,
     return study
 
 
-def search_limit_past(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_loss=False, limit_past_min=0, limit_past_max=366):
+def search_limit_past(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past_min=1, limit_past_max=366):
 
-    results = [(limit_past, eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past, limit_loss=limit_loss)) for limit_past in range(limit_past_min, limit_past_max + 1)]
+    results = [(limit_past, eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)) for limit_past in [*range(limit_past_min, limit_past_max + 1), None]]
 
     return min(results, key=lambda x: x[1])
