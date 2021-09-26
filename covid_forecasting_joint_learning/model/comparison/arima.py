@@ -113,16 +113,35 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
     return study
 
 
-ARIMA_REGEX = re.compile(r"(\(([\d]+)\, *([\d]+)\, *([\d]+)\))? *(\(([\d]+)\, *([\d]+)\, *([\d]+)\)([\d]+))?$")
+ARIMA_REGEX = re.compile(r"(\(([\d]+)\, *(([\d]+)\, *)?([\d]+)\))? *(\(([\d]+)\, *(([\d]+)\, *)?([\d]+)\)([\d]+))?$")
 
 def _parse_arima_regex(m):
-    order = (m.group(2), m.group(3), m.group(4)) if m.group(1) else None
-    seasonal_order = (m.group(6), m.group(7), m.group(8), m.group(9)) if m.group(5) else None
+    order = (
+        m.group(2),
+        m.group(4) if m.group(3) else 0,
+        m.group(5)
+    ) if m.group(1) else None
+    seasonal_order = (
+        m.group(7),
+        m.group(9) if m.group(8) else 0,
+        m.group(10),
+        m.group(11)
+    ) if m.group(6) else None
     return order, seasonal_order
 
 def parse_arima_string(s):
-    s = "(1, 2, 3)(4, 5, 6)7; (8, 9, 10)11; (12, 13, 14)"
-    s = [si.strip() for si in s.split(";")]
+    s = [si.strip() for sg in s.split("|") for sx in sg.split("x") for si in sx.split(";")]
+    s = [si for si in s if si]
     m = [ARIMA_REGEX.match(si) for si in s]
+    m = [mi for mi in m if mi]
+    if not m:
+        return [
+            (1, 0, 0),
+            (0, 0, 1),
+            (1, 0, 1),
+            (1, 1, 0),
+            (0, 1, 1),
+            (1, 1, 1)
+        ]
     orders = [_parse_arima_regex(mi) for mi in m]
     return orders
