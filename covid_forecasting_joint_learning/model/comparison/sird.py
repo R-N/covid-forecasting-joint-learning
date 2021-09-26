@@ -170,7 +170,7 @@ def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit
             limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)
 
         model = SIRDModel(params_hint=params_hint, n=n, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)
-        return model.eval_dataset(dataset, n)
+        return model.eval_dataset(dataset)
 
     if n_trials is None:
         n_trials = (limit_past_max - limit_past_min + 1)
