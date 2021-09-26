@@ -13,7 +13,7 @@ def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     return mse(pred - future) / (mse(naive(past, limit=limit_naive)) + eps)
 
 def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
-    return np.sqrt(msse(past, future, pred, limit=limit_naive, eps=eps))
+    return np.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))
 
 def reduce(loss, reduction="sum"):
     while loss.ndim > 1:
