@@ -27,10 +27,10 @@ class ARIMAModel:
         return self.model.predict(start=start, end=end, exog=exo)
 
     def pred(self, days, exo=None):
-        return self._predict(start=self.first, end=self.first + days, exo=exo)
+        return self._pred(start=self.first, end=self.first + days, exo=exo)
 
     def pred_full(self, days, exo=None):
-        return self._predict(start=0, end=days, exo=exo)
+        return self._pred(start=0, end=days, exo=exo)
 
     def eval(self, past, future, exo=None, past_exo=None, loss_fn=rmsse):
         self.fit(past, exo=past_exo)
