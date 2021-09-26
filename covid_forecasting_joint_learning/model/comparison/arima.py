@@ -27,9 +27,10 @@ class ARIMAModel:
         model = model or self.model
         return self.model.predict(start=start, end=end, exog=exog)
 
-    def eval(self, start, end, future, exog=None, model=None, loss_fn=rmsse):
+    def eval(self, start, end, past, future, exog=None, past_exog=None, model=None, loss_fn=rmsse):
+        model = model or self.model or self.fit(past, exog=past_exog)
         pred = self.predict(start, end, exog=exog, model=model)
-        return loss_fn(future, pred)
+        return loss_fn(past, future, pred)
 
     def eval_sample(self, past, future, past_exo=None, future_exo=None, loss_fn=rmsse):
         model = self.fit(past, exog=past_exo)
