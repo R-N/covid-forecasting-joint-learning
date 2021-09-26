@@ -34,7 +34,7 @@ class ARIMAModel:
 
     def eval(self, past, future, exo=None, past_exo=None, loss_fn=rmsse):
         self.fit(past, exo=past_exo)
-        pred = self.predict(len(future), exo=exo)
+        pred = self.pred(len(future), exo=exo)
         return loss_fn(past, future, pred)
 
     def eval_sample(self, sample, loss_fn=rmsse, use_exo=False):
