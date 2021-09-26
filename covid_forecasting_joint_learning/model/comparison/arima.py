@@ -69,7 +69,7 @@ class ARIMAModel:
             raise Exception(f"Invalid reduction \"{reduction}\"")
 
 
-def search_arima(orders, train_set, loss_fn=msse, use_exo=False):
+def search(orders, train_set, loss_fn=msse, use_exo=False):
     best_loss = np.inf
     best_model = None
     for order_set in orders:
