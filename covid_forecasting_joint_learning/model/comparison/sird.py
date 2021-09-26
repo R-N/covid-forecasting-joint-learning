@@ -157,10 +157,12 @@ class SIRDModel:
             raise Exception(f"Invalid reduction \"{reduction}\"")
 
 
-def search_optuna(dataset, params_hint, n, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, n_trials=None):
+def search_optuna(dataset, params_hint, n, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
     def objective(trial):
-        no_limit = trial.suggest_categorical("no_limit", (0, 1))
-        if no_limit:
+        no_limit_1 = no_limit
+        if no_limit_1 is None:
+            trial.suggest_categorical("no_limit", (0, 1))
+        if no_limit_1:
             limit_past = None
         else:
             limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)

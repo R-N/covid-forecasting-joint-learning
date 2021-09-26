@@ -84,15 +84,17 @@ def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
     return best_model
 
 
-def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_past_min=7, limit_past_max=366, n_trials=None):
+def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
     def objective(trial):
         order_set = trial.suggest_int("order", 0, len(orders) - 1)
         order_set = orders[order_set]
         order = order_set[0]
         seasonal_order = order_set[1] if len(order_set) > 1 else None
 
-        no_limit = trial.suggest_categorical("no_limit", (0, 1))
-        if no_limit:
+        no_limit_1 = no_limit
+        if no_limit_1 is None:
+            trial.suggest_categorical("no_limit", (0, 1))
+        if no_limit_1:
             limit_fit = None
         else:
             limit_fit = trial.suggest_int("limit_fit", limit_past_min, limit_past_max)
