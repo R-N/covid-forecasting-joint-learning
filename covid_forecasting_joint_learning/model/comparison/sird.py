@@ -62,16 +62,18 @@ def make_params(params):
     return params_1
 
 
-def fit(objective, params, loss_fn=None):
+def fit(objective, params):
     result = minimize(objective, params, calc_covar=True)
     return result
 
 
 class SIRDModel:
-    def __init__(self, params_hint, n, loss_fn=None):
+    def __init__(self, params_hint, n, loss_fn=rmsse, limit_past=None):
         self.params_hint = params_hint
         self.n = n
         self.loss_fn = loss_fn
+        self.loss = None
+        self.limit_past = limit_past
         self.clear()
 
     @property
@@ -87,15 +89,16 @@ class SIRDModel:
         self.pred_start = None
         self.first = 1
 
-    def fit(self, past, loss_fn=msse):
+    def fit(self, past, limit_past=None):
         self.clear()
 
-        def loss_fn(future, pred):
-            return loss_fn(past, future, pred)
+        limit_past = limit_past or self.limit_past
+        if limit_past:
+            past = past[:limit_past]
 
         objective = make_objective(past, self.n)
 
-        self.fit_result = fit(objective, self.params_hint, loss_fn=loss_fn)
+        self.fit_result = fit(objective, self.params_hint)
 
         self.first = past[0]
         self.prev = past[-1]
@@ -128,42 +131,42 @@ class SIRDModel:
         )
         return np.array([i, r, d]).T
 
-    def test(self, past, future, loss_fn=rmsse):
-        loss_fn = self.loss_fn or loss_fn
+    def test(self, past, future, loss_fn=None):
+        loss_fn = loss_fn or self.loss_fn
         pred = self.pred(len(future))
-        return loss_fn(past, future, pred)
+        self.loss = loss_fn(past, future, pred)
+        return self.loss
 
 
-def eval(past, future, n, params, loss_fn=rmsse, limit_past=None):
-    model = SIRDModel(params_hint=params, n=n)
-    past_1 = past if not limit_past else past[:limit_past]
-    model.fit(past_1)
-    model.loss = model.test(past, future, loss_fn=loss_fn)
-    return model
+    def eval(self, past, future, loss_fn=rmsse, limit_past=None):
+        self.fit(past, limit_past=limit_past)
+        return self.test(past, future, loss_fn=loss_fn)
 
 
-def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past=None):
-    losses = [
-        eval(past, future, n, params, loss_fn=loss_fn, limit_past=limit_past).loss
-        for past, future, indices in dataset[:2]
-    ]
-    sum_loss = sum(losses)
-    if reduction == "sum":
-        return sum_loss
-    elif reduction in ("mean", "avg"):
-        return sum_loss / len(losses)
-    else:
-        raise Exception(f"Invalid reduction \"{reduction}\"")
+    def eval_dataset(self, dataset, loss_fn=rmsse, reduction="mean", limit_past=None):
+        losses = [
+            self.eval(past, future, loss_fn=loss_fn, limit_past=limit_past)
+            for past, future, indices in dataset
+        ]
+        sum_loss = sum(losses)
+        if reduction == "sum":
+            return sum_loss
+        elif reduction in ("mean", "avg"):
+            return sum_loss / len(losses)
+        else:
+            raise Exception(f"Invalid reduction \"{reduction}\"")
 
 
-def search_optuna(dataset, n, params, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, n_trials=None):
+def search_optuna(dataset, params_hint, n, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, n_trials=None):
     def objective(trial):
         no_limit = trial.suggest_categorical("no_limit", (0, 1))
         if no_limit:
             limit_past = None
         else:
             limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)
-        return eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)
+
+        model = SIRDModel(params_hint=params_hint, n=n, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)
+        return model.eval_dataset(dataset, n)
 
     if n_trials is None:
         n_trials = (limit_past_max - limit_past_min + 1)
@@ -173,8 +176,13 @@ def search_optuna(dataset, n, params, loss_fn=msse, reduction="mean", limit_past
     return study
 
 
-def search_greedy(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past_min=7, limit_past_max=366):
-
-    results = [(limit_past, eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)) for limit_past in [*range(limit_past_min, limit_past_max + 1), None]]
-
-    return min(results, key=lambda x: x[1])
+def search_greedy(dataset, params_hint, n, loss_fn=rmsse, reduction="mean", limit_past_min=7, limit_past_max=366):
+    best_model = None
+    best_loss = np.inf
+    for limit_past in [*range(limit_past_min, limit_past_max + 1), None]:
+        model = SIRDModel(params_hint=params_hint, n=n, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)
+        loss = model.eval_dataset(dataset)
+        if loss < best_loss:
+            best_model = model
+            best_loss = loss
+    return best_model
