@@ -20,7 +20,7 @@ class ARIMAModel:
             if exo is not None:
                 exo = exo[:self.limit_fit]
         self.model = SARIMAX(endog=endo, exog=exo, order=self.order, seasonal_order=self.seasonal_order)
-        self.model.fit()
+        self.model = self.model.fit()
         self.first = len(endo)
 
     def _pred(self, start, end, exo=None):
