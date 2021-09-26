@@ -156,7 +156,7 @@ def eval_dataset(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past
         raise Exception(f"Invalid reduction \"{reduction}\"")
 
 
-def search(dataset, n, params, loss_fn=msse, reduction="mean", n_trials=None, limit_past_min=1, limit_past_max=366):
+def search(dataset, n, params, loss_fn=msse, reduction="mean", n_trials=None, limit_past_min=7, limit_past_max=366):
     def objective(trial):
         no_limit = trial.suggest_categorical("no_limit", (0, 1))
         if no_limit:
@@ -173,7 +173,7 @@ def search(dataset, n, params, loss_fn=msse, reduction="mean", n_trials=None, li
     return study
 
 
-def search_limit_past(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past_min=1, limit_past_max=366):
+def search_limit_past(dataset, n, params, loss_fn=rmsse, reduction="mean", limit_past_min=7, limit_past_max=366):
 
     results = [(limit_past, eval_dataset(dataset, n, params, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)) for limit_past in [*range(limit_past_min, limit_past_max + 1), None]]
 
