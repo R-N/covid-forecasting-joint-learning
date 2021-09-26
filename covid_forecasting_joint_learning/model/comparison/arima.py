@@ -14,22 +14,24 @@ class ARIMAModel:
         self.model = None
         self.limit_fit = limit_fit
 
-    def fit(self, endog, exog=None):
+    def fit(self, endo, exo=None):
         if self.limit_fit:
-            endog = endog[:self.limit_fit]
-            if exog is not None:
-                exog = exog[:self.limit_fit]
-        self.model = SARIMAX(endog=endog, exog=exog, order=self.order, seasonal_order=self.seasonal_order)
+            endo = endo[:self.limit_fit]
+            if exo is not None:
+                exo = exo[:self.limit_fit]
+        self.model = SARIMAX(endog=endo, exog=exo, order=self.order, seasonal_order=self.seasonal_order)
         self.model.fit()
-        return self.model
+        self.first = len(endo)
 
-    def predict(self, start, end, exog=None, model=None):
-        model = model or self.model
-        return self.model.predict(start=start, end=end, exog=exog)
+    def _predict(self, start, end, exo=None):
+        return self.model.predict(start=start, end=end, exog=exo)
 
-    def eval(self, start, end, past, future, exog=None, past_exog=None, model=None, loss_fn=rmsse):
-        model = model or self.model or self.fit(past, exog=past_exog)
-        pred = self.predict(start, end, exog=exog, model=model)
+    def predict(self, days, exo=None):
+        return self._predict(start=self.first, end=self.first + days, exo=exo)
+
+    def eval(self, past, future, exo=None, past_exo=None, loss_fn=rmsse):
+        self.fit(past, exo=past_exo)
+        pred = self.predict(len(future), exo=exo)
         return loss_fn(past, future, pred)
 
     def eval_sample(self, sample, loss_fn=rmsse, use_exo=False):
@@ -38,13 +40,11 @@ class ARIMAModel:
         else:
             past, future = sample[:2]
             past_exo, future_exo = None, None
-        model = self.fit(past, exog=past_exo)
         loss = self.eval(
-            start=len(past),
-            end=len(future),
+            past=past,
             future=future,
-            exog=future_exo,
-            model=model,
+            exo=future_exo,
+            past_exo=past_exo,
             loss_fn=loss_fn
         )
         return loss
