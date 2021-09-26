@@ -10,7 +10,7 @@ rmsse = wrap_reduce(rmsse)
 
 
 class ARIMAModel:
-    def __init__(self, order, seasonal_order=None, limit_fit=None, reduction="mean"):
+    def __init__(self, order=None, seasonal_order=None, limit_fit=None, reduction="mean"):
         self.order = order
         self.seasonal_order = seasonal_order or (0, 0, 0, 0)
         self.fit_result = None
