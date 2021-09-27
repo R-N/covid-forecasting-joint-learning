@@ -97,6 +97,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
             no_limit = no_limit_0
             if no_limit is None:
                 no_limit = trial.suggest_categorical("no_limit", (False, True))
+
             if no_limit:
                 limit_fit = None
             else:
