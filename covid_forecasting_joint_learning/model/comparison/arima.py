@@ -86,30 +86,51 @@ def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
 
 
 def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
-    def objective(trial):
-        order_set = trial.suggest_int("order", 0, len(orders) - 1)
-        order_set = orders[order_set]
-        order = order_set[0]
-        seasonal_order = order_set[1] if len(order_set) > 1 else None
 
-        no_limit_1 = no_limit
-        if no_limit_1 is None:
-            trial.suggest_categorical("no_limit", (0, 1))
-        if no_limit_1:
-            limit_fit = None
-        else:
-            limit_fit = trial.suggest_int("limit_fit", limit_past_min, limit_past_max)
+    def make_objective(order_set_0, limit_fit_0, no_limit_0):
+        def objective(trial):
+            order_set = trial.suggest_int("order", *order_set_0)
+            order_set = orders[order_set]
+            order = order_set[0]
+            seasonal_order = order_set[1] if len(order_set) > 1 else None
 
-        model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
-        loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
+            no_limit = no_limit_0
+            if no_limit is None:
+                no_limit = trial.suggest_categorical("no_limit", (False, True))
+            if no_limit:
+                limit_fit = None
+            else:
+                limit_fit = trial.suggest_int("limit_fit", *limit_fit_0)
 
-        return loss
+            model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
+            loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
+
+            return loss
 
     if n_trials is None:
         n_trials = (limit_past_max - limit_past_min + 1) * ceil(sqrt(len(orders)))
 
     study = optuna.create_study()
-    study.optimize(objective, n_trials=n_trials, n_jobs=1)
+    for i in range(len(orders)):
+        study.optimize(
+            make_objective(
+                (i, i),
+                (limit_past_max, limit_past_max),
+                False
+            ),
+            n_trials=1,
+            n_jobs=1
+        )
+
+    study.optimize(
+        make_objective(
+            (0, len(orders) - 1),
+            (limit_past_min, limit_past_max),
+            no_limit
+        ),
+        n_trials=n_trials,
+        n_jobs=1
+    )
     return study
 
 

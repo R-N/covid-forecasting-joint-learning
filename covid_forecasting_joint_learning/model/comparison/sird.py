@@ -163,7 +163,8 @@ def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit
     def objective(trial):
         no_limit_1 = no_limit
         if no_limit_1 is None:
-            trial.suggest_categorical("no_limit", (0, 1))
+            no_limit_1 = trial.suggest_categorical("no_limit", (False, True))
+
         if no_limit_1:
             limit_past = None
         else:
