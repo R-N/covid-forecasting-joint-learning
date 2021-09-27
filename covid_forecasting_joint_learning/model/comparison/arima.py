@@ -107,6 +107,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
             loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
 
             return loss
+        return objective
 
     if n_trials is None:
         n_trials = (limit_past_max - limit_past_min + 1) * ceil(sqrt(len(orders)))
