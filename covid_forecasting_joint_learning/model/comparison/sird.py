@@ -95,7 +95,7 @@ class SIRDModel:
 
         limit_past = limit_past or self.limit_past
         if limit_past:
-            past = past[:limit_past]
+            past = past[-limit_past:]
 
         objective = make_objective(past, self.n)
 

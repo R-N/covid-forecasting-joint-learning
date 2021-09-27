@@ -21,9 +21,9 @@ class ARIMAModel:
 
     def fit(self, endo, exo=None):
         if self.limit_fit:
-            endo = endo[:self.limit_fit]
+            endo = endo[-self.limit_fit:]
             if exo is not None:
-                exo = exo[:self.limit_fit]
+                exo = exo[-self.limit_fit:]
         model = SARIMAX(endog=endo, exog=exo, order=self.order, seasonal_order=self.seasonal_order)
         self.fit_result = model.fit()
         self.first = len(endo)

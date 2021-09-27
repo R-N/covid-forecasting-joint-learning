@@ -6,7 +6,7 @@ def mse(err):
 
 def naive(past, step=1, limit=None):
     if limit:
-        past = past[:limit]
+        past = past[-limit:]
     return past[:-step] - past[step:]
 
 def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):

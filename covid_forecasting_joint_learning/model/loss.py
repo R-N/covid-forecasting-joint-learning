@@ -17,7 +17,7 @@ def mse(err):
 def naive(past, step=1, limit=None):
     if past.dim() == 3:
         if limit:
-            past = past[:, :limit]
+            past = past[:, -limit:]
         return (past[:, :-step] - past[:, step:]).detach()
     elif past.dim() < 3:
         if limit:
