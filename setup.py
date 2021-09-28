@@ -40,6 +40,7 @@ setuptools.setup(
         "mpld3",
         "lmfit",
         "numdifftools",
-        "torch-lr-finder"
+        "torch-lr-finder",
+        "orange3"
     ]
 )
