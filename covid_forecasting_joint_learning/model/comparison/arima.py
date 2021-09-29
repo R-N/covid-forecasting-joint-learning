@@ -163,9 +163,11 @@ def combine_arima(a, b):
 
 def parse_arima_string(s):
     s = [sg.strip() for sg in s.split("|")]
+    s = [sg for sg in s if sg]
     if len(s) > 1:
         return list(chain.from_iterable([parse_arima_string(sg) for sg in s]))
     s = [sx.strip() for sg in s for sx in sg.split("x")]
+    s = [sx for sx in s if sx]
     if len(s) > 1:
         assert len(s) == 2
         s = [parse_arima_string(sg) for sg in s]
