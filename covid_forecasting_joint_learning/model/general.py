@@ -316,14 +316,24 @@ DEFAULT_ACTIVATIONS = {
     "Tanh": nn.Tanh,
     "SELU": nn.SELU
 }
+
+DEFAULT_FUTURE_EXO_COLS = [
+    DataCol.future_exo_cols(dates=DataCol.DATES),
+    DataCol.future_exo_cols(dates=DataCol.DATES_BETA),
+    DataCol.future_exo_cols(dates=DataCol.DATES_DELTA_I),
+    DataCol.future_exo_cols(dates=DataCol.DATES_I),
+    DataCol.future_exo_cols(dates=DataCol.DATES_CORR),
+    DataCol.future_exo_cols(dates=[])
+]
+
 DEFAULT_PAST_COLS = [
     DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES)),
     DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_BETA)),
     DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_DELTA_I)),
     DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_I)),
-    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_CORR))
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_CORR)),
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=[]))
 ]
-DEFAULT_FUTURE_EXO_COLS = [DataCol.FUTURE_EXO_COLS]
 
 
 class ObjectiveModel:
