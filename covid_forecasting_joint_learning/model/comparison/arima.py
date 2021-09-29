@@ -4,6 +4,7 @@ import numpy as np
 from math import sqrt, ceil
 import optuna
 import re
+from itertools import chain
 
 
 msse = wrap_reduce(msse)
@@ -152,8 +153,22 @@ def _parse_arima_regex(m):
     ) if m.group(6) else None
     return order, seasonal_order
 
+def combine_arima(a, b):
+    if a[0] is None and b[1] is None:
+        return (b[0], a[1])
+    elif a[1] is None and b[0] is None:
+        return (a[0], b[1])
+    else:
+        raise Exception(f"Invalid ARIMA combination: {a} x {b}")
+
 def parse_arima_string(s):
-    s = [si.strip() for sg in s.split("|") for sx in sg.split("x") for si in sx.split(";")]
+    s = [sg.strip() for sg in s.split("|")]
+    if len(s) > 1:
+        return chain.from_iterable([parse_arima_string(sg) for sg in s])
+    s = [sx.strip() for sx in s.split("x")]
+    if len(s) > 1:
+        return chain.from_iterable([parse_arima_string(sx) for sx in s])
+    s = [si.strip() for si in s.split(";")]
     s = [si for si in s if si]
     m = [ARIMA_REGEX.match(si) for si in s]
     m = [mi for mi in m if mi]
