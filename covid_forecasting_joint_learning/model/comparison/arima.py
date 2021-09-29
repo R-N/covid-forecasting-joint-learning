@@ -164,10 +164,15 @@ def combine_arima(a, b):
 def parse_arima_string(s):
     s = [sg.strip() for sg in s.split("|")]
     if len(s) > 1:
-        return chain.from_iterable([parse_arima_string(sg) for sg in s])
+        return list(chain.from_iterable([parse_arima_string(sg) for sg in s]))
     s = [sx.strip() for sg in s for sx in sg.split("x")]
     if len(s) > 1:
-        return chain.from_iterable([parse_arima_string(sx) for sx in s])
+        assert len(s) == 2
+        s = [parse_arima_string(sg) for sg in s]
+        assert len(s) == 2
+        s, sb = s
+        s = [[combine_arima(si, sbi) for sbi in sb] for si in s]
+        return list(chain.from_iterable([parse_arima_string(sg) for sg in s]))
     s = [si.strip() for sg in s for si in sg.split(";")]
     s = [si for si in s if si]
     m = [ARIMA_REGEX.match(si) for si in s]
