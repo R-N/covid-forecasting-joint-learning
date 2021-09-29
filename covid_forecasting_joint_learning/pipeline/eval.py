@@ -5,7 +5,7 @@ def bonferroni_dunn_cd(avranks, n_datasets, alpha="0.05"):
     return Orange.evaluation.compute_CD(
         avranks,
         n_datasets,
-        alpha=alpha,
+        alpha=str(alpha),
         test="bonferroni-dunn"
     )
 
@@ -23,7 +23,7 @@ def nemenyi_cd(avranks, n_datasets, alpha="0.05"):
     return Orange.evaluation.compute_CD(
         avranks,
         n_datasets,
-        alpha=alpha
+        alpha=str(alpha)
     )
 
 def plot_nemenyi(names, avranks, cd, width=5, textspace=1.5):
