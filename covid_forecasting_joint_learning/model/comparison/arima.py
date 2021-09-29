@@ -6,6 +6,8 @@ import optuna
 import re
 from itertools import chain
 import pandas as pd
+from optuna.structs import TrialPruned
+from numpy.linalg import LinAlgError
 
 
 msse = wrap_reduce(msse)
@@ -107,10 +109,12 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
             else:
                 limit_fit = trial.suggest_int("limit_fit", *limit_fit_0)
 
-            model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
-            loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
-
-            return loss
+            try:
+                model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
+                loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
+                return loss
+            except LinAlgError:
+                raise TrialPruned(str(LinAlgError))
         return objective
 
     n_orders = len(orders)
