@@ -165,10 +165,10 @@ def parse_arima_string(s):
     s = [sg.strip() for sg in s.split("|")]
     if len(s) > 1:
         return chain.from_iterable([parse_arima_string(sg) for sg in s])
-    s = [sx.strip() for sx in s.split("x")]
+    s = [sx.strip() for sg in s for sx in sg.split("x")]
     if len(s) > 1:
         return chain.from_iterable([parse_arima_string(sx) for sx in s])
-    s = [si.strip() for si in s.split(";")]
+    s = [si.strip() for sg in s for si in sg.split(";")]
     s = [si for si in s if si]
     m = [ARIMA_REGEX.match(si) for si in s]
     m = [mi for mi in m if mi]
