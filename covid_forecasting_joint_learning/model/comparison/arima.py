@@ -161,13 +161,26 @@ def combine_arima(a, b):
     else:
         raise Exception(f"Invalid ARIMA combination: {a} x {b}")
 
+ARIMA_DEFAULT = [
+    (1, 0, 0),
+    (0, 0, 1),
+    (1, 0, 1),
+    (1, 1, 0),
+    (0, 1, 1),
+    (1, 1, 1)
+]
+
 def parse_arima_string(s):
     s = [sg.strip() for sg in s.split("|")]
     s = [sg for sg in s if sg]
+    if not s:
+        return ARIMA_DEFAULT
     if len(s) > 1:
         return list(chain.from_iterable([parse_arima_string(sg) for sg in s]))
     s = [sx.strip() for sg in s for sx in sg.split("x")]
     s = [sx for sx in s if sx]
+    if not s:
+        return ARIMA_DEFAULT
     if len(s) > 1:
         assert len(s) == 2
         s = [parse_arima_string(sg) for sg in s]
@@ -177,16 +190,11 @@ def parse_arima_string(s):
         return list(chain.from_iterable([sg for sg in s]))
     s = [si.strip() for sg in s for si in sg.split(";")]
     s = [si for si in s if si]
+    if not s:
+        return ARIMA_DEFAULT
     m = [ARIMA_REGEX.match(si) for si in s]
     m = [mi for mi in m if mi]
     if not m:
-        return [
-            (1, 0, 0),
-            (0, 0, 1),
-            (1, 0, 1),
-            (1, 1, 0),
-            (0, 1, 1),
-            (1, 1, 1)
-        ]
+        return ARIMA_DEFAULT
     orders = [_parse_arima_regex(mi) for mi in m]
     return orders
