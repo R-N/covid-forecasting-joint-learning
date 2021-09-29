@@ -93,7 +93,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
 
     def make_objective(order_set_0, limit_fit_0, no_limit_0):
         def objective(trial):
-            order_set = trial.suggest_int("order", *order_set_0)
+            order_set = trial.suggest_categorical("order", *order_set_0)
             order_set = orders[order_set]
             order = order_set[0]
             seasonal_order = order_set[1] if len(order_set) > 1 else None
@@ -113,24 +113,26 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
             return loss
         return objective
 
+    n_orders = len(orders)
+
     if n_trials is None:
-        n_trials = (limit_past_max - limit_past_min + 1) * ceil(sqrt(len(orders)))
+        n_trials = (limit_past_max - limit_past_min + 1)
 
     study = optuna.create_study()
-    for i in range(len(orders)):
-        study.optimize(
-            make_objective(
-                (i, i),
-                (limit_past_max, limit_past_max),
-                False
-            ),
-            n_trials=1,
-            n_jobs=1
-        )
+    orders_id = list(range(n_orders))
+    study.optimize(
+        make_objective(
+            orders_id,
+            (limit_past_max, limit_past_max),
+            False
+        ),
+        n_trials=n_orders * n_orders,
+        n_jobs=1
+    )
 
     study.optimize(
         make_objective(
-            (0, len(orders) - 1),
+            orders_id,
             (limit_past_min, limit_past_max),
             no_limit
         ),
