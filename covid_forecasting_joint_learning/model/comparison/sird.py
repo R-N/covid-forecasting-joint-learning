@@ -3,6 +3,7 @@ from lmfit import minimize, Parameters
 import numpy as np
 from ..loss_common import msse, rmsse, wrap_reduce
 from ...data import cols as DataCol
+import pandas as pd
 import optuna
 
 msse = wrap_reduce(msse)
@@ -151,12 +152,15 @@ class SIRDModel:
             for past, future, indices in dataset
         ]
         sum_loss = sum(losses)
+        count = len(losses)
         if reduction == "sum":
-            return sum_loss
+            loss = sum_loss
         elif reduction in ("mean", "avg"):
-            return sum_loss / len(losses)
+            loss = sum_loss / count
         else:
             raise Exception(f"Invalid reduction \"{reduction}\"")
+        self.loss = loss
+        return loss
 
 
 def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
@@ -191,3 +195,41 @@ def search_greedy(params_hint, n, dataset, loss_fn=rmsse, reduction="mean", limi
             best_model = model
             best_loss = loss
     return best_model
+
+
+class SIRDSearchLog:
+    def __init__(self, log_path, log_sheet_name="SIRD"):
+        self.log_path = log_path
+        self.log_sheet_name = log_sheet_name
+        self.load_log()
+
+    def load_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        try:
+            self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
+        except FileNotFoundError:
+            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "limit_fit", "loss"])
+            self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
+        return self.log_df
+
+    def save_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
+
+    def is_search_done(self, group, cluster, kabko):
+        df = self.log_df
+        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
+
+    def log(self, group, cluster, kabko, model, loss=None):
+        df = self.load_log()
+        loss = model.loss if loss is None else loss
+        df.loc[df.shape[0]] = {
+            "group": group,
+            "cluster": cluster,
+            "kabko": kabko,
+            "limit_fit": model.limit_fit,
+            "loss": loss
+        }
+        self.save_log()

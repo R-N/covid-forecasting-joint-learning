@@ -5,6 +5,7 @@ from math import sqrt, ceil
 import optuna
 import re
 from itertools import chain
+import pandas as pd
 
 
 msse = wrap_reduce(msse)
@@ -64,11 +65,13 @@ class ARIMAModel:
         sum_loss = sum(losses)
         count = len(losses)
         if reduction == "sum":
-            return sum_loss
+            loss = sum_loss
         elif reduction in ("mean", "avg"):
-            return sum_loss / count
+            loss = sum_loss / count
         else:
             raise Exception(f"Invalid reduction \"{reduction}\"")
+        self.loss = loss
+        return loss
 
 
 def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_past_min=7, limit_past_max=366):
@@ -161,6 +164,7 @@ def combine_arima(a, b):
     else:
         raise Exception(f"Invalid ARIMA combination: {a} x {b}")
 
+
 ARIMA_DEFAULT = [
     (1, 0, 0),
     (0, 0, 1),
@@ -169,6 +173,7 @@ ARIMA_DEFAULT = [
     (0, 1, 1),
     (1, 1, 1)
 ]
+
 
 def parse_arima_string(s):
     s = [sg.strip() for sg in s.split("|")]
@@ -198,3 +203,50 @@ def parse_arima_string(s):
         return ARIMA_DEFAULT
     orders = [_parse_arima_regex(mi) for mi in m]
     return orders
+
+class ARIMASearchLog:
+    def __init__(self, source_path, log_path, source_sheet_name="ARIMA", log_sheet_name="ARIMA"):
+        self.source_path = source_path
+        self.log_path = log_path
+        self.source_sheet_name = source_sheet_name
+        self.log_sheet_name = log_sheet_name
+        self.source_df = pd.read_excel(source_path, sheet_name=source_sheet_name)
+        self.load_log()
+
+    def load_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        try:
+            self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
+        except FileNotFoundError:
+            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "order", "seasonal_order", "limit_fit", "loss"])
+            self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
+        return self.log_df
+
+    def save_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
+
+    def is_search_done(self, group, cluster, kabko, label):
+        df = self.log_df
+        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
+
+    def log(self, group, cluster, kabko, label, model, loss=None):
+        df = self.load_log()
+        loss = model.loss if loss is None else loss
+        df.loc[df.shape[0]] = {
+            "group": group,
+            "cluster": cluster,
+            "kabko": kabko,
+            "label": label,
+            "order": model.order,
+            "seasonal_order": model.seasonal_order,
+            "limit_fit": model.limit_fit,
+            "loss": loss
+        }
+        self.save_log()
+
+    def read_arima(self, kabko, label):
+        df = self.source_df
+        return df[(df["kabko"] == kabko)][label].item()
