@@ -172,7 +172,7 @@ def parse_arima_string(s):
         assert len(s) == 2
         s, sb = s
         s = [[combine_arima(si, sbi) for sbi in sb] for si in s]
-        return list(chain.from_iterable([parse_arima_string(sg) for sg in s]))
+        return list(chain.from_iterable([sg for sg in s]))
     s = [si.strip() for sg in s for si in sg.split(";")]
     s = [si for si in s if si]
     m = [ARIMA_REGEX.match(si) for si in s]
