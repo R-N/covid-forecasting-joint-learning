@@ -21,7 +21,7 @@ def naive(past, step=1, limit=None):
         return (past[:, :-step] - past[:, step:]).detach()
     elif past.dim() < 3:
         if limit:
-            past = past[:limit]
+            past = past[-limit:]
         return (past[:-step] - past[step:]).detach()
     else:
         raise Exception(f"Invalid input dim {past.dim()}")
