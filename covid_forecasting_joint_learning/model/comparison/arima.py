@@ -93,7 +93,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
 
     def make_objective(order_set_0, limit_fit_0, no_limit_0):
         def objective(trial):
-            order_set = trial.suggest_categorical("order", *order_set_0)
+            order_set = trial.suggest_categorical("order", order_set_0)
             order_set = orders[order_set]
             order = order_set[0]
             seasonal_order = order_set[1] if len(order_set) > 1 else None
