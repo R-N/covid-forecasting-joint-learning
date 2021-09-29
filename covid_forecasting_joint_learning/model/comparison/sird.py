@@ -222,14 +222,13 @@ class SIRDSearchLog:
         df = self.log_df
         return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
 
-    def log(self, group, cluster, kabko, model, loss=None):
+    def log(self, group, cluster, kabko, limit_fit, loss):
         df = self.load_log()
-        loss = model.loss if loss is None else loss
         df.loc[df.shape[0]] = {
             "group": group,
             "cluster": cluster,
             "kabko": kabko,
-            "limit_fit": model.limit_fit,
+            "limit_fit": limit_fit,
             "loss": loss
         }
         self.save_log()

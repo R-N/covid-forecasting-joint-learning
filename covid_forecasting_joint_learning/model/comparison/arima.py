@@ -234,17 +234,16 @@ class ARIMASearchLog:
         df = self.log_df
         return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
 
-    def log(self, group, cluster, kabko, label, model, loss=None):
+    def log(self, group, cluster, kabko, label, order, seasonal_order, limit_fit, loss):
         df = self.load_log()
-        loss = model.loss if loss is None else loss
         df.loc[df.shape[0]] = {
             "group": group,
             "cluster": cluster,
             "kabko": kabko,
             "label": label,
-            "order": model.order,
-            "seasonal_order": model.seasonal_order,
-            "limit_fit": model.limit_fit,
+            "order": order,
+            "seasonal_order": seasonal_order,
+            "limit_fit": limit_fit,
             "loss": loss
         }
         self.save_log()
