@@ -146,15 +146,15 @@ ARIMA_REGEX = re.compile(r"(\(([\d]+)\, *(([\d]+)\, *)?([\d]+)\))? *(\(([\d]+)\,
 
 def _parse_arima_regex(m):
     order = (
-        m.group(2),
-        m.group(4) if m.group(3) else 0,
-        m.group(5)
+        int(m.group(2)),
+        int(m.group(4)) if m.group(3) else 0,
+        int(m.group(5))
     ) if m.group(1) else None
     seasonal_order = (
-        m.group(7),
-        m.group(9) if m.group(8) else 0,
-        m.group(10),
-        m.group(11)
+        int(m.group(7)),
+        int(m.group(9)) if m.group(8) else 0,
+        int(m.group(10)),
+        int(m.group(11))
     ) if m.group(6) else None
     return order, seasonal_order
 
