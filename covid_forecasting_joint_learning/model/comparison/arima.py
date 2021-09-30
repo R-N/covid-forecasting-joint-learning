@@ -113,7 +113,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
                 model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
                 loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
                 return loss
-            except LinAlgError as ex:
+            except (LinAlgError, IndexError) as ex:
                 raise TrialPruned(str(ex))
         return objective
 
