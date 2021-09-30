@@ -323,7 +323,8 @@ DEFAULT_FUTURE_EXO_COLS = [
     DataCol.future_exo_cols(dates=DataCol.DATES_DELTA_I),
     DataCol.future_exo_cols(dates=DataCol.DATES_I),
     DataCol.future_exo_cols(dates=DataCol.DATES_CORR),
-    DataCol.future_exo_cols(dates=[])
+    DataCol.future_exo_cols(dates=[]),
+    []
 ]
 
 DEFAULT_PAST_COLS = [
@@ -332,7 +333,9 @@ DEFAULT_PAST_COLS = [
     DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_DELTA_I)),
     DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_I)),
     DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=DataCol.DATES_CORR)),
-    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=[]))
+    DataCol.past_cols(future_exo_cols=DataCol.future_exo_cols(dates=[])),
+    DataCol.past_cols(future_exo_cols=[]),
+    DataCol.past_cols(future_exo_cols=[], cols_non_date=[])
 ]
 
 
