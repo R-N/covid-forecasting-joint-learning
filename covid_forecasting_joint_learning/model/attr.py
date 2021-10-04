@@ -60,7 +60,7 @@ def postprocess_result(tup, reduction="max"):
     ret = detach_tuple(tup)
     # ret = tuple(t[0] for t in ret)
     if reduction == "max":
-        reduce = ModelUtil.max
+        reduce = ModelUtil.torch_max
     elif reduction == "sum":
         reduce = torch.sum
     else:
