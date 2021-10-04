@@ -235,3 +235,6 @@ def round_digits(x, n_digits=0):
         digits = round(digits, n_digits)
     exp = x.exponent + len(x.digits) - 1
     return digits * 10**exp
+
+    def max(tensor, dim=0):
+        return torch.max(tensor, dim=dim).values

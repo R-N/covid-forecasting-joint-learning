@@ -2,6 +2,7 @@ import torch
 from captum.attr import Saliency, LayerGradCam
 import numpy as np
 import matplotlib.pyplot as plt
+from . import util as ModelUtil
 from .util import multi_index_dict, union_lists
 from ..data.exploration import init_ipython, init_matplotlib
 
@@ -59,7 +60,7 @@ def postprocess_result(tup, reduction="max"):
     ret = detach_tuple(tup)
     # ret = tuple(t[0] for t in ret)
     if reduction == "max":
-        reduce = torch.max
+        reduce = ModelUtil.max
     elif reduction == "sum":
         reduce = torch.sum
     else:
