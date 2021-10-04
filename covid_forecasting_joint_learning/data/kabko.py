@@ -132,7 +132,7 @@ class KabkoData:
         # assert not (full >= 0 and single)
         if full >= 0:
             if full >= len(self.dataloaders):
-                batches = list(chain.from_iterables([
+                batches = list(chain.from_iterable([
                     list(self.dataloaders[i]) for i in range(len(self.dataloaders))
                 ]))
             else:
