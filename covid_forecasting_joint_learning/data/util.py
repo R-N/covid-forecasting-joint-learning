@@ -74,3 +74,8 @@ def full_combinations(src, include_empty=True):
 
 def label_combinations(combs):
     return {" + ".join(c): c for c in combs}
+
+def combine_batches(batches, tensor_count=7):
+    remains = batches[-1][tensor_count:]
+    tensors = tuple(torch.cat([batch[i] for batch in batches], dim=0) for i in range(tensor_count))
+    return tensors + remains

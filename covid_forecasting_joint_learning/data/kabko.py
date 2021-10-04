@@ -1,5 +1,6 @@
 from . import util as DataUtil
 from . import cols as DataCol
+from itertools import chain
 
 
 class KabkoData:
@@ -127,16 +128,24 @@ class KabkoData:
         del df
         return ret
 
-    def get_batch_sample(self, last=False, single=True, tensor_count=7):
-        if last:
-            *_, sample = iter(self.dataloaders[0])
+    def get_batch_sample(self, last=False, single=True, full=-1, tensor_count=7):
+        # assert not (full >= 0 and single)
+        if full >= 0:
+            if full >= len(self.dataloaders):
+                batches = list(chain.from_iterables([
+                    list(self.dataloaders[i]) for i in range(len(self.dataloaders))
+                ]))
+            else:
+                batches = list(self.dataloaders[full])
+            sample = DataUtil.combine_batches(batches, tensor_count=tensor_count)
         else:
-            sample = next(iter(self.dataloaders[0]))
-        sample = sample[:-1]
-        if single:
-            return tuple(DataUtil.single_batch(sample[i]) if i < tensor_count else sample[i] for i in range(len(sample)))
-        else:
-            return sample
+            if last:
+                *_, sample = iter(self.dataloaders[0])
+            else:
+                sample = next(iter(self.dataloaders[0]))
+            if single:
+                sample = tuple(DataUtil.single_batch(sample[i]) if i < tensor_count else sample[i] for i in range(len(sample)))
+        return sample[:-1]
 
     def get_model_summary(self, sample=None, sample_last=False, sample_single=True):
         sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
@@ -146,15 +155,15 @@ class KabkoData:
         sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
         return self.model.write_graph(path, sample)
 
-    def get_input_attr(self, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
-        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+    def get_input_attr(self, *args, sample=None, **kwargs):
+        sample = self.get_batch_sample(full=len(self.dataloaders))[:5] if sample is None else sample
         return self.model.get_input_attr(sample, *args, **kwargs)
 
-    def get_layer_attr(self, layer, *args, sample=None, sample_last=False, sample_single=True, **kwargs):
-        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+    def get_layer_attr(self, layer, *args, sample=None, **kwargs):
+        sample = self.get_batch_sample(full=len(self.dataloaders))[:5] if sample is None else sample
         return self.model.get_layer_attr(layer, sample, *args, **kwargs)
 
-    def get_aggregate_layer_attr(self, sample=None, sample_last=False, sample_single=True):
-        sample = self.get_batch_sample(last=sample_last, single=sample_single)[:5] if sample is None else sample
+    def get_aggregate_layer_attr(self, sample=None):
+        sample = self.get_batch_sample(full=len(self.dataloaders))[:5] if sample is None else sample
         layer_attrs = self.model.get_aggregate_layer_attr(sample)
         return layer_attrs

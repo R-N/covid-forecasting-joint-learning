@@ -12,6 +12,7 @@ class NaNLossException(TrialPruned):
         super(NaNLossException, self).__init__("Loss is NaN!")
 
 def mse(err):
+    # (batch, horizon, feature)
     return torch.mean(torch.square(err), dim=-2)
 
 def naive(past, step=1, limit=None):

@@ -45,21 +45,27 @@ def wrap_params(model, *f_args, **f_kwargs):
     return model_param
 
 def wrap_sum(model):
-    def sum_model(*inputs):
+    def reduce(*inputs):
         output = model(*inputs)
         return torch.sum(output, dim=0)
-    return sum_model
+    return reduce
 
 def detach_tuple(tup):
     return tuple(x.detach() for x in tup)
 
-def postprocess_result(tup):
+def postprocess_result(tup, reduction="max"):
     if not isinstance(tup, tuple):
         tup = (tup,)
     ret = detach_tuple(tup)
     # ret = tuple(t[0] for t in ret)
+    if reduction == "max":
+        reduce = torch.max
+    elif reduction == "sum":
+        reduce = torch.sum
+    else:
+        raise Exception(f"Invalid reduction '{reduction}'")
     while ret[0].dim() > 1:
-        ret = tuple(torch.sum(t, dim=0) for t in ret)
+        ret = tuple(reduce(t, dim=0) for t in ret)
     ret = tuple(x.cpu().detach().numpy() for x in ret)
     return ret
 
@@ -100,14 +106,15 @@ def __calc_attr(
     use_exo=True,
     use_seed=True,
     single=True,
-    out_dim=3
+    out_dim=3,
+    reduction="max"
 ):
     batch = filter_batch(batch, teacher_forcing=teacher_forcing, use_exo=use_exo, use_seed=use_seed, none=False)
     # batch = tuple(single_batch(t) for t in batch)
     if single:
-        attr = postprocess_result(method.attribute(prepare_batch(batch)))
+        attr = postprocess_result(method.attribute(prepare_batch(batch)), reduction=reduction)
     else:
-        attr = [postprocess_result(method.attribute(prepare_batch(batch), target=i)) for i in range(out_dim)]
+        attr = [postprocess_result(method.attribute(prepare_batch(batch), target=i), reduction=reduction) for i in range(out_dim)]
         attr = list(zip(*attr))
     return attr
 
