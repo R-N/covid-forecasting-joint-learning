@@ -83,6 +83,6 @@ def optimize(study, model_objective, n_jobs=1, batch=None, n_trials=10000):
 
         study.optimize(model_objective, n_trials=min(batch, n_trials_remain), n_jobs=n_jobs, callbacks=[callback])
         # joblib.dump(study, save_file)
-        trials_done = ModelUtil.count_trials_done(trials)
-        n_trials_remain -= trials_done
+        trials_done = PipelineUtil.count_trials_done(study.trials)
+        n_trials_remain = n_trials - trials_done
         cond = n_trials_remain > 0 or trials_done == 0
