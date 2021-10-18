@@ -37,7 +37,7 @@ def __eval(
         for sample in samples:
             sample, kabko = sample[:-1], sample[-1]
             pred = kabko.model(*sample[:5])
-            loss_s = loss_fn(sample[1], sample[3], pred)
+            loss_s = loss_fn(sample[3], pred, mse_naive=sample[7], past=sample[1])
             weight = kabko.weight
             loss += weight * loss_s
 

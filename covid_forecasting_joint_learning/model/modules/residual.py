@@ -11,7 +11,7 @@ class ResidualBlock(nn.Module):
     def __init__(
         self,
         main_block,
-        size,
+        size=1,
         highway=False,
         activation=None
     ):

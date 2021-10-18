@@ -9,11 +9,21 @@ def naive(past, step=1, limit=None):
         past = past[-limit:]
     return past[:-step] - past[step:]
 
-def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
-    return mse(pred - future) / (mse(naive(past, limit=limit_naive)) + eps)
+def msse(future, pred, mse_naive=None, past=None, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
+    assert mse_naive is not None or past is not None
+    if mse_naive is None:
+        mse_naive = mse(naive(past, limit=limit_naive))
+    return mse(pred - future) / (mse_naive + eps)
 
-def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
-    return np.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))
+def rmsse(future, pred, mse_naive=None, past=None, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
+    return np.sqrt(msse(
+        future,
+        pred,
+        mse_naive=mse_naive,
+        past=past,
+        limit_naive=limit_naive,
+        eps=eps
+    ))
 
 def reduce(loss, reduction="sum"):
     while loss.ndim > 1:

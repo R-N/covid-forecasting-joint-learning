@@ -27,13 +27,23 @@ def naive(past, step=1, limit=None):
     else:
         raise Exception(f"Invalid input dim {past.dim()}")
 
-def msse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
+def msse(future, pred, mse_naive=None, past=None, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
+    assert mse_naive is not None or past is not None
     if torch.isnan(pred).any():
         raise NaNPredException()
-    return mse(pred - future) / (mse(naive(past, limit=limit_naive)) + eps).detach()
+    if mse_naive is None:
+        mse_naive = mse(naive(past, limit=limit_naive))
+    return mse(pred - future) / (mse_naive + eps).detach()
 
-def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
-    return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))
+def rmsse(future, pred, mse_naive=None, past=None, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
+    return torch.sqrt(msse(
+        future,
+        pred,
+        mse_naive=mse_naive,
+        past=past,
+        limit_naive=limit_naive,
+        eps=eps
+    ))
 
 def reduce(loss, reduction="sum"):
     while loss.dim() > 1:
@@ -52,8 +62,15 @@ class MSSELoss(nn.Module):
         self.limit_naive = limit_naive
         self.eps = eps
 
-    def forward(self, past, future, pred):
-        return reduce(msse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)
+    def forward(self, future, pred, mse_naive=None, past=None):
+        return reduce(msse(
+            future,
+            pred,
+            mse_naive=mse_naive,
+            past=past,
+            limit_naive=self.limit_naive,
+            eps=self.eps
+        ), reduction=self.reduction)
 
 class RMSSELoss(nn.Module):
     def __init__(self, reduction="sum", limit_naive=30, eps=ModelUtil.NAIVE_EPS):
@@ -62,5 +79,12 @@ class RMSSELoss(nn.Module):
         self.limit_naive = limit_naive
         self.eps = eps
 
-    def forward(self, past, future, pred):
-        return reduce(rmsse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)
+    def forward(self, future, pred, mse_naive=None, past=None):
+        return reduce(rmsse(
+            future,
+            pred,
+            mse_naive=mse_naive,
+            past=past,
+            limit_naive=self.limit_naive,
+            eps=self.eps
+        ), reduction=self.reduction)

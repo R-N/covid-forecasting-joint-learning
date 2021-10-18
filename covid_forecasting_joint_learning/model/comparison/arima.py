@@ -15,12 +15,13 @@ rmsse = wrap_reduce(rmsse)
 
 
 class ARIMAModel:
-    def __init__(self, order=None, seasonal_order=None, limit_fit=None, reduction="mean"):
+    def __init__(self, order=None, seasonal_order=None, limit_fit=None, reduction="mean", loss_fn=rmsse):
         self.order = order
         self.seasonal_order = seasonal_order or (0, 0, 0, 0)
         self.fit_result = None
         self.limit_fit = limit_fit
         self.reduction = reduction
+        self.loss_fn = loss_fn
         self.loss = None
 
     def fit(self, endo, exo=None):
@@ -41,27 +42,32 @@ class ARIMAModel:
     def pred_full(self, days, exo=None):
         return self._pred(start=0, end=days - 1, exo=exo)
 
-    def eval(self, past, future, exo=None, past_exo=None, loss_fn=rmsse):
-        self.fit(past, exo=past_exo)
+    def test(self, future, exo=None, mse_naive=None, past=None, loss_fn=None):
+        loss_fn = loss_fn or self.loss_fn
         pred = self.pred(len(future), exo=exo)
-        self.loss = loss_fn(past, future, pred)
+        self.loss = loss_fn(future, pred, mse_naive=mse_naive, past=past)
         return self.loss
 
-    def eval_sample(self, sample, loss_fn=rmsse, use_exo=False):
+    def eval(self, past, future, exo=None, past_exo=None, mse_naive=None, loss_fn=None):
+        self.fit(past, exo=past_exo)
+        return self.test(future, exo=exo, mse_naive=mse_naive, past=past, loss_fn=loss_fn)
+
+    def eval_sample(self, sample, loss_fn=None, use_exo=False):
         if use_exo:
-            past, past_exo, future, future_exo = sample[:4]
+            past, past_exo, future, future_exo, mse_naive = sample[:5]
         else:
-            past, future = sample[:2]
+            past, future, mse_naive = sample[:3]
             past_exo, future_exo = None, None
         return self.eval(
             past=past,
             future=future,
             exo=future_exo,
             past_exo=past_exo,
+            mse_naive=mse_naive,
             loss_fn=loss_fn
         )
 
-    def eval_dataset(self, dataset, loss_fn=rmsse, use_exo=False, reduction=None):
+    def eval_dataset(self, dataset, loss_fn=None, use_exo=False, reduction=None):
         reduction = reduction or self.reduction
         losses = [self.eval_sample(sample, loss_fn=loss_fn, use_exo=use_exo) for sample in dataset]
         sum_loss = sum(losses)
@@ -83,8 +89,8 @@ def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
         order = order_set[0]
         seasonal_order = order_set[1] if len(order_set) > 1 else None
         for i in [*range(limit_past_min, limit_past_max), None]:
-            model = ARIMAModel(order, seasonal_order, reduction=reduction, limit_fit=i)
-            loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
+            model = ARIMAModel(order, seasonal_order, reduction=reduction, limit_fit=i, loss_fn=loss_fn)
+            loss = model.eval_dataset(train_set, use_exo=use_exo)
             if loss < best_loss:
                 best_loss = loss
                 best_model = model
@@ -110,8 +116,8 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
                 limit_fit = trial.suggest_int("limit_fit", *limit_fit_0)
 
             try:
-                model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
-                loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
+                model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction, loss_fn=loss_fn)
+                loss = model.eval_dataset(train_set, use_exo=use_exo)
                 return loss
             except (LinAlgError, IndexError) as ex:
                 raise TrialPruned(str(ex))

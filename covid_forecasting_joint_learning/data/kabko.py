@@ -128,7 +128,7 @@ class KabkoData:
         del df
         return ret
 
-    def get_batch_sample(self, last=False, single=True, full=-1, tensor_count=7):
+    def get_batch_sample(self, last=False, single=True, full=-1, tensor_count=9):
         # assert not (full >= 0 and single)
         if full >= 0:
             if full >= len(self.dataloaders):

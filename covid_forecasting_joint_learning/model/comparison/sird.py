@@ -133,23 +133,23 @@ class SIRDModel:
         )
         return np.array([i, r, d]).T
 
-    def test(self, past, future, loss_fn=None):
+    def test(self, future, mse_naive=None, past=None, loss_fn=None):
         loss_fn = loss_fn or self.loss_fn
         pred = self.pred(len(future))
-        self.loss = loss_fn(past, future, pred)
+        self.loss = loss_fn(future, pred, mse_naive=mse_naive, past=past)
         return self.loss
 
 
-    def eval(self, past, future, loss_fn=rmsse, limit_past=None):
+    def eval(self, past, future, mse_naive=None, loss_fn=None, limit_past=None):
         self.fit(past, limit_past=limit_past)
-        return self.test(past, future, loss_fn=loss_fn)
+        return self.test(future, mse_naive=mse_naive, past=past, loss_fn=loss_fn)
 
 
-    def eval_dataset(self, dataset, loss_fn=rmsse, reduction=None, limit_past=None):
+    def eval_dataset(self, dataset, loss_fn=None, reduction=None, limit_past=None):
         reduction = reduction or self.reduction
         losses = [
-            self.eval(past, future, loss_fn=loss_fn, limit_past=limit_past)
-            for past, future, indices in dataset
+            self.eval(past, future, mse_naive=mse_naive, loss_fn=loss_fn, limit_past=limit_past)
+            for past, future, mse_naive, indices in dataset
         ]
         sum_loss = sum(losses)
         count = len(losses)

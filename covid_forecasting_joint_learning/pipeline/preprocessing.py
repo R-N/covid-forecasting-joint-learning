@@ -7,6 +7,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from ..data import cols as DataCol
 import itertools
 from .clustering import shortest, merge_clusters
+from ..model.loss_common import mse, naive
 
 
 # Zero handling
@@ -176,7 +177,9 @@ def slice_dataset(
     future_start=None, future_end=None,
     past_size=30, future_size=14,
     stride=1,
-    limit_past=True
+    limit_past=True,
+    label_cols=DataCol.SIRD_VARS,
+    final_cols=DataCol.IRD
 ):
     len_df = len(df)
     past_size = min(len_df - future_size, past_size)
@@ -195,11 +198,19 @@ def slice_dataset(
         past = [df.iloc[:past_end_1 + i] for i in ids]
     future = [df.iloc[future_start_1 + i:future_end_1 + i] for i in ids]
 
-    return past, future
+    mse_naive = [df[label_cols].iloc[:past_end_1 + i] for i in ids]
+    mse_naive = [mse(naive(x.to_numpy())) for x in mse_naive]
+
+    mse_naive_final = [df[final_cols].iloc[:past_end_1 + i] for i in ids]
+    mse_naive_final = [mse(naive(x.to_numpy())) for x in mse_naive]
+
+    return past, future, mse_naive, mse_naive_final
+
 
 
 def label_dataset_0(
     past, future,
+    mse_naive=None, mse_naive_final=None,
     past_cols=None,
     seed_size=None,
     label_cols=DataCol.SIRD_VARS,
@@ -233,6 +244,8 @@ def label_dataset_0(
         future_exo[i],
         final_seed[i],
         future_final[i],
+        mse_naive[i] if mse_naive else mse_naive,
+        mse_naive_final[i] if mse_naive_final else mse_naive_final,
         indices[i]
     ) for i in range(len(past))]
 
@@ -244,6 +257,8 @@ def label_dataset_0(
         future_exo_cols,
         final_seed_cols,
         final_cols,
+        label_cols,
+        final_cols,
         "index"
     ]
 
@@ -252,6 +267,7 @@ def label_dataset_0(
 
 def label_dataset_1(
     past, future,
+    mse_naive=None, mse_naive_final=None,
     label_cols=DataCol.SIRD,
     **kwargs
 ):
@@ -263,10 +279,12 @@ def label_dataset_1(
     ret = [(
         past[i],
         future[i],
+        mse_naive[i] if mse_naive else mse_naive,
         indices[i]
     ) for i in range(len(past))]
 
     labels = [
+        label_cols,
         label_cols,
         label_cols,
         "index"
@@ -276,6 +294,7 @@ def label_dataset_1(
 
 def label_dataset_2(
     past, future,
+    mse_naive=None, mse_naive_final=None,
     label_cols=DataCol.SIRD_VARS,
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD,
@@ -294,6 +313,8 @@ def label_dataset_2(
         future[i],
         final_seed[i],
         future_final[i],
+        mse_naive[i] if mse_naive else mse_naive,
+        mse_naive_final[i] if mse_naive_final else mse_naive_final,
         indices[i]
     ) for i in range(len(past))]
 
@@ -301,6 +322,7 @@ def label_dataset_2(
         label_cols,
         label_cols,
         final_seed_cols,
+        label_cols,
         final_cols,
         "index"
     ]
