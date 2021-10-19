@@ -107,7 +107,7 @@ DATES_CORR = [x for x in DATES_CORR if x in DATES]
 COLS_NON_DATE = [
     # DAILY_POS_RATE,
     # DELTA_VAC_PEOPLE,
-    DELTA_VAC_FULL,
+    # DELTA_VAC_FULL,
     # VAC_PEOPLE_S,
     VAC_FULL_S,
     # POS_RATE,
