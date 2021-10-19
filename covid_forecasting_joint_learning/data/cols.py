@@ -114,7 +114,7 @@ COLS_NON_DATE = [
     DELTA_TEST
 ]
 
-def future_exo_cols(dates=DATES, days=DAYS):
+def future_exo_cols(dates=DATES, days=[]):
     return [
         # DAY,
         *days,
