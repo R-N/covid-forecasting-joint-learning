@@ -56,12 +56,12 @@ LOCKDOWN_DATES = [
     "ppkm_mikro"
 ]
 HOLIDAY_DATES = [
-    "kenaikan_isa",
+    # "kenaikan_isa",
     "libur_awal_puasa",
     "hari_buruh",
     "idul_fitri_siswa",
     "idul_fitri_umum",
-    "libur_semester_genap",
+    # "libur_semester_genap",
     "idul_adha",
     "hut_ri",
     "tahun_baru_hijriyah",
@@ -99,19 +99,24 @@ DATES_CORR = [
     'ramadhan'
 ]
 
+DATES_BETA = [x for x in DATES_BETA if x in DATES]
+DATES_DELTA_I = [x for x in DATES_DELTA_I if x in DATES]
+DATES_I = [x for x in DATES_I if x in DATES]
+DATES_CORR = [x for x in DATES_CORR if x in DATES]
+
 COLS_NON_DATE = [
-    DAILY_POS_RATE,
-    DELTA_VAC_PEOPLE,
+    # DAILY_POS_RATE,
+    # DELTA_VAC_PEOPLE,
     DELTA_VAC_FULL,
-    VAC_PEOPLE_S,
+    # VAC_PEOPLE_S,
     VAC_FULL_S,
-    POS_RATE,
+    # POS_RATE,
     DELTA_TEST
 ]
 
 def future_exo_cols(dates=DATES, days=DAYS):
     return [
-        DAY,
+        # DAY,
         *days,
         *dates
     ]
