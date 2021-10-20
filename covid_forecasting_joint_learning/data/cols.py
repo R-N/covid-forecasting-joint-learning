@@ -90,9 +90,9 @@ DATES_DELTA_I = ["hut_ri", "idul_adha", "idul_fitri_siswa", "idul_fitri_umum", "
 DATES_I = ["hut_ri", "idul_adha", "idul_fitri_siswa", "idul_fitri_umum", "libur_semester_ganjil", "libur_semester_genap", "maulid_nabi", "maulid_nabi_ext", "natal", "natal_ext", "pilkada", "ppkm", "ppkm_mikro", "psbb", "tahun_baru_hijriyah", "tahun_baru_hijriyah_ext", "tahun_baru_masehi"]
 
 DATES_CORR = [
-    'libur_semester_ganjil',
-    'libur_semester_genap',
-    'natal',
+    # 'libur_semester_ganjil',
+    # 'libur_semester_genap',
+    # 'natal',
     'ppkm',
     'ppkm_mikro',
     'psbb',
