@@ -270,7 +270,7 @@ class ClusterModel:
         )
 
     def test(self, loss_fn=None):
-        test_kwargs = self.train_kwargs
+        test_kwargs = {k: v for k, v in self.train_kwargs if k not in ["source_weight"]}
         if loss_fn:
             test_kwargs["loss_fn"] = loss_fn
         return {target.name: test(
