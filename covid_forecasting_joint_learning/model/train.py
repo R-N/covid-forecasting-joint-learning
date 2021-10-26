@@ -173,7 +173,7 @@ def test(
     target.model.eval()
     dataloader = key(target)
     target_loss = 0
-    n = target.n
+    n = target.population
     for batch_id, samples in enumerate(dataloader):
         for sample in samples:
             sample, kabko = sample[:-1], sample[-1]
