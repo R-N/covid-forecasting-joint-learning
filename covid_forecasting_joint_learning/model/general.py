@@ -863,7 +863,7 @@ def eval(
     log_dir_copy = ModelUtil.prepare_dir(log_dir_copy)
     model_dir_copy = ModelUtil.prepare_dir(model_dir_copy)
 
-    trial_id = 0
+    trial_id = -1
 
     log_dir_i, model_dir_i = ModelUtil.prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=True)
     log_dir_copy_i, model_dir_copy_i = ModelUtil.prepare_log_model_dir(log_dir_copy, model_dir_copy, trial_id, mkdir=False)
