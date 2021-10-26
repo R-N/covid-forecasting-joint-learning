@@ -547,7 +547,7 @@ class ObjectiveModel:
             check_conv_kwargs(model_kwargs["representation_future_model"]["shared_representation"]["conv_kwargs"], future_length)
 
         self.preprocessing_5_params = {
-            "past_size": past_size,
+            "past_size": past_length,
             "seed_size": seed_length_0,
             "past_cols": past_cols,
             "future_exo_cols": future_exo_cols,
