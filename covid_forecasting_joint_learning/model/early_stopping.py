@@ -162,9 +162,10 @@ class EarlyStopping:
             self.best_loss_2_writer.add_scalar(self.label + label, best_loss_2, global_step=epoch)
             self.best_loss_2_writer.flush()
 
-    def __call__(self, train_loss, val_loss, epoch=None):
+    def __call__(self, train_loss, val_loss=None, epoch=None):
         epoch = epoch if epoch is not None else self.epoch
 
+        val_loss = train_loss if val_loss is None else val_loss
         val_loss_0, train_loss_0 = val_loss, train_loss
 
         mean_train_loss, min_delta_train_2 = self.calculate_interval(val=True)
@@ -361,6 +362,7 @@ class EarlyStopping:
 
     def update_state(self):
         self.best_state = deepcopy(self.model.state_dict())
+        self.best_epoch = self.epoch
 
     def load_best_state(self):
         self.model.load_state_dict(deepcopy(self.best_state))

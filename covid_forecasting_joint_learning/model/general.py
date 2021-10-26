@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from .modules.representation import check_conv_kwargs
 from .modules.main import SingleModel
-from .train import train, test, autoclip_gradient
+from .train import train, test, val, autoclip_gradient
 import datetime
 from torch.utils.tensorboard import SummaryWriter
 from .scheduler import OneCycleLR, LRFinder
@@ -262,7 +262,7 @@ class ClusterModel:
         train_kwargs = self.train_kwargs
         if loss_fn:
             train_kwargs["loss_fn"] = loss_fn
-        return test(
+        return val(
             self.sources,
             self.targets,
             key=lambda k: k.dataloaders[1],
@@ -270,15 +270,14 @@ class ClusterModel:
         )
 
     def test(self, loss_fn=None):
-        train_kwargs = self.train_kwargs
+        test_kwargs = self.train_kwargs
         if loss_fn:
-            train_kwargs["loss_fn"] = loss_fn
-        return test(
-            self.sources,
-            self.targets,
-            key=lambda k: k.dataloaders[2],
-            **train_kwargs
-        )
+            test_kwargs["loss_fn"] = loss_fn
+        return {target.name: test(
+            target,
+            key=lambda k: k.dataloaders[-1],
+            **test_kwargs
+        ) for target in self.targets}
 
     def get_target_model_summary(self):
         return self.target.get_model_summary()
@@ -400,7 +399,8 @@ class ObjectiveModel:
         shared_model=None,
         use_shared=True,
         update_hx=True,
-        use_exo=True
+        use_exo=True,
+        val=None
     ):
         self.cluster = cluster
 
@@ -546,21 +546,16 @@ class ObjectiveModel:
         with suppress(KeyError, TypeError, AttributeError):
             check_conv_kwargs(model_kwargs["representation_future_model"]["shared_representation"]["conv_kwargs"], future_length)
 
-        members = cluster.members
-        preprocessing_5(
-            members,
-            past_size=past_length,
-            seed_size=seed_length_0,
-            past_cols=past_cols,
-            future_exo_cols=future_exo_cols,
-            label_cols=DataCol.SIRD_VARS,
-            final_seed_cols=DataCol.SIRD,
-            final_cols=DataCol.IRD
-        )
-        preprocessing_6(
-            members,
-            batch_size=batch_size
-        )
+        self.preprocessing_5_params = {
+            "past_size": past_size,
+            "seed_size": seed_length_0,
+            "past_cols": past_cols,
+            "future_exo_cols": future_exo_cols,
+        }
+        self.preprocessing_6_params = {
+            "batch_size": batch_size
+        }
+        self.preprocessing(val=val)
 
         sample = cluster.target.datasets[0][0]
         input_size_past = sample[0].shape[-1]
@@ -636,6 +631,24 @@ class ObjectiveModel:
         self.val_epoch = 0
 
         self.label = f"G{self.cluster.group.id}.C{self.cluster.id}/"
+
+
+    def preprocessing(
+        self,
+        val=None
+    ):
+        preprocessing_5(
+            self.cluster.members,
+            label_cols=DataCol.SIRD_VARS,
+            final_seed_cols=DataCol.SIRD,
+            final_cols=DataCol.IRD,
+            val=val,
+            **self.preprocessing_5_params
+        )
+        preprocessing_6(
+            self.cluster.members,
+            **self.preprocessing_6_params
+        )
 
 
     def _log_scalar(self, writer, loss, epoch):
@@ -803,6 +816,259 @@ class TrialWrapper:
             return self.trial.suggest_categorical(name, param, *args, **kwargs)
         return param
 
+def eval(
+    groups,
+    params,
+    log_dir="temp/logs/",
+    model_dir="temp/model/",
+    log_dir_copy=None,
+    model_dir_copy=None,
+    drive=None,
+    log_dir_id=None,
+    model_dir_id=None,
+    device=None,
+    write_graph=True,
+    early_stopping_interval_mode=1,
+    min_epoch=100,
+    max_epoch=None,
+    teacher_forcing=True,
+    activations=DEFAULT_ACTIVATIONS,
+    past_cols=DEFAULT_PAST_COLS,
+    future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
+    source_pick=SourcePick.ALL,
+    private_mode=SharedMode.PRIVATE,
+    shared_mode=SharedMode.SHARED,
+    pretrain_upload=False,
+    posttrain_upload=False,
+    pretrain_copy=True,
+    posttrain_copy=True,
+    cleanup=True,
+    use_representation_past=True,
+    use_representation_future=False,
+    use_shared=True,
+    update_hx=True,
+    joint_learning=True,
+    merge_clusters=False,
+    debug=False
+):
+    if device is None:
+        device = ModelUtil.DEVICE
+    activation_keys = [x for x in activations.keys()]
+
+    assert (not log_dir_copy) or log_dir
+    assert (not model_dir_copy) or model_dir
+
+    log_dir = ModelUtil.prepare_dir(log_dir)
+    model_dir = ModelUtil.prepare_dir(model_dir)
+    log_dir_copy = ModelUtil.prepare_dir(log_dir_copy)
+    model_dir_copy = ModelUtil.prepare_dir(model_dir_copy)
+
+    trial_id = 0
+
+    log_dir_i, model_dir_i = ModelUtil.prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=True)
+    log_dir_copy_i, model_dir_copy_i = ModelUtil.prepare_log_model_dir(log_dir_copy, model_dir_copy, trial_id, mkdir=False)
+
+    ModelUtil.global_random_seed()
+
+    onecycle = params["onecycle"]
+    if onecycle:
+        params["lr"] = None
+
+    source_pick_1 = source_pick
+    if not joint_learning:
+        del params["source_weight"]
+        source_pick_1 = SourcePick.NONE
+
+    if not (use_representation_past or use_representation_future):
+        del params["conv_activation"]
+
+    if not use_shared:
+        del params["shared_state_size"]
+        del params["combine_head_w0_mean"]
+        del params["combine_head_w0_std"]
+        del params["precombine_head_depth"]
+
+    if not use_representation_past:
+        del params["hidden_size_past"]
+        del params["representation_past_private_depth"]
+        del params["representation_past_private_kernel_size"]
+        del params["representation_past_private_stride"]
+        del params["representation_past_private_dilation"]
+
+    if use_representation_past and not use_shared:
+        del params["representation_past_shared_depth"]
+        del params["representation_past_shared_kernel_size"]
+        del params["representation_past_shared_stride"]
+        del params["representation_past_shared_dilation"]
+        del params["representation_past_pre_shared_depth"]
+        del params["combine_representation_past_w0_mean"]
+        del params["combine_representation_past_w0_std"]
+
+    if not use_representation_future:
+        del params["hidden_size_future"]
+        del params["representation_future_private_depth"]
+        del params["representation_future_private_kernel_size"]
+        del params["representation_future_private_stride"]
+        del params["representation_future_private_dilation"]
+
+    if use_representation_future and not use_shared:
+        del params["representation_future_shared_depth"]
+        del params["representation_future_shared_kernel_size"]
+        del params["representation_future_shared_stride"]
+        del params["representation_future_shared_dilation"]
+        del params["representation_future_pre_shared_depth"]
+        del params["combine_representation_future_w0_mean"]
+        del params["combine_representation_future_w0_std"]
+
+    params = prepare_params(params, activations, past_cols, future_exo_cols)
+
+    if "use_exo" not in params:
+        params["use_exo"] = bool(params["future_exo_cols"])
+
+    target_losses = {}
+
+    for group_0 in groups:
+        group = group_0.copy()
+        target_losses[group.id] = {}
+        clusters = [group.merge_clusters()] if merge_clusters else group.clusters
+        for cluster in clusters:
+            if debug and (group.id > 0 or cluster.id > 1):
+                continue
+
+            print(f"Model for {trial_id}.{group.id}.{cluster.id}")
+
+            grad_scaler = None  # GradScaler(init_scale=8192)
+
+            model = ObjectiveModel(
+                cluster,
+                trial_id=trial_id,
+                log_dir=log_dir_i,
+                model_dir=model_dir_i,
+                grad_scaler=grad_scaler,
+                # teacher_forcing=True,
+                min_epoch=min_epoch,
+                use_shared=use_shared,
+                source_pick=source_pick_1,
+                private_mode=private_mode,
+                shared_mode=shared_mode,
+                debug=debug,
+                val=False,  # Combine train set and val set
+                **params
+            )
+            model.to(device)
+
+            if write_graph and group.id == 0 and cluster.id <= 0:
+                model.write_graph()
+
+            if model_dir:
+                model.pretrain_save_model()
+
+            if pretrain_copy:
+                if model_dir_copy_i:
+                    ModelUtil.copytree(model_dir_i, model_dir_copy_i, dirs_exist_ok=True)
+            if drive and pretrain_upload:
+                upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
+
+            early_stopping = EarlyStopping(
+                model.model.models,
+                debug=1,
+                log_dir=model.log_dir,
+                label=model.label,
+                interval_mode=early_stopping_interval_mode,
+                wait=min_epoch,
+                max_epoch=max_epoch
+            )
+
+            while not early_stopping.stopped:
+                train_loss_target, val_loss_target = np.nan, np.nan
+                try:
+                    train_loss, train_loss_target, train_loss_targets = model.train()
+                    if torch.isnan(train_loss).any():
+                        raise NaNLossException()
+                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+
+                    val_loss, val_loss_target, val_loss_targets = model.val()
+                    if torch.isnan(val_loss).any():
+                        raise NaNLossException()
+                    val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+
+                    early_stopping(train_loss_target, val_loss_target)
+                except (NaNPredException, NaNLossException):
+                    if not early_stopping.step_nan():
+                        raise
+
+            best_epoch = early_stopping.best_epoch
+            del early_stopping
+            model.preprocessing(val=2)
+
+            early_stopping = EarlyStopping(
+                model.model.models,
+                debug=1,
+                log_dir=model.log_dir,
+                label=model.label + "a",
+                interval_mode=early_stopping_interval_mode,
+                wait=0,
+                max_epoch=best_epoch
+            )
+
+            while not early_stopping.stopped:
+                train_loss_target, val_loss_target = np.nan, np.nan
+                try:
+                    train_loss, train_loss_target, train_loss_targets = model.train()
+                    if torch.isnan(train_loss).any():
+                        raise NaNLossException()
+                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+
+                    val_loss, val_loss_target, val_loss_targets = model.val()
+                    if torch.isnan(val_loss).any():
+                        raise NaNLossException()
+                    val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+
+                    early_stopping(train_loss_target, val_loss_target)
+                except (NaNPredException, NaNLossException):
+                    if not early_stopping.step_nan():
+                        raise
+
+            target_losses[group.id][cluster.id] = model.test()
+
+            if model_dir:
+                model.posttrain_save_model(save_state=True)
+
+            if posttrain_copy:
+                if log_dir_copy_i:
+                    ModelUtil.copytree(log_dir_i, log_dir_copy_i, dirs_exist_ok=True)
+                if model_dir_copy_i:
+                    ModelUtil.copytree(model_dir_i, model_dir_copy_i, dirs_exist_ok=True)
+            if drive and posttrain_upload:
+                upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
+
+            del model
+            del early_stopping
+
+            torch.cuda.empty_cache()
+            gc.collect()
+
+        del group
+        del clusters
+        gc.collect()
+
+    if not posttrain_copy:
+        if log_dir_copy_i:
+            ModelUtil.copytree(log_dir_i, log_dir_copy_i, dirs_exist_ok=True)
+        if model_dir_copy_i:
+            ModelUtil.copytree(model_dir_i, model_dir_copy_i, dirs_exist_ok=True)
+    if drive and not posttrain_upload:
+        upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
+    if cleanup:
+        if log_dir_i and (log_dir_copy_i or drive):
+            ModelUtil.rmtree(log_dir_i)
+        if model_dir_i and (model_dir_copy_i or drive):
+            ModelUtil.rmtree(model_dir_i)
+
+    return target_losses
+
+
+
 def make_objective(
     groups,
     log_dir="temp/logs/",
@@ -904,8 +1170,6 @@ def make_objective(
         else:
             params["lr"] = trial.suggest_float("lr", lrs)
 
-        use_exo = bool(params["future_exo_cols"])
-        params["use_exo"] = use_exo
 
         source_pick_1 = source_pick
         if joint_learning:
@@ -967,6 +1231,8 @@ def make_objective(
                 })
 
         params = prepare_params(params, activations, past_cols, future_exo_cols)
+        use_exo = bool(params["future_exo_cols"])
+        params["use_exo"] = use_exo
 
         sum_val_loss_target = 0
 
