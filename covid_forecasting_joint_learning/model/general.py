@@ -876,49 +876,49 @@ def eval(
 
     source_pick_1 = source_pick
     if not joint_learning:
-        del params["source_weight"]
+        params.pop("source_weight", None)
         source_pick_1 = SourcePick.NONE
 
     if not (use_representation_past or use_representation_future):
-        del params["conv_activation"]
+        params.pop("conv_activation", None)
 
     if not use_shared:
-        del params["shared_state_size"]
-        del params["combine_head_w0_mean"]
-        del params["combine_head_w0_std"]
-        del params["precombine_head_depth"]
+        params.pop("shared_state_size", None)
+        params.pop("combine_head_w0_mean", None)
+        params.pop("combine_head_w0_std", None)
+        params.pop("precombine_head_depth", None)
 
     if not use_representation_past:
-        del params["hidden_size_past"]
-        del params["representation_past_private_depth"]
-        del params["representation_past_private_kernel_size"]
-        del params["representation_past_private_stride"]
-        del params["representation_past_private_dilation"]
+        params.pop("hidden_size_past", None)
+        params.pop("representation_past_private_depth", None)
+        params.pop("representation_past_private_kernel_size", None)
+        params.pop("representation_past_private_stride", None)
+        params.pop("representation_past_private_dilation", None)
 
     if use_representation_past and not use_shared:
-        del params["representation_past_shared_depth"]
-        del params["representation_past_shared_kernel_size"]
-        del params["representation_past_shared_stride"]
-        del params["representation_past_shared_dilation"]
-        del params["representation_past_pre_shared_depth"]
-        del params["combine_representation_past_w0_mean"]
-        del params["combine_representation_past_w0_std"]
+        params.pop("representation_past_shared_depth", None)
+        params.pop("representation_past_shared_kernel_size", None)
+        params.pop("representation_past_shared_stride", None)
+        params.pop("representation_past_shared_dilation", None)
+        params.pop("representation_past_pre_shared_depth", None)
+        params.pop("combine_representation_past_w0_mean", None)
+        params.pop("combine_representation_past_w0_std", None)
 
     if not use_representation_future:
-        del params["hidden_size_future"]
-        del params["representation_future_private_depth"]
-        del params["representation_future_private_kernel_size"]
-        del params["representation_future_private_stride"]
-        del params["representation_future_private_dilation"]
+        params.pop("hidden_size_future", None)
+        params.pop("representation_future_private_depth", None)
+        params.pop("representation_future_private_kernel_size", None)
+        params.pop("representation_future_private_stride", None)
+        params.pop("representation_future_private_dilation", None)
 
     if use_representation_future and not use_shared:
-        del params["representation_future_shared_depth"]
-        del params["representation_future_shared_kernel_size"]
-        del params["representation_future_shared_stride"]
-        del params["representation_future_shared_dilation"]
-        del params["representation_future_pre_shared_depth"]
-        del params["combine_representation_future_w0_mean"]
-        del params["combine_representation_future_w0_std"]
+        params.pop("representation_future_shared_depth", None)
+        params.pop("representation_future_shared_kernel_size", None)
+        params.pop("representation_future_shared_stride", None)
+        params.pop("representation_future_shared_dilation", None)
+        params.pop("representation_future_pre_shared_depth", None)
+        params.pop("combine_representation_future_w0_mean", None)
+        params.pop("combine_representation_future_w0_std", None)
 
     params = prepare_params(params, activations, past_cols, future_exo_cols)
 
