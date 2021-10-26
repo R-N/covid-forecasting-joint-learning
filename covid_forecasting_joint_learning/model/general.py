@@ -873,6 +873,7 @@ def eval(
     onecycle = params["onecycle"]
     if onecycle:
         params["lr"] = None
+    params.pop("onecycle", None)
 
     source_pick_1 = source_pick
     if not joint_learning:
