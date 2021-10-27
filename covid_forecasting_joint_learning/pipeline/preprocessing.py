@@ -128,7 +128,7 @@ class Group:
 def split_groups(
     kabko_dfs,
     limit_length=[90, 180, 366],
-    limit_date=["2021-01-20"]
+    limit_date=["2021-01-21"]
 ):
     groups = [
         *[[(kabko, df[:l].copy()) for kabko, df in kabko_dfs] for l in limit_length],
