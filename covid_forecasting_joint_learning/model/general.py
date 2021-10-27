@@ -1001,20 +1001,23 @@ def eval(
 
             if val_train:
                 best_epoch = early_stopping.best_epoch
-                del early_stopping
+                best_loss = early_stopping.best_val_loss_2
+                first_train_count = len(model.model.target.datasets[0])
                 model.preprocessing(val=2)
+                second_train_count = len(model.model.target.datasets[0])
 
-                early_stopping = EarlyStopping(
+                early_stopping_2 = EarlyStopping(
                     model.model.models,
                     debug=1,
                     log_dir=model.log_dir,
                     label=model.label + "a",
                     interval_mode=early_stopping_interval_mode,
                     wait=0,
-                    max_epoch=best_epoch
+                    max_epoch=int(best_epoch * (second_train_count / first_train_count)),
+                    update_state_mode=1
                 )
 
-                while not early_stopping.stopped:
+                while not early_stopping_2.stopped:
                     train_loss_target, val_loss_target = np.nan, np.nan
                     try:
                         train_loss, train_loss_target, train_loss_targets = model.train()
@@ -1027,10 +1030,14 @@ def eval(
                             raise NaNLossException()
                         val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
 
-                        early_stopping(train_loss_target, val_loss_target)
+                        early_stopping_2(train_loss_target, val_loss_target)
                     except (NaNPredException, NaNLossException):
-                        if not early_stopping.step_nan():
+                        if not early_stopping_2.step_nan():
                             raise
+
+                if best_loss < early_stopping_2.best_val_loss:
+                    print("Second training results in higher loss. Loading previous best state")
+                    early_stopping.load_best_state()
 
             test_loss = model.test()
             print("Test loss:", test_loss)
