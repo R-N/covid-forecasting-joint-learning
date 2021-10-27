@@ -849,7 +849,8 @@ def eval(
     update_hx=True,
     joint_learning=True,
     merge_clusters=False,
-    debug=False
+    debug=False,
+    val_train=True
 ):
     if device is None:
         device = ModelUtil.DEVICE
@@ -998,39 +999,42 @@ def eval(
                     if not early_stopping.step_nan():
                         raise
 
-            best_epoch = early_stopping.best_epoch
-            del early_stopping
-            model.preprocessing(val=2)
+            if val_train:
+                best_epoch = early_stopping.best_epoch
+                del early_stopping
+                model.preprocessing(val=2)
 
-            early_stopping = EarlyStopping(
-                model.model.models,
-                debug=1,
-                log_dir=model.log_dir,
-                label=model.label + "a",
-                interval_mode=early_stopping_interval_mode,
-                wait=0,
-                max_epoch=best_epoch
-            )
+                early_stopping = EarlyStopping(
+                    model.model.models,
+                    debug=1,
+                    log_dir=model.log_dir,
+                    label=model.label + "a",
+                    interval_mode=early_stopping_interval_mode,
+                    wait=0,
+                    max_epoch=best_epoch
+                )
 
-            while not early_stopping.stopped:
-                train_loss_target, val_loss_target = np.nan, np.nan
-                try:
-                    train_loss, train_loss_target, train_loss_targets = model.train()
-                    if torch.isnan(train_loss).any():
-                        raise NaNLossException()
-                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+                while not early_stopping.stopped:
+                    train_loss_target, val_loss_target = np.nan, np.nan
+                    try:
+                        train_loss, train_loss_target, train_loss_targets = model.train()
+                        if torch.isnan(train_loss).any():
+                            raise NaNLossException()
+                        train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
 
-                    val_loss, val_loss_target, val_loss_targets = model.val()
-                    if torch.isnan(val_loss).any():
-                        raise NaNLossException()
-                    val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+                        val_loss, val_loss_target, val_loss_targets = model.val()
+                        if torch.isnan(val_loss).any():
+                            raise NaNLossException()
+                        val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
 
-                    early_stopping(train_loss_target, val_loss_target)
-                except (NaNPredException, NaNLossException):
-                    if not early_stopping.step_nan():
-                        raise
+                        early_stopping(train_loss_target, val_loss_target)
+                    except (NaNPredException, NaNLossException):
+                        if not early_stopping.step_nan():
+                            raise
 
-            target_losses[group.id][cluster.id] = model.test()
+            test_loss = model.test()
+            print("Test loss:", test_loss)
+            target_losses[group.id][cluster.id] = test_loss
 
             if model_dir:
                 model.posttrain_save_model(save_state=True)
