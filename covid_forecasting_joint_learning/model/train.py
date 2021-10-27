@@ -167,7 +167,7 @@ def val(*args, **kwargs):
 def test(
     target,
     loss_fn=rmsse,
-    reduction="sum",
+    reduction="mean",
     key=lambda k: k.dataloaders[-1]
 ):
     target.model.eval()
