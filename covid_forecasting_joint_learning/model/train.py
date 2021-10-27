@@ -187,7 +187,7 @@ def test(
         ) for i in range(len(pred_vars))]
         pred_final = np.stack(pred_final)
         losses = [loss_fn(
-            prev[i],
+            prev[i][:, :, 1:],
             final[i],
             pred_final[i]
         ) for i in range(len(pred_final))]
