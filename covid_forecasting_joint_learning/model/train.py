@@ -174,27 +174,26 @@ def test(
     dataloader = key(target)
     target_loss = 0
     n = target.population
-    for batch_id, samples in enumerate(dataloader):
-        for sample in samples:
-            # sample, kabko = sample[:-1], sample[-1]
-            pred_vars = target.model(*sample[:5]).numpy()
-            prev, final = sample[5], sample[6]
-            if isinstance(prev, torch.Tensor):
-                prev, final = prev.numpy(), final.numpy()
-            pred_final = [sird.rebuild(
-                pred_vars[i],
-                prev[i][-1],
-                n
-            ) for i in range(len(pred_vars))]
-            pred_final = np.stack(pred_final)
-            losses = [loss_fn(
-                prev[i],
-                final[i],
-                pred_final[i]
-            ) for i in range(len(pred_final))]
-            losses = np.stack(losses)
+    for batch_id, sample in enumerate(dataloader):
+        # sample, kabko = sample[:-1], sample[-1]
+        pred_vars = target.model(*sample[:5]).numpy()
+        prev, final = sample[5], sample[6]
+        if isinstance(prev, torch.Tensor):
+            prev, final = prev.numpy(), final.numpy()
+        pred_final = [sird.rebuild(
+            pred_vars[i],
+            prev[i][-1],
+            n
+        ) for i in range(len(pred_vars))]
+        pred_final = np.stack(pred_final)
+        losses = [loss_fn(
+            prev[i],
+            final[i],
+            pred_final[i]
+        ) for i in range(len(pred_final))]
+        losses = np.stack(losses)
 
-            target_loss += reduce(losses, reduction=reduction)
+        target_loss += reduce(losses, reduction=reduction)
     return target_loss
 
 
