@@ -176,7 +176,7 @@ def test(
     n = target.population
     for batch_id, sample in enumerate(dataloader):
         # sample, kabko = sample[:-1], sample[-1]
-        pred_vars = target.model(*sample[:5]).numpy()
+        pred_vars = target.model(*sample[:5]).detach().numpy()
         prev, final = sample[5], sample[6]
         if isinstance(prev, torch.Tensor):
             prev, final = prev.numpy(), final.numpy()
