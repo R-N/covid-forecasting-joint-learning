@@ -77,7 +77,7 @@ def rebuild(sird_vars, prev, n, index=None):
         r += delta_r
         d += delta_d
 
-        rebuilt.append([s, i, r, d])
+        rebuilt.append([i, r, d])
 
     rebuilt.pop(0)
 
