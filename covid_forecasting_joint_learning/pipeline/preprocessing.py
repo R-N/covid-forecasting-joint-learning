@@ -202,7 +202,7 @@ def slice_dataset(
     mse_naive = [mse(naive(x.to_numpy())) for x in mse_naive]
 
     mse_naive_final = [df[final_cols].iloc[:past_end_1 + i] for i in ids]
-    mse_naive_final = [mse(naive(x.to_numpy())) for x in mse_naive]
+    mse_naive_final = [mse(naive(x.to_numpy())) for x in mse_naive_final]
 
     return past, future, mse_naive, mse_naive_final
 
