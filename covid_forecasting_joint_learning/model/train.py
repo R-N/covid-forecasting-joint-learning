@@ -193,7 +193,7 @@ def test(
         ) for i in range(len(pred_final))]
         losses = np.stack(losses)
 
-        target_loss += reduce(losses, reduction=reduction)
+        target_loss += reduce(losses, reduction=reduction, reduce_feature=False)
     return target_loss
 
 
