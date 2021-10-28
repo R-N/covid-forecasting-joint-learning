@@ -177,9 +177,9 @@ def test(
     for batch_id, sample in enumerate(dataloader):
         # sample, kabko = sample[:-1], sample[-1]
         pred_vars = target.model(*sample[:5]).detach().numpy()
-        prev, final = sample[5], sample[6]
+        prev, final, mse_final = sample[5], sample[6], sample[8]
         if isinstance(prev, torch.Tensor):
-            prev, final = prev.numpy(), final.numpy()
+            prev, final, mse_final = prev.numpy(), final.numpy(), mse_final.numpy()
         pred_final = [sird.rebuild(
             pred_vars[i],
             prev[i][-1],
@@ -187,9 +187,10 @@ def test(
         ) for i in range(len(pred_vars))]
         pred_final = np.stack(pred_final)
         losses = [loss_fn(
-            prev[i][:, 1:],
             final[i],
-            pred_final[i]
+            pred_final[i],
+            mse_naive=mse_final[i],
+            past=prev[i][:, 1:]
         ) for i in range(len(pred_final))]
         losses = np.stack(losses)
 
