@@ -45,13 +45,13 @@ def rmsse(future, pred, mse_naive=None, past=None, limit_naive=30, eps=ModelUtil
         eps=eps
     ))
 
-def reduce(loss, reduction="sum"):
-    while loss.dim() > 1:
+def reduce(loss, reduction="sum", reduce_feature=True):
+    while reduce_feature and loss.dim() > 1:
         loss = torch.sum(loss, dim=-1)
     if reduction in ("mean", "avg"):
-        return torch.mean(loss)
+        return torch.mean(loss, dim=0)
     elif reduction == "sum":
-        return torch.sum(loss)
+        return torch.sum(loss, dim=0)
     else:
         raise ValueError(f"Invalid reduction {reduction}")
 

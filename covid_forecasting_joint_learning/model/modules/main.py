@@ -509,6 +509,8 @@ class SingleModel(nn.Module):
         with suppress(KeyError, TypeError, AttributeError):
             layer_attrs["past_model.private_representation"] = self.get_layer_attr(self.past_model.representation_model.private_representation, sample)
         with suppress(KeyError, TypeError, AttributeError):
+            layer_attrs["past_model.pre_shared_representation"] = self.get_layer_attr(self.past_model.representation_model.pre_shared_representation, sample)
+        with suppress(KeyError, TypeError, AttributeError):
             layer_attrs["past_model.shared_representation"] = self.get_layer_attr(self.past_model.representation_model.shared_representation, sample)
         with suppress(KeyError, TypeError, AttributeError):
             layer_attrs["past_model.private_head"] = self.get_layer_attr(self.past_model.private_head, sample, labels=["hx", "cx"])
@@ -518,6 +520,8 @@ class SingleModel(nn.Module):
             layer_attrs["past_model"] = self.get_layer_attr(self.past_model, sample)
         with suppress(KeyError, TypeError, AttributeError):
             layer_attrs["future_model.private_representation"] = self.get_layer_attr(self.representation_future_model.private_representation, sample)
+        with suppress(KeyError, TypeError, AttributeError):
+            layer_attrs["future_model.pre_shared_representation"] = self.get_layer_attr(self.representation_future_model.pre_shared_representation, sample)
         with suppress(KeyError, TypeError, AttributeError):
             layer_attrs["future_model.shared_representation"] = self.get_layer_attr(self.representation_future_model.shared_representation, sample)
         with suppress(KeyError, TypeError, AttributeError):

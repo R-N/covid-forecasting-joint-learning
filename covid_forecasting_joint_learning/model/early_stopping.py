@@ -26,7 +26,8 @@ class EarlyStopping:
         debug=0,
         log_dir=None,
         label=None,
-        eps=1e-3
+        eps=1e-3,
+        update_state_mode=2
     ):
         """
         :param patience: how many epochs to wait before stopping when loss is
@@ -82,10 +83,11 @@ class EarlyStopping:
         self.train_loss = None
         self.val_loss = None
 
-        self.max_nan = max_nan or int(0.5 * (self.wait - self.history_length))
+        self.max_nan = max_nan or max(0, int(0.5 * (self.wait - self.history_length)))
         self.nan_counter = 0
 
         self.eps = eps
+        self.update_state_mode = update_state_mode
 
         if self.log_dir is not None:
             assert self.label is not None
@@ -162,9 +164,10 @@ class EarlyStopping:
             self.best_loss_2_writer.add_scalar(self.label + label, best_loss_2, global_step=epoch)
             self.best_loss_2_writer.flush()
 
-    def __call__(self, train_loss, val_loss, epoch=None):
+    def __call__(self, train_loss, val_loss=None, epoch=None):
         epoch = epoch if epoch is not None else self.epoch
 
+        val_loss = train_loss if val_loss is None else val_loss
         val_loss_0, train_loss_0 = val_loss, train_loss
 
         mean_train_loss, min_delta_train_2 = self.calculate_interval(val=True)
@@ -337,7 +340,8 @@ class EarlyStopping:
         if self.max_epoch and epoch >= self.max_epoch:
             self.stop()
             if self.debug >= 1:
-                print(f"INFO: Stopping at max epoch {epoch} with best_val_loss_2={self.best_val_loss_2}")
+                loss = f"best_val_loss_2={self.best_val_loss_2}" if self.update_state_mode == 2 else f"best_val_loss={self.best_val_loss}"
+                print(f"INFO: Stopping at max epoch {epoch} with {loss} at epoch {self.best_epoch}")
 
         self.epoch = epoch + 1
         return self.epoch
@@ -361,13 +365,15 @@ class EarlyStopping:
 
     def update_state(self):
         self.best_state = deepcopy(self.model.state_dict())
+        self.best_epoch = self.epoch
 
     def load_best_state(self):
         self.model.load_state_dict(deepcopy(self.best_state))
 
     def update_best_val_2(self, val_loss):
         self.best_val_loss_2 = val_loss
-        self.update_state()
+        if self.update_state_mode == 2:
+            self.update_state()
 
     def update_best_train(self, train_loss):
         self.best_train_loss = train_loss
@@ -376,6 +382,8 @@ class EarlyStopping:
         self.best_val_loss = val_loss
         if val_loss < self.best_val_loss_2:
             self.update_best_val_2(val_loss)
+        if self.update_state_mode == 1:
+            self.update_state()
 
     def stop(self):
         if not self.stopped:
@@ -389,7 +397,8 @@ class EarlyStopping:
         epoch = epoch if epoch is not None else self.epoch
         self.stop()
         if self.debug >= 1:
-            print(f"INFO: Early stopping due to {reason} at epoch {epoch} with best_val_loss_2={self.best_val_loss_2}")
+            loss = f"best_val_loss_2={self.best_val_loss_2}" if self.update_state_mode == 2 else f"best_val_loss={self.best_val_loss}"
+            print(f"INFO: Early stopping due to {reason} at epoch {epoch} with {loss} at epoch {self.best_epoch}")
 
     def calculate_forgiveness(self, counter, forgiveness, patience):
         return min(counter, forgiveness * patience)

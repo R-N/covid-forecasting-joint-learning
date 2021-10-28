@@ -218,7 +218,7 @@ def label_dataset_0(
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD
 ):
-    final_seed = [x.iloc[-1] for x in past]
+    final_seed = [x.iloc[-seed_size:] for x in past]
     indices = [x.index for x in future]
     past_size = len(past[0])
     seed_size = seed_size or past_size
@@ -394,7 +394,9 @@ def split_dataset(
         future_exo_cols=future_exo_cols,
         final_seed_cols=final_seed_cols, final_cols=final_cols
     )
-    if val:
+    if val == 2:
+        return (merge_dataset([train_set, val_set]), val_set, test_set), labels
+    elif val:
         return (train_set, val_set, test_set), labels
     else:
         return (merge_dataset([train_set, val_set]), test_set), labels

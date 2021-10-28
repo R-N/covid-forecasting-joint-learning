@@ -2,8 +2,10 @@ import torch
 from torch import nn
 import contextlib
 from .loss import MSSELoss
+from .loss_common import rmsse, reduce
 from .util import LINE_PROFILER
 import numpy as np
+from ..pipeline import sird
 
 
 dummy_context = contextlib.nullcontext()
@@ -159,8 +161,41 @@ def eval(
 def train(*args, **kwargs):
     return eval(*args, train=True, **kwargs)
 
-def test(*args, **kwargs):
+def val(*args, **kwargs):
     return eval(*args, train=False, **kwargs)
+
+def test(
+    target,
+    loss_fn=rmsse,
+    reduction="mean",
+    key=lambda k: k.dataloaders[-1]
+):
+    target.model.eval()
+    dataloader = key(target)
+    target_loss = 0
+    n = target.population
+    for batch_id, sample in enumerate(dataloader):
+        # sample, kabko = sample[:-1], sample[-1]
+        pred_vars = target.model(*sample[:5]).detach().numpy()
+        prev, final = sample[5], sample[6]
+        if isinstance(prev, torch.Tensor):
+            prev, final = prev.numpy(), final.numpy()
+        pred_final = [sird.rebuild(
+            pred_vars[i],
+            prev[i][-1],
+            n
+        ) for i in range(len(pred_vars))]
+        pred_final = np.stack(pred_final)
+        losses = [loss_fn(
+            prev[i][:, 1:],
+            final[i],
+            pred_final[i]
+        ) for i in range(len(pred_final))]
+        losses = np.stack(losses)
+
+        target_loss += reduce(losses, reduction=reduction, reduce_feature=False)
+    return target_loss
+
 
 def _get_grad_norm(model):
     total_norm = 0

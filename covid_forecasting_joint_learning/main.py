@@ -17,7 +17,11 @@ def init():
     return device
 
 
-def main_1(data_path, labeled_dates=DataCol.LABELED_DATES, cols=DataCol.COLS):
+def main_1(
+    data_path,
+    labeled_dates=DataCol.LABELED_DATES,
+    cols=DataCol.COLS
+):
     loader = DataCenter()
     loader.load_excel(data_path)
     loader = Pipeline.preprocessing_0(loader)

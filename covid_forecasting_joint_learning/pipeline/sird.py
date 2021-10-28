@@ -56,15 +56,15 @@ def calc_vars(df, n, df_shifted=None):
     return df
 
 
-def rebuild(sird_vars, prev, n, index=None):
+def rebuild(sird_vars, prev, n, index=None, return_s=False):
     is_df = isinstance(sird_vars, pd.DataFrame)
     index = index if index is not None else sird_vars.index if is_df else None
     sird_vars = sird_vars[DataCol.SIRD_VARS].itertuples(index=False) if is_df else sird_vars
 
     rebuilt = [prev]
+    s, i, r, d = prev
 
     for beta, gamma, delta in sird_vars:
-        s, i, r, d = rebuilt[-1]
 
         delta_r = gamma * i
         delta_d = delta * i
@@ -80,6 +80,8 @@ def rebuild(sird_vars, prev, n, index=None):
         rebuilt.append([s, i, r, d])
 
     rebuilt.pop(0)
+    if not return_s:
+        rebuilt = [x[1:] for x in rebuilt]
 
     rebuilt = rebuilt if index is None else pd.DataFrame(rebuilt, columns=DataCol.SIRD, index=index)
 
