@@ -383,9 +383,7 @@ def preprocessing_5(
 ):
     assert (not seed_size) or seed_size <= past_size
     if val is None:
-        val = (labeling == 0)
-    if not val and labeling == 0:
-        val = 2
+        val = 0 if labeling == 0 else 2
     for kabko in kabkos:
         split_indices = kabko.split_indices[1], kabko.split_indices[3]
         split_indices = [kabko.data.index.get_loc(s) for s in split_indices]

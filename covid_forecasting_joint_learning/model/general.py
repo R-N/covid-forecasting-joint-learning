@@ -816,70 +816,26 @@ class TrialWrapper:
             return self.trial.suggest_categorical(name, param, *args, **kwargs)
         return param
 
-def eval(
-    groups,
+
+def clean_params(
     params,
-    log_dir="temp/logs/",
-    model_dir="temp/model/",
-    log_dir_copy=None,
-    model_dir_copy=None,
-    drive=None,
-    log_dir_id=None,
-    model_dir_id=None,
-    device=None,
-    write_graph=True,
-    early_stopping_interval_mode=1,
-    min_epoch=100,
-    max_epoch=None,
-    teacher_forcing=True,
-    activations=DEFAULT_ACTIVATIONS,
-    past_cols=DEFAULT_PAST_COLS,
-    future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
-    source_pick=SourcePick.ALL,
-    private_mode=SharedMode.PRIVATE,
-    shared_mode=SharedMode.SHARED,
-    pretrain_upload=False,
-    posttrain_upload=False,
-    pretrain_copy=True,
-    posttrain_copy=True,
-    cleanup=True,
-    use_representation_past=True,
-    use_representation_future=False,
-    use_shared=True,
-    update_hx=True,
-    joint_learning=True,
-    merge_clusters=False,
-    debug=False,
-    val_train=True
+    source_pick,
+    joint_learning,
+    use_representation_past,
+    use_representation_future,
+    use_shared,
+    activations,
+    past_cols,
+    future_exo_cols
 ):
-    if device is None:
-        device = ModelUtil.DEVICE
-    activation_keys = [x for x in activations.keys()]
-
-    assert (not log_dir_copy) or log_dir
-    assert (not model_dir_copy) or model_dir
-
-    log_dir = ModelUtil.prepare_dir(log_dir)
-    model_dir = ModelUtil.prepare_dir(model_dir)
-    log_dir_copy = ModelUtil.prepare_dir(log_dir_copy)
-    model_dir_copy = ModelUtil.prepare_dir(model_dir_copy)
-
-    trial_id = -1
-
-    log_dir_i, model_dir_i = ModelUtil.prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=True)
-    log_dir_copy_i, model_dir_copy_i = ModelUtil.prepare_log_model_dir(log_dir_copy, model_dir_copy, trial_id, mkdir=False)
-
-    ModelUtil.global_random_seed()
-
     onecycle = params["onecycle"]
     if onecycle:
         params["lr"] = None
     params.pop("onecycle", None)
 
-    source_pick_1 = source_pick
     if not joint_learning:
         params.pop("source_weight", None)
-        source_pick_1 = SourcePick.NONE
+        source_pick = SourcePick.NONE
 
     if not (use_representation_past or use_representation_future):
         params.pop("conv_activation", None)
@@ -927,6 +883,76 @@ def eval(
     if "use_exo" not in params:
         params["use_exo"] = bool(params["future_exo_cols"])
 
+    return params, source_pick
+
+
+def eval(
+    groups,
+    params,
+    log_dir="temp/logs/",
+    model_dir="temp/model/",
+    log_dir_copy=None,
+    model_dir_copy=None,
+    drive=None,
+    log_dir_id=None,
+    model_dir_id=None,
+    device=None,
+    write_graph=True,
+    early_stopping_interval_mode=1,
+    min_epoch=100,
+    max_epoch=None,
+    teacher_forcing=True,
+    activations=DEFAULT_ACTIVATIONS,
+    past_cols=DEFAULT_PAST_COLS,
+    future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
+    source_pick=SourcePick.ALL,
+    private_mode=SharedMode.PRIVATE,
+    shared_mode=SharedMode.SHARED,
+    pretrain_upload=False,
+    posttrain_upload=False,
+    pretrain_copy=True,
+    posttrain_copy=True,
+    cleanup=True,
+    use_representation_past=True,
+    use_representation_future=False,
+    use_shared=True,
+    update_hx=True,
+    joint_learning=True,
+    merge_clusters=False,
+    debug=False,
+    val=0,  # use 2 for pred training
+    continue_train=True
+):
+    if device is None:
+        device = ModelUtil.DEVICE
+
+    assert (not log_dir_copy) or log_dir
+    assert (not model_dir_copy) or model_dir
+
+    log_dir = ModelUtil.prepare_dir(log_dir)
+    model_dir = ModelUtil.prepare_dir(model_dir)
+    log_dir_copy = ModelUtil.prepare_dir(log_dir_copy)
+    model_dir_copy = ModelUtil.prepare_dir(model_dir_copy)
+
+    trial_id = -1
+
+    log_dir_i, model_dir_i = ModelUtil.prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=True)
+    log_dir_copy_i, model_dir_copy_i = ModelUtil.prepare_log_model_dir(log_dir_copy, model_dir_copy, trial_id, mkdir=False)
+
+    ModelUtil.global_random_seed()
+
+    params, source_pick = clean_params(
+        params,
+        source_pick,
+        joint_learning,
+        use_representation_past,
+        use_representation_future,
+        use_shared,
+        activations,
+        past_cols,
+        future_exo_cols
+    )
+
     target_losses = {}
 
     for group_0 in groups:
@@ -950,11 +976,11 @@ def eval(
                 # teacher_forcing=True,
                 min_epoch=min_epoch,
                 use_shared=use_shared,
-                source_pick=source_pick_1,
+                source_pick=source_pick,
                 private_mode=private_mode,
                 shared_mode=shared_mode,
                 debug=debug,
-                val=False,  # Combine train set and val set
+                val=val,
                 **params
             )
             model.to(device)
@@ -999,11 +1025,11 @@ def eval(
                     if not early_stopping.step_nan():
                         raise
 
-            if val_train:
+            if continue_train:
                 best_epoch = early_stopping.best_epoch
                 best_loss = early_stopping.best_val_loss_2
                 first_train_count = len(model.model.target.datasets[0])
-                model.preprocessing(val=2)
+                model.preprocessing(val=val+1)
                 second_train_count = len(model.model.target.datasets[0])
 
                 early_stopping_2 = EarlyStopping(

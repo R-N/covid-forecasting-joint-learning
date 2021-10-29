@@ -324,7 +324,7 @@ def split_dataset(
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD,
     limit_past=True,
-    val=True,
+    val=0,
     labeling=label_dataset_0
 ):
     # if past_cols is not None:
@@ -372,12 +372,14 @@ def split_dataset(
         future_exo_cols=future_exo_cols,
         final_seed_cols=final_seed_cols, final_cols=final_cols
     )
-    if val == 2:
-        return (merge_dataset([train_set, val_set]), val_set, test_set), labels
-    elif val:
+    if val == 0:
         return (train_set, val_set, test_set), labels
-    else:
+    elif val == 1:
+        return (merge_dataset([train_set, val_set]), val_set, test_set), labels
+    elif val == 2:
         return (merge_dataset([train_set, val_set]), test_set), labels
+    elif val == 3:
+        return (merge_dataset([train_set, val_set, test_set]), test_set), labels
 
 
 # Differencing
