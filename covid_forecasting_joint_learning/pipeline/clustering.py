@@ -18,13 +18,13 @@ class Cluster:
         group,
         sources=None,
         target=None,
-        targets=None
+        targets=[]
     ):
         self.id = id
         self.group = group
         self.sources = sources
         self.__target = None
-        self.__targets = None
+        self.__targets = []
 
         if target and targets:
             self.__target = target
@@ -40,8 +40,11 @@ class Cluster:
     @target.setter
     def target(self, value):
         self.__target = value
-        if (not self.__targets) and value:
-            self.__targets = [value]
+        if value:
+            if (not self.__targets) and value:
+                self.__targets = [value]
+            elif value not in self.__targets:
+                self.__targets.append(value)
 
     @property
     def targets(self):
@@ -51,8 +54,15 @@ class Cluster:
     def targets(self, value):
         assert value is None or isinstance(value, list)
         self.__targets = value
-        if (not self.__target) and value:
-            self.__target = max(value, key=lambda x: shortest(x))
+        if value:
+            self.__select_target()
+
+    def __select_target(self):
+        self.__target = max(self.__targets, key=lambda x: shortest(x))
+
+    def append_target(self, value):
+        self.__targets.append(value)
+        self.__select_target()
 
     @property
     def members(self):
