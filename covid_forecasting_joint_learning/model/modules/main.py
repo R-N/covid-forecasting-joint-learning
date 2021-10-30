@@ -359,6 +359,7 @@ class SingleModel(nn.Module):
         # o and o_exo is of sequential item shape (Batch, Channel)
         if o is not None:
             # o = o.detach()
+            assert (not self.use_exo) or (o_exo is not None)
             if o_exo is not None:
                 o = torch.cat([o, o_exo], dim=o.dim() - 1)
             past_seed_full = torch.cat([past_seed_full, torch.stack([o])], dim=0)
@@ -402,6 +403,8 @@ class SingleModel(nn.Module):
             past_seed_full = torch.cat([past_seed, past_exo], dim=past_seed.dim() - 1)
         else:
             past_seed_full = past_seed
+
+        assert (not self.use_exo) or (len(future_exo) == self.future_length)
 
         outputs = []
         cx_private, cx_shared, o, o_exo, hx_private_1, hx_shared_1 = None, None, None, None, None, None

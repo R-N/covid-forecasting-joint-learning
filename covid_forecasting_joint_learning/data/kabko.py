@@ -1,6 +1,7 @@
 from . import util as DataUtil
 from . import cols as DataCol
 from itertools import chain
+import pandas as pd
 
 
 class KabkoData:
@@ -167,3 +168,4 @@ class KabkoData:
         sample = self.get_batch_sample(full=len(self.dataloaders))[:5] if sample is None else sample
         layer_attrs = self.model.get_aggregate_layer_attr(sample)
         return layer_attrs
+

@@ -422,7 +422,7 @@ def preprocessing_6(
     for kabko in kabkos:
         kabko.datasets_torch = [[
             tuple(
-                torch.Tensor(sample[i]) if i < tensor_count else sample[i] for i in range(8)
+                torch.Tensor(sample[i]) if i < tensor_count else sample[i] for i in range(len(sample))
             ) for sample in dataset
         ] for dataset in kabko.datasets]
 
@@ -438,3 +438,57 @@ def preprocessing_6(
             num_workers=0,
             pin_memory=pin_memory
         ) for i in range(dataset_count)]
+
+def get_future_exo(
+    kabko,
+    end_date="2021-12-31",
+    labeled_dates=DataCol.LABELED_DATES
+):
+    df = kabko.data
+    first_future_date = df.last_valid_index() + pd.DateOffset(1)
+    future_exo = pd.date_range(first_future_date, end_date)
+    future_exo = pd.DataFrame([], index=future_exo)
+    future_exo = kabko.add_dates(labeled_dates)
+    return future_exo
+
+
+def preprocessing_7(
+    kabkos,
+    end_date="2021-12-31",
+    past_size=30,
+    limit_past=True,
+    seed_size=None,
+    labeled_dates=DataCol.LABELED_DATES,
+    past_cols=None,
+    label_cols=DataCol.SIRD_VARS,
+    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
+    final_seed_cols=DataCol.SIRD,
+    final_cols=DataCol.IRD,
+    labeling=0,
+    tensor_count=7
+):
+    assert (not seed_size) or seed_size <= past_size
+    for kabko in kabkos:
+        df = kabko.data
+        future_exo = get_future_exo(kabko, end_date, labeled_dates)
+
+        data, labels = preprocessing.prepare_pred(
+            df,
+            future_exo,
+            past_size=past_size,
+            limit_past=limit_past,
+            past_cols=past_cols,
+            seed_size=seed_size,
+            label_cols=label_cols,
+            final_seed_cols=final_seed_cols,
+            final_cols=final_cols
+        )
+
+        kabko.datasets = (data,)
+        kabko.dataset_labels = labels
+
+        kabko.datasets_torch = [[
+            tuple(
+                torch.Tensor(sample[i]) if i < tensor_count and sample[i] is not None else sample[i] for i in range(len(sample))
+            ) for sample in dataset
+        ] for dataset in kabko.datasets]

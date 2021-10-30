@@ -389,3 +389,68 @@ def diff(series, order=1, shift=1, **kwargs):
         series = series.diff(periods=shift, **kwargs)
     series.dropna(inplace=True)
     return series
+
+
+def prepare_pred(
+    df,
+    future_exo,
+    past_size=30,
+    limit_past=True,
+    past_cols=None,
+    seed_size=None,
+    label_cols=DataCol.SIRD_VARS,
+    final_seed_cols=DataCol.SIRD,
+    final_cols=DataCol.IRD
+):
+    len_df = len(df)
+    past_size = min(len_df, past_size)
+    past_start = len_df - past_size
+    if limit_past:
+        past = [df.iloc[past_start:]]
+    else:
+        past = [df.iloc[:]]
+
+    future_exo_cols = future_exo.columns
+    indices = [x.index for x in future_exo]
+    final_seed = [x.iloc[-seed_size:] for x in past]
+
+    past_size = len(past[0])
+    seed_size = seed_size or past_size
+    assert seed_size <= past_size
+
+    past_seed = [x[label_cols].iloc[-seed_size:].to_numpy() for x in past]
+    past_exo = [x[future_exo_cols].iloc[-seed_size:].to_numpy() for x in past]
+
+    if past_cols is not None:
+        past = [x[past_cols] for x in past]
+    else:
+        past_cols = past[0].columns
+
+    final_seed = [x[final_seed_cols].to_numpy() for x in final_seed]
+    past = [x.to_numpy() for x in past]
+
+    future_exo = [x.to_numpy() for x in future_exo]
+
+    ret = [(
+        past[i],
+        past_seed[i],
+        past_exo[i],
+        None,
+        future_exo[i],
+        final_seed[i],
+        None,
+        indices[i]
+    ) for i in range(len(past))]
+
+    labels = [
+        past_cols,
+        label_cols,
+        future_exo_cols,
+        label_cols,
+        future_exo_cols,
+        final_seed_cols,
+        final_cols,
+        "index"
+    ]
+
+    return ret, labels
