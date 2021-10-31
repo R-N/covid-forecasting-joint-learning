@@ -23,7 +23,8 @@ def main_1(
     cols=DataCol.COLS,
     limit_length=[90, 180, 366],
     limit_date=["2021-01-21"],
-    n_clusters=Pipeline.DEFAULT_GROUPS_N_CLUSTERS
+    n_clusters=Pipeline.DEFAULT_GROUPS_N_CLUSTERS,
+    clustering_callback=None
 ):
     loader = DataCenter()
     loader.load_excel(data_path)
@@ -50,6 +51,9 @@ def main_1(
         n_clusters_min=n_cluster,
         n_clusters_max=n_cluster
     ) for group, n_cluster in zip(groups, n_clusters)]
+
+    if clustering_callback:
+        clustering_callback(groups)
 
     for group in groups:
         for cluster in group.clusters:
