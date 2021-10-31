@@ -364,6 +364,7 @@ def preprocessing_4(
             kabko.data.loc[:, cols] = scaler.transform(kabko.data[cols])
     return cluster
 
+
 LABELINGS = [
     preprocessing.label_dataset_0,
     preprocessing.label_dataset_1,
