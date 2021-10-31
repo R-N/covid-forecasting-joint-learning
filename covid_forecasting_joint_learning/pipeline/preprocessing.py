@@ -207,11 +207,12 @@ def label_dataset_0(
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD
 ):
-    final_seed = [x.iloc[-seed_size:] for x in past]
-    indices = [x.index for x in future]
     past_size = len(past[0])
     seed_size = seed_size or past_size
     assert seed_size <= past_size
+
+    final_seed = [x.iloc[-seed_size:] for x in past]
+    indices = [x.index for x in future]
 
     past_seed = [x[label_cols].iloc[-seed_size:].to_numpy() for x in past]
     past_exo = [x[future_exo_cols].iloc[-seed_size:].to_numpy() for x in past]
@@ -402,7 +403,8 @@ def prepare_pred(
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD
 ):
-    seed_size = past_size if seed_size is None else seed_size
+    seed_size = seed_size or past_size
+    assert seed_size <= past_size
 
     len_df = len(df)
     past_size = min(len_df, past_size)
