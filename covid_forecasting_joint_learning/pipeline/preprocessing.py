@@ -402,6 +402,8 @@ def prepare_pred(
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD
 ):
+    seed_size = past_size if seed_size is None else seed_size
+
     len_df = len(df)
     past_size = min(len_df, past_size)
     past_start = len_df - past_size
