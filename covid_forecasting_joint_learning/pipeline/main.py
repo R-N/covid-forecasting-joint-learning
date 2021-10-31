@@ -493,6 +493,6 @@ def preprocessing_7(
 
         kabko.datasets_torch = [[
             tuple(
-                torch.Tensor(sample[i]) if i < tensor_count and sample[i] is not None else sample[i] for i in range(len(sample))
+                torch.Tensor([sample[i]]) if i < tensor_count and sample[i] is not None else sample[i] for i in range(len(sample))
             ) for sample in dataset
         ] for dataset in kabko.datasets]
