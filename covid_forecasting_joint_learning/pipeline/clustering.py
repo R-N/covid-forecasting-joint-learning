@@ -196,7 +196,7 @@ def cluster_best(
     metric="dtw",
     random_state=None,
     good_clustering_non_single=2,
-    min_silhouette_percentile=0.75,
+    min_silhouette_percentile=75,
     max_silhouette_diff=0.1,
     verbose=True,
     **kwargs

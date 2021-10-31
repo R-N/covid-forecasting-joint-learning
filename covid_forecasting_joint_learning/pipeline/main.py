@@ -238,7 +238,7 @@ def clustering_1(
     metric="dtw",
     random_state=257,
     good_clustering_non_single=2,
-    min_silhouette_percentile=0.75,
+    min_silhouette_percentile=75,
     max_silhouette_diff=0.1,
     scale=True,
     verbose=True,
