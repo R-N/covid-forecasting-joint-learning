@@ -83,7 +83,11 @@ def rebuild(sird_vars, prev, n, index=None, return_s=False):
     if not return_s:
         rebuilt = [x[1:] for x in rebuilt]
 
-    rebuilt = rebuilt if index is None else pd.DataFrame(rebuilt, columns=DataCol.SIRD, index=index)
+    rebuilt = rebuilt if index is None else pd.DataFrame(
+        rebuilt,
+        columns=DataCol.SIRD if return_s else DataCol.IRD,
+        index=index
+    )
 
     return rebuilt
 
