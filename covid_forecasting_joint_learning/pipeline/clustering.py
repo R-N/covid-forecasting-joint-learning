@@ -183,7 +183,7 @@ class ClusteringInfo:
 def log_results(trial_results, title):
     print(title)
     for r in trial_results:
-        print(f"n: {r.n}, silhouette: {r.silhouette}, non_single: {r.n_clusters_non_single}, single: {r.n_clusters_single}")
+        print(f"n: {r.n_clusters}, silhouette: {r.silhouette}, non_single: {r.n_clusters_non_single}, single: {r.n_clusters_single}")
 
 
 def cluster_best(
