@@ -433,7 +433,7 @@ def prepare_pred(
     final_seed = [x[final_seed_cols].to_numpy() for x in final_seed]
     past = [x.to_numpy() for x in past]
 
-    future_exo = [x.to_numpy() for x in future_exo]
+    future_exo = [future_exo.to_numpy()]
 
     ret = [(
         past[i],
