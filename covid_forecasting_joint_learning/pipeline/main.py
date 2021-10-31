@@ -241,6 +241,7 @@ def clustering_1(
     min_silhouette_percentile=0.75,
     max_silhouette_diff=0.1,
     scale=True,
+    verbose=True,
     **kwargs
 ):
     for k in group.members:
@@ -250,6 +251,8 @@ def clustering_1(
 
     clustering_members = list(group.members)
     outliers = []
+    if verbose:
+        print(f"Clustering for group {group.id}")
     while len(clustering_members) > 0:
         dataset = [k.data_clustering for k in clustering_members]
         dataset = clustering.to_time_series_dataset(dataset)
@@ -265,6 +268,7 @@ def clustering_1(
             good_clustering_non_single=good_clustering_non_single,
             min_silhouette_percentile=min_silhouette_percentile,
             max_silhouette_diff=max_silhouette_diff,
+            verbose=verbose,
             **kwargs
         )
         outliers += [k for k in clustering_members if clustering.predict(best_clustering.model, k.data_clustering) in best_clustering.single_clusters]

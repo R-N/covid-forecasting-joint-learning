@@ -180,6 +180,12 @@ class ClusteringInfo:
         self.best_silhouette = best_silhouette
 
 
+def log_results(trial_results, title):
+    print(title)
+    for r in trial_results:
+        print(f"n: {r.n}, silhouette: {r.silhouette}, non_single: {r.n_clusters_non_single}, single: {r.n_clusters_single}")
+
+
 def cluster_best(
     dataset,
     n_clusters_min=2,
@@ -192,6 +198,7 @@ def cluster_best(
     good_clustering_non_single=2,
     min_silhouette_percentile=0.75,
     max_silhouette_diff=0.1,
+    verbose=True,
     **kwargs
 ):
     trial_labels = [(n, *cluster(
@@ -203,13 +210,22 @@ def cluster_best(
         metric=metric,
         random_state=random_state,
         **kwargs
-    )) for n in range(n_clusters_min, n_clusters_max+1)]
+    )) for n in range(n_clusters_min, n_clusters_max + 1)]
 
     trial_results = [ClusteringResult(n, model, labels, silhouette_score(
         dataset,
         labels,
         metric=metric
     )) for n, model, labels in trial_labels]
+
+    trial_results = sorted(
+        trial_results,
+        key=lambda r: r.silhouette,
+        reverse=True
+    )
+
+    if verbose:
+        log_results(trial_results, "All silhouette")
 
     if len(trial_results) > 1:
 
@@ -229,16 +245,21 @@ def cluster_best(
         # I decided to first filter the clusters to have at least 2 non-single clusters
         # That way the clustering works
         trial_results_1 = [r for r in trial_results if r.n_clusters_non_single >= good_clustering_non_single]
+
         # I must first check that it exists before using it
         good_clustering = len(trial_results_1) > 0
-        if good_clustering:
+        if good_clustering and len(trial_results_1) != len(trial_results):
             trial_results = trial_results_1
+            if verbose:
+                log_results(trial_results, "At least 2 non-single clusters")
         # Else I'll just return best one to remove outliers
 
         # Then I will filter it to just the upper quartile of silhouette
         silhouettes = [r.silhouette for r in trial_results]
         min_silhouette = np.percentile(silhouettes, min_silhouette_percentile)
         trial_results = [r for r in trial_results if r.silhouette >= min_silhouette]
+        if verbose:
+            log_results(trial_results, "Upper quartile")
 
         # It should also not be that far off the best silhouette
         best_silhouette = max(silhouettes)
@@ -247,8 +268,10 @@ def cluster_best(
         # Try to not have single clusters more than non-single
         trial_results_2 = [r for r in trial_results if r.n_clusters_non_single >= r.n_clusters_single]
         good_clustering_2 = len(trial_results_2) > 0
-        if good_clustering:
+        if good_clustering and len(trial_results_2) != len(trial_results):
             trial_results = trial_results_2
+            if verbose:
+                log_results(trial_results, "Single cluster count not higher than non-single")
 
         # if good_clustering:
         #     # Then I'll pick the one with most non-single clusters, 
@@ -269,6 +292,9 @@ def cluster_best(
         best_result.best_silhouette = best_result.silhouette
         best_result.good_clustering = best_result.n_clusters_non_single >= good_clustering_non_single
         best_result.good_clustering_2 = best_result.n_clusters_non_single >= best_result.n_clusters_single
+
+    if verbose:
+        log_results([best_result], "Best n cluster")
 
     return best_result
 
