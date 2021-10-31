@@ -379,7 +379,7 @@ def preprocessing_5(
     stride=1,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
-    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
+    future_exo_cols=DataCol.FUTURE_EXO_COLS,
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD,
     labeling=0,
@@ -447,7 +447,8 @@ def preprocessing_6(
 def get_future_exo(
     kabko,
     end_date="2021-12-31",
-    labeled_dates=DataCol.LABELED_DATES
+    labeled_dates=DataCol.LABELED_DATES,
+    future_exo_cols=DataCol.FUTURE_EXO_COLS
 ):
     df = kabko.data
     first_future_date = df.last_valid_index() + pd.DateOffset(1)
@@ -455,7 +456,7 @@ def get_future_exo(
     future_exo = pd.DataFrame(0, columns=["dummy"], index=future_exo)
     future_exo = kabko.add_dates(future_exo, dates=labeled_dates)
     del future_exo["dummy"]
-    return future_exo
+    return future_exo[future_exo_cols]
 
 
 def preprocessing_7(
@@ -467,7 +468,7 @@ def preprocessing_7(
     labeled_dates=DataCol.LABELED_DATES,
     past_cols=None,
     label_cols=DataCol.SIRD_VARS,
-    future_exo_cols=["psbb", "ppkm", "ppkm_mikro"],
+    future_exo_cols=DataCol.FUTURE_EXO_COLS,
     final_seed_cols=DataCol.SIRD,
     final_cols=DataCol.IRD,
     labeling=0,
@@ -476,7 +477,12 @@ def preprocessing_7(
     assert (not seed_size) or seed_size <= past_size
     for kabko in kabkos:
         df = kabko.data
-        future_exo = get_future_exo(kabko, end_date, labeled_dates)
+        future_exo = get_future_exo(
+            kabko,
+            end_date,
+            labeled_dates=labeled_dates,
+            future_exo_cols=future_exo_cols
+        )
 
         data, labels = preprocessing.prepare_pred(
             df,
