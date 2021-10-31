@@ -452,7 +452,7 @@ def get_future_exo(
     first_future_date = df.last_valid_index() + pd.DateOffset(1)
     future_exo = pd.date_range(first_future_date, end_date)
     future_exo = pd.DataFrame([], index=future_exo)
-    future_exo = kabko.add_dates(labeled_dates)
+    future_exo = kabko.add_dates(kabko.data, dates=labeled_dates)
     return future_exo
 
 
