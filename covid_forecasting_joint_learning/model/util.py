@@ -70,14 +70,14 @@ def linear_to_sequential_tensor(t):
     if t.dim() == 3:
         return t.permute(1, 0, 2)
     elif t.dim() == 2:
-        return t.permute(1, 2)
+        return t.permute(0, 1)
 
 
 def sequential_to_linear_tensor(t):
     if t.dim() == 3:
         return t.permute(1, 0, 2)
     elif t.dim() == 2:
-        return t.permute(1, 2)
+        return t.permute(0, 1)
 
 
 # Conv1d uses input of shape (Batch, Channel, Length)
@@ -85,14 +85,14 @@ def linear_to_conv1d_tensor(t):
     if t.dim() == 3:
         return t.permute(0, 2, 1)
     elif t.dim() == 2:
-        return t.permute(2, 1)
+        return t.permute(1, 0)
 
 
 def conv1d_to_linear_tensor(t):
     if t.dim() == 3:
         return t.permute(0, 2, 1)
     elif t.dim() == 2:
-        return t.permute(2, 1)
+        return t.permute(1, 0)
 
 
 def str_dict(d):
