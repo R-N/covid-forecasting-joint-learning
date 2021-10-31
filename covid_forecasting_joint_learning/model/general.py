@@ -921,7 +921,8 @@ def eval(
     merge_clusters=False,
     debug=False,
     val=0,  # use 2 for pred training
-    continue_train=True
+    continue_train=True,
+    trial_id=-1
 ):
     if device is None:
         device = ModelUtil.DEVICE
@@ -933,8 +934,6 @@ def eval(
     model_dir = ModelUtil.prepare_dir(model_dir)
     log_dir_copy = ModelUtil.prepare_dir(log_dir_copy)
     model_dir_copy = ModelUtil.prepare_dir(model_dir_copy)
-
-    trial_id = -1
 
     log_dir_i, model_dir_i = ModelUtil.prepare_log_model_dir(log_dir, model_dir, trial_id, mkdir=True)
     log_dir_copy_i, model_dir_copy_i = ModelUtil.prepare_log_model_dir(log_dir_copy, model_dir_copy, trial_id, mkdir=False)
