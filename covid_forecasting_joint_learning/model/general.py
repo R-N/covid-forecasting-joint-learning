@@ -922,7 +922,8 @@ def eval(
     debug=False,
     val=0,  # use 2 for pred training
     continue_train=True,
-    trial_id=-1
+    trial_id=-1,
+    copy_group=False
 ):
     if device is None:
         device = ModelUtil.DEVICE
@@ -955,7 +956,7 @@ def eval(
     target_losses = {}
 
     for group_0 in groups:
-        group = group_0.copy()
+        group = group_0.copy() if copy_group else group_0
         target_losses[group.id] = {}
         clusters = [group.merge_clusters()] if merge_clusters else group.clusters
         for cluster in clusters:
