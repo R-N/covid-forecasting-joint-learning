@@ -22,7 +22,8 @@ def main_1(
     labeled_dates=DataCol.LABELED_DATES,
     cols=DataCol.COLS,
     limit_length=[90, 180, 366],
-    limit_date=["2021-01-21"]
+    limit_date=["2021-01-21"],
+    n_clusters=Pipeline.DEFAULT_GROUPS_N_CLUSTERS
 ):
     loader = DataCenter()
     loader.load_excel(data_path)
@@ -43,8 +44,6 @@ def main_1(
     # groups = [groups[2]]
     for group in groups:
         Pipeline.preprocessing_3(group.members)
-
-    n_clusters = Pipeline.DEFAULT_GROUPS_N_CLUSTERS
 
     clusters = [Pipeline.clustering_1(
         group,
