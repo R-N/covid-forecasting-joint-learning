@@ -20,7 +20,9 @@ def init():
 def main_1(
     data_path,
     labeled_dates=DataCol.LABELED_DATES,
-    cols=DataCol.COLS
+    cols=DataCol.COLS,
+    limit_length=[90, 180, 366],
+    limit_date=["2021-01-21"]
 ):
     loader = DataCenter()
     loader.load_excel(data_path)
@@ -33,7 +35,11 @@ def main_1(
     for kabko in kabkos:
         kabko.data = kabko.add_dates(kabko.data, dates=labeled_dates)[cols]
 
-    groups = Pipeline.preprocessing_2(kabkos)
+    groups = Pipeline.preprocessing_2(
+        kabkos,
+        limit_length=limit_length,
+        limit_date=limit_date
+    )
     # groups = [groups[2]]
     for group in groups:
         Pipeline.preprocessing_3(group.members)
