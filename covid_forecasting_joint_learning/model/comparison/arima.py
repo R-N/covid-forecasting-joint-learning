@@ -234,8 +234,8 @@ class ARIMASearchLog:
         log_sheet_name = log_sheet_name or self.log_sheet_name
         self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
 
-    def is_search_done(self, group, cluster, kabko, label):
-        df = self.log_df
+    def is_search_done(self, group, cluster, kabko, label, df=None):
+        df = df or self.log_df
         return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
 
     def log(self, group, cluster, kabko, label, order, seasonal_order, limit_fit, loss, log_path=None, log_sheet_name=None):
@@ -256,7 +256,32 @@ class ARIMASearchLog:
         df = self.source_df
         return df[(df["kabko"] == kabko)][label].item()
 
-    def get_arima(self, group, cluster, kabko, label):
+class ARIMAEvalLog(ARIMASearchLog):
+    def __init__(self, source_path, log_path, source_sheet_name="ARIMA", log_sheet_name="Eval"):
+        super().__init__(source_path, log_path, source_sheet_name=source_sheet_name, log_sheet_name=log_sheet_name)
+
+    def load_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        try:
+            self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
+        except FileNotFoundError:
+            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "order", "seasonal_order", "limit_fit", "loss"])
+            self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
+        return self.log_df
+
+    def save_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
+
+    def is_search_done(self, group, cluster, kabko, label):
+        return super().is_search_done(group, cluster, kabko, label, df=self.source_df)
+
+    def is_eval_done(self, group, cluster, kabko, label):
+        return super().is_search_done(group, cluster, kabko, label, df=self.log_df)
+
+    def read_arima(self, group, cluster, kabko, label):
         df = self.log_df
         cond = ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label))
         return df[cond]
