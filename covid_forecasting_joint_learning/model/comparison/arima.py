@@ -238,7 +238,7 @@ class ARIMASearchLog:
         df = self.log_df
         return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
 
-    def log(self, group, cluster, kabko, label, order, seasonal_order, limit_fit, loss):
+    def log(self, group, cluster, kabko, label, order, seasonal_order, limit_fit, loss, log_path=None, log_sheet_name=None):
         df = self.load_log()
         df.loc[df.shape[0]] = {
             "group": group,
@@ -250,7 +250,7 @@ class ARIMASearchLog:
             "limit_fit": limit_fit,
             "loss": loss
         }
-        self.save_log()
+        self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
 
     def read_arima(self, kabko, label):
         df = self.source_df
