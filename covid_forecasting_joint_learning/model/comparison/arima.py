@@ -255,3 +255,8 @@ class ARIMASearchLog:
     def read_arima(self, kabko, label):
         df = self.source_df
         return df[(df["kabko"] == kabko)][label].item()
+
+    def get_arima(self, group, cluster, kabko, label):
+        df = self.log_df
+        cond = ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label))
+        return df[cond]
