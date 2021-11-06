@@ -88,7 +88,7 @@ def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
             if loss < best_loss:
                 best_loss = loss
                 best_model = model
-    return best_model
+    return best_model, best_loss
 
 
 def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
@@ -259,21 +259,6 @@ class ARIMASearchLog:
 class ARIMAEvalLog(ARIMASearchLog):
     def __init__(self, source_path, log_path, source_sheet_name="ARIMA", log_sheet_name="Eval"):
         super().__init__(source_path, log_path, source_sheet_name=source_sheet_name, log_sheet_name=log_sheet_name)
-
-    def load_log(self, log_path=None, log_sheet_name=None):
-        log_path = log_path or self.log_path
-        log_sheet_name = log_sheet_name or self.log_sheet_name
-        try:
-            self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
-        except FileNotFoundError:
-            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "order", "seasonal_order", "limit_fit", "loss"])
-            self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
-        return self.log_df
-
-    def save_log(self, log_path=None, log_sheet_name=None):
-        log_path = log_path or self.log_path
-        log_sheet_name = log_sheet_name or self.log_sheet_name
-        self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
 
     def is_search_done(self, group, cluster, kabko, label):
         return super().is_search_done(group, cluster, kabko, label, df=self.source_df)

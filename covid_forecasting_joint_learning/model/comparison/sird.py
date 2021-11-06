@@ -194,7 +194,7 @@ def search_greedy(params_hint, n, dataset, loss_fn=rmsse, reduction="mean", limi
         if loss < best_loss:
             best_model = model
             best_loss = loss
-    return best_model
+    return best_model, best_loss
 
 
 class SIRDSearchLog:
@@ -232,3 +232,52 @@ class SIRDSearchLog:
             "loss": loss
         }
         self.save_log()
+
+class SIRDEvalLog:
+    def __init__(self, source_path, log_path, source_sheet_name="SIRD", log_sheet_name="Eval"):
+        self.source_path = source_path
+        self.log_path = log_path
+        self.source_sheet_name = source_sheet_name
+        self.log_sheet_name = log_sheet_name
+        self.source_df = pd.read_excel(source_path, sheet_name=source_sheet_name)
+        self.load_log()
+
+    def load_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        try:
+            self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
+        except FileNotFoundError:
+            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "limit_fit", "loss"])
+            self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
+        return self.log_df
+
+    def save_log(self, log_path=None, log_sheet_name=None):
+        log_path = log_path or self.log_path
+        log_sheet_name = log_sheet_name or self.log_sheet_name
+        self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
+
+    def is_search_done(self, group, cluster, kabko, df=None):
+        df = self.source_df
+        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
+
+    def is_eval_done(self, group, cluster, kabko, label):
+        df = self.log_df
+        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
+
+    def log(self, group, cluster, kabko, label, limit_fit, loss, log_path=None, log_sheet_name=None):
+        df = self.load_log()
+        df.loc[df.shape[0]] = {
+            "group": group,
+            "cluster": cluster,
+            "kabko": kabko,
+            "label": label,
+            "limit_fit": limit_fit,
+            "loss": loss
+        }
+        self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
+
+    def read_sird(self, group, cluster, kabko):
+        df = self.log_df
+        cond = ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko))
+        return df[cond]
