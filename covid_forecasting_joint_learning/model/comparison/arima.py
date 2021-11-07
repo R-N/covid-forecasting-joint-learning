@@ -224,7 +224,7 @@ class ARIMASearchLog:
         log_sheet_name = log_sheet_name or self.log_sheet_name
         try:
             self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
-        except FileNotFoundError:
+        except (FileNotFoundError, ValueError):
             self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "order", "seasonal_order", "limit_fit", "loss"])
             self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
         return self.log_df
@@ -239,7 +239,7 @@ class ARIMASearchLog:
         try:
             return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
         except Exception as ex:
-            if "No sheet" in str(ex):
+            if "No sheet" in str(ex) or "is not in list" in str(ex):
                 return False
             raise
 
