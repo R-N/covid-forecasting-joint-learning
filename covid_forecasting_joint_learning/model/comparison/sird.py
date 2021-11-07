@@ -220,7 +220,12 @@ class SIRDSearchLog:
 
     def is_search_done(self, group, cluster, kabko):
         df = self.log_df
-        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
+        try:
+            return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
+        except Exception as ex:
+            if "No sheet" in str(ex):
+                return False
+            raise
 
     def log(self, group, cluster, kabko, limit_fit, loss):
         df = self.load_log()
@@ -259,11 +264,16 @@ class SIRDEvalLog:
 
     def is_search_done(self, group, cluster, kabko, df=None):
         df = self.source_df
-        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
+        try:
+            return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
+        except Exception as ex:
+            if "No sheet" in str(ex):
+                return False
+            raise
 
-    def is_eval_done(self, group, cluster, kabko, label):
+    def is_eval_done(self, group, cluster, kabko):
         df = self.log_df
-        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
+        return self.is_serach_done(group, cluster, kabko, df=df)
 
     def log(self, group, cluster, kabko, limit_fit, loss, log_path=None, log_sheet_name=None):
         df = self.load_log()

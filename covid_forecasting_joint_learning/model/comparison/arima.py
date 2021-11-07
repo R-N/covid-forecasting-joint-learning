@@ -236,7 +236,12 @@ class ARIMASearchLog:
 
     def is_search_done(self, group, cluster, kabko, label, df=None):
         df = self.log_df if df is None else df
-        return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
+        try:
+            return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
+        except Exception as ex:
+            if "No sheet" in str(ex):
+                return False
+            raise
 
     def log(self, group, cluster, kabko, label, order, seasonal_order, limit_fit, loss, log_path=None, log_sheet_name=None):
         df = self.load_log()
