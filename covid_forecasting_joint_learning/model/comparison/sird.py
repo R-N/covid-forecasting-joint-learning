@@ -278,6 +278,7 @@ class SIRDEvalLog:
 
     def log(self, group, cluster, kabko, limit_fit, loss, log_path=None, log_sheet_name=None):
         df = self.load_log()
+        assert len(loss) == 3
         df.loc[df.shape[0]] = {
             "group": group,
             "cluster": cluster,
