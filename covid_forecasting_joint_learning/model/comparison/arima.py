@@ -235,7 +235,7 @@ class ARIMASearchLog:
         self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
 
     def is_search_done(self, group, cluster, kabko, label, df=None):
-        df = df or self.log_df
+        df = self.log_df if df is None else df
         return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
 
     def log(self, group, cluster, kabko, label, order, seasonal_order, limit_fit, loss, log_path=None, log_sheet_name=None):
