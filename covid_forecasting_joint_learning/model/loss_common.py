@@ -25,8 +25,8 @@ def reduce(loss, reduction="sum", reduce_feature=True):
     else:
         raise ValueError(f"Invalid reduction {reduction}")
 
-def wrap_reduce(loss_fn, reduction="sum"):
+def wrap_reduce(loss_fn, reduction="sum", reduce_feature=True):
     def wrapper(*args, **kwargs):
         loss = loss_fn(*args, **kwargs)
-        return reduce(loss, reduction=reduction)
+        return reduce(loss, reduction=reduction, reduce_feature=reduce_feature)
     return wrapper

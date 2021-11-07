@@ -7,7 +7,7 @@ import pandas as pd
 import optuna
 
 msse = wrap_reduce(msse)
-rmsse = wrap_reduce(rmsse)
+rmsse = wrap_reduce(rmsse, reduce_feature=False)
 
 def dpsird(y, t, n, beta, gamma, delta):
     s, i, r, d = y
@@ -248,7 +248,7 @@ class SIRDEvalLog:
         try:
             self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
         except FileNotFoundError:
-            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "limit_fit", "loss"])
+            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "limit_fit", "i", "r", "d"])
             self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
         return self.log_df
 
@@ -273,7 +273,9 @@ class SIRDEvalLog:
             "kabko": kabko,
             "label": label,
             "limit_fit": limit_fit,
-            "loss": loss
+            "i": loss[0],
+            "r": loss[1],
+            "d": loss[2]
         }
         self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
 
