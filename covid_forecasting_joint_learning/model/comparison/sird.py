@@ -264,7 +264,7 @@ class SIRDEvalLog:
         self.log_df.to_excel(log_path, sheet_name=log_sheet_name, index=False)
 
     def is_search_done(self, group, cluster, kabko, df=None):
-        df = self.source_df
+        df = self.source_df if df is None else df
         try:
             return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
         except (ValueError, XLRDError) as ex:
