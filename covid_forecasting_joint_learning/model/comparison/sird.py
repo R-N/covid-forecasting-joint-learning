@@ -248,7 +248,7 @@ class SIRDEvalLog:
         try:
             self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
         except FileNotFoundError:
-            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "limit_fit", "i", "r", "d"])
+            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "limit_fit", "i", "r", "d"])
             self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
         return self.log_df
 
@@ -265,13 +265,12 @@ class SIRDEvalLog:
         df = self.log_df
         return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label)).any()
 
-    def log(self, group, cluster, kabko, label, limit_fit, loss, log_path=None, log_sheet_name=None):
+    def log(self, group, cluster, kabko, limit_fit, loss, log_path=None, log_sheet_name=None):
         df = self.load_log()
         df.loc[df.shape[0]] = {
             "group": group,
             "cluster": cluster,
             "kabko": kabko,
-            "label": label,
             "limit_fit": limit_fit,
             "i": loss[0],
             "r": loss[1],
