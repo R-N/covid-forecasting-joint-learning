@@ -291,6 +291,6 @@ class SIRDEvalLog:
         self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
 
     def read_sird(self, group, cluster, kabko):
-        df = self.log_df
+        df = self.source_df
         cond = ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko))
         return df[cond]
