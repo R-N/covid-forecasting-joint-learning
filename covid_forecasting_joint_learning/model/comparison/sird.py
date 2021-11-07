@@ -69,12 +69,12 @@ def fit(objective, params):
 
 
 class SIRDModel:
-    def __init__(self, params_hint, n, loss_fn=rmsse, limit_past=None, reduction="mean"):
+    def __init__(self, params_hint, n, loss_fn=rmsse, limit_fit=None, reduction="mean"):
         self.params_hint = params_hint
         self.n = n
         self.loss_fn = loss_fn
         self.loss = None
-        self.limit_past = limit_past
+        self.limit_fit = limit_fit
         self.reduction = reduction
         self.clear()
 
@@ -91,12 +91,12 @@ class SIRDModel:
         self.pred_start = None
         self.first = 1
 
-    def fit(self, past, limit_past=None):
+    def fit(self, past, limit_fit=None):
         self.clear()
 
-        limit_past = limit_past or self.limit_past
-        if limit_past:
-            past = past[-limit_past:]
+        limit_fit = limit_fit or self.limit_fit
+        if limit_fit:
+            past = past[-limit_fit:]
 
         objective = make_objective(past, self.n)
 
@@ -140,15 +140,15 @@ class SIRDModel:
         return self.loss
 
 
-    def eval(self, past, future, loss_fn=rmsse, limit_past=None):
-        self.fit(past, limit_past=limit_past)
+    def eval(self, past, future, loss_fn=rmsse, limit_fit=None):
+        self.fit(past, limit_fit=limit_fit)
         return self.test(past, future, loss_fn=loss_fn)
 
 
-    def eval_dataset(self, dataset, loss_fn=rmsse, reduction=None, limit_past=None):
+    def eval_dataset(self, dataset, loss_fn=rmsse, reduction=None, limit_fit=None):
         reduction = reduction or self.reduction
         losses = [
-            self.eval(past, future, loss_fn=loss_fn, limit_past=limit_past)
+            self.eval(past, future, loss_fn=loss_fn, limit_fit=limit_fit)
             for past, future, indices in dataset
         ]
         sum_loss = sum(losses)
@@ -163,33 +163,33 @@ class SIRDModel:
         return loss
 
 
-def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
+def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit_fit_min=7, limit_fit_max=366, no_limit=False, n_trials=None):
     def objective(trial):
         no_limit_1 = no_limit
         if no_limit_1 is None:
             no_limit_1 = trial.suggest_categorical("no_limit", (False, True))
 
         if no_limit_1:
-            limit_past = None
+            limit_fit = None
         else:
-            limit_past = trial.suggest_int("limit_past", limit_past_min, limit_past_max)
+            limit_fit = trial.suggest_int("limit_fit", limit_fit_min, limit_fit_max)
 
-        model = SIRDModel(params_hint=params_hint, n=n, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)
+        model = SIRDModel(params_hint=params_hint, n=n, loss_fn=loss_fn, reduction=reduction, limit_fit=limit_fit)
         return model.eval_dataset(dataset)
 
     if n_trials is None:
-        n_trials = (limit_past_max - limit_past_min + 1)
+        n_trials = (limit_fit_max - limit_fit_min + 1)
 
     study = optuna.create_study()
     study.optimize(objective, n_trials=n_trials, n_jobs=1)
     return study
 
 
-def search_greedy(params_hint, n, dataset, loss_fn=rmsse, reduction="mean", limit_past_min=7, limit_past_max=366):
+def search_greedy(params_hint, n, dataset, loss_fn=rmsse, reduction="mean", limit_fit_min=7, limit_fit_max=366):
     best_model = None
     best_loss = np.inf
-    for limit_past in [*range(limit_past_min, limit_past_max + 1), None]:
-        model = SIRDModel(params_hint=params_hint, n=n, loss_fn=loss_fn, reduction=reduction, limit_past=limit_past)
+    for limit_fit in [*range(limit_fit_min, limit_fit_max + 1), None]:
+        model = SIRDModel(params_hint=params_hint, n=n, loss_fn=loss_fn, reduction=reduction, limit_fit=limit_fit)
         loss = model.eval_dataset(dataset)
         if loss < best_loss:
             best_model = model
@@ -222,13 +222,13 @@ class SIRDSearchLog:
         df = self.log_df
         return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
 
-    def log(self, group, cluster, kabko, limit_past, loss):
+    def log(self, group, cluster, kabko, limit_fit, loss):
         df = self.load_log()
         df.loc[df.shape[0]] = {
             "group": group,
             "cluster": cluster,
             "kabko": kabko,
-            "limit_past": limit_past,
+            "limit_fit": limit_fit,
             "loss": loss
         }
         self.save_log()

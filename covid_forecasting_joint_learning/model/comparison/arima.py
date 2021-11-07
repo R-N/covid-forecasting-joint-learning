@@ -76,13 +76,13 @@ class ARIMAModel:
         return loss
 
 
-def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_past_min=7, limit_past_max=366):
+def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_fit_min=7, limit_fit_max=366):
     best_loss = np.inf
     best_model = None
     for order_set in orders:
         order = order_set[0]
         seasonal_order = order_set[1] if len(order_set) > 1 else None
-        for i in [*range(limit_past_min, limit_past_max), None]:
+        for i in [*range(limit_fit_min, limit_fit_max + 1), None]:
             model = ARIMAModel(order, seasonal_order, reduction=reduction, limit_fit=i)
             loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
             if loss < best_loss:
@@ -91,7 +91,7 @@ def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
     return best_model, best_loss
 
 
-def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_past_min=7, limit_past_max=366, no_limit=False, n_trials=None):
+def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_fit_min=7, limit_fit_max=366, no_limit=False, n_trials=None):
 
     def make_objective(order_set_0, limit_fit_0, no_limit_0):
         def objective(trial):
@@ -120,14 +120,14 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
     n_orders = len(orders)
 
     if n_trials is None:
-        n_trials = (limit_past_max - limit_past_min + 1)
+        n_trials = (limit_fit_max - limit_fit_min + 1)
 
     study = optuna.create_study()
     orders_id = list(range(n_orders))
     study.optimize(
         make_objective(
             orders_id,
-            (limit_past_max, limit_past_max),
+            (limit_fit_max, limit_fit_max),
             False
         ),
         n_trials=n_orders * n_orders,
@@ -137,7 +137,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
     study.optimize(
         make_objective(
             orders_id,
-            (limit_past_min, limit_past_max),
+            (limit_fit_min, limit_fit_max),
             no_limit
         ),
         n_trials=n_trials,
