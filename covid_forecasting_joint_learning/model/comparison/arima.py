@@ -273,6 +273,6 @@ class ARIMAEvalLog(ARIMASearchLog):
         return super().is_search_done(group, cluster, kabko, label, df=self.log_df)
 
     def read_arima(self, group, cluster, kabko, label):
-        df = self.log_df
+        df = self.source_df
         cond = ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko) & (df["label"] == label))
         return df[cond]
