@@ -274,7 +274,7 @@ class SIRDEvalLog:
 
     def is_eval_done(self, group, cluster, kabko):
         df = self.log_df
-        return self.is_serach_done(group, cluster, kabko, df=df)
+        return self.is_search_done(group, cluster, kabko, df=df)
 
     def log(self, group, cluster, kabko, limit_fit, loss, log_path=None, log_sheet_name=None):
         df = self.load_log()
