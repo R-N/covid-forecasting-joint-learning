@@ -36,14 +36,19 @@ def rmsse(past, future, pred, limit_naive=30, eps=ModelUtil.NAIVE_EPS):
     return torch.sqrt(msse(past, future, pred, limit_naive=limit_naive, eps=eps))
 
 def reduce(loss, reduction="sum", reduce_feature=True):
-    while reduce_feature and loss.dim() > 1:
-        loss = torch.sum(loss, dim=-1)
-    if reduction in ("mean", "avg"):
-        return torch.mean(loss, dim=0)
-    elif reduction == "sum":
-        return torch.sum(loss, dim=0)
+    if loss.dim() < 2:
+        while reduce_feature and loss.dim() > 0:
+            loss = torch.sum(loss, axis=-1)
+        return loss
     else:
-        raise ValueError(f"Invalid reduction {reduction}")
+        while reduce_feature and loss.dim() > 1:
+            loss = torch.sum(loss, dim=-1)
+        if reduction in ("mean", "avg"):
+            return torch.mean(loss, dim=0)
+        elif reduction == "sum":
+            return torch.sum(loss, dim=0)
+        else:
+            raise ValueError(f"Invalid reduction {reduction}")
 
 class MSSELoss(nn.Module):
     def __init__(self, reduction="sum", limit_naive=30, eps=ModelUtil.NAIVE_EPS):

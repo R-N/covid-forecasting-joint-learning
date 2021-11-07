@@ -8,7 +8,7 @@ import optuna
 from xlrd import XLRDError
 
 msse = wrap_reduce(msse)
-rmsse = wrap_reduce(rmsse, reduce_feature=False)
+rmsse = wrap_reduce(rmsse)
 
 def dpsird(y, t, n, beta, gamma, delta):
     s, i, r, d = y
