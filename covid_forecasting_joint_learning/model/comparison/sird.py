@@ -253,7 +253,7 @@ class SIRDEvalLog:
         log_sheet_name = log_sheet_name or self.log_sheet_name
         try:
             self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
-        except FileNotFoundError:
+        except (FileNotFoundError, ValueError, XLRDError):
             self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "limit_fit", "i", "r", "d"])
             self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
         return self.log_df
