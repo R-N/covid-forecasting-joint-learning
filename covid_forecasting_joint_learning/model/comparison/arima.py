@@ -34,6 +34,8 @@ class ARIMAModel:
         self.first = len(endo)
 
     def _pred(self, start, end, exo=None):
+        if exo is not None:
+            assert len(exo) == (end - start + 1)
         return self.fit_result.predict(start=start, end=end, exog=exo)
 
     def pred(self, days, exo=None):
@@ -77,14 +79,14 @@ class ARIMAModel:
         return loss
 
 
-def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_fit_min=7, limit_fit_max=366):
+def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_fit_min=7, limit_fit_max=366, Model=ARIMAModel):
     best_loss = np.inf
     best_model = None
     for order_set in orders:
         order = order_set[0]
         seasonal_order = order_set[1] if len(order_set) > 1 else None
         for i in [*range(limit_fit_min, limit_fit_max + 1), None]:
-            model = ARIMAModel(order, seasonal_order, reduction=reduction, limit_fit=i)
+            model = Model(order, seasonal_order, reduction=reduction, limit_fit=i)
             loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
             if loss < best_loss:
                 best_loss = loss
@@ -92,7 +94,7 @@ def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
     return best_model, best_loss
 
 
-def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_fit_min=7, limit_fit_max=366, no_limit=False, n_trials=None):
+def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mean", limit_fit_min=7, limit_fit_max=366, no_limit=False, n_trials=None, Model=ARIMAModel):
 
     def make_objective(order_set_0, limit_fit_0, no_limit_0):
         def objective(trial):
@@ -111,7 +113,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
                 limit_fit = trial.suggest_int("limit_fit", *limit_fit_0)
 
             try:
-                model = ARIMAModel(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
+                model = Model(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
                 loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
                 return loss
             except (LinAlgError, IndexError) as ex:
