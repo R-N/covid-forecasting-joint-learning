@@ -182,6 +182,7 @@ ARIMA_DEFAULT = [
     (0, 1, 1),
     (1, 1, 1)
 ]
+ARIMA_DEFAULT = [(x, None) for x in ARIMA_DEFAULT]
 
 
 def parse_arima_string(s):
