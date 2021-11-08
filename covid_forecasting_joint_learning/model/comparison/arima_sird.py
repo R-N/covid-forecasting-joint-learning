@@ -1,4 +1,5 @@
 import numpy as np
+from xlrd import XLRDError
 from .arima import ARIMAModel, ARIMASearchLog, ARIMAEvalLog, rmsse, msse
 from ...pipeline import sird
 
@@ -78,3 +79,38 @@ class ARIMASIRDModel:
             past_exo=past_exo,
             loss_fn=loss_fn
         )
+
+
+class ARIMASIRDEvalLog(ARIMAEvalLog):
+    def __init__(self, source_path, log_path, source_sheet_name="ARIMA", log_sheet_name="Eval"):
+        super().__init__(
+            source_path, log_path,
+            source_sheet_name=source_sheet_name,
+            log_sheet_name=log_sheet_name,
+            columns=["group", "cluster", "kabko", "order", "seasonal_order", "limit_fit", "loss"]
+        )
+
+    def is_eval_done(self, group, cluster, kabko):
+        df = self.log_df
+        try:
+            return ((df["group"] == group) & (df["cluster"] == cluster) & (df["kabko"] == kabko)).any()
+        except (ValueError, XLRDError) as ex:
+            if "No sheet" in str(ex) or "is not in list" in str(ex):
+                return False
+            raise
+
+    def log(self, group, cluster, kabko, order, seasonal_order, limit_fit, loss, log_path=None, log_sheet_name=None):
+        assert len(loss) == 3
+        df = self.load_log()
+        df.loc[df.shape[0]] = {
+            "group": group,
+            "cluster": cluster,
+            "kabko": kabko,
+            "order": order,
+            "seasonal_order": seasonal_order,
+            "limit_fit": limit_fit,
+            "i": loss[0],
+            "r": loss[1],
+            "d": loss[2]
+        }
+        self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)

@@ -214,12 +214,18 @@ def parse_arima_string(s):
     return orders
 
 class ARIMASearchLog:
-    def __init__(self, source_path, log_path, source_sheet_name="ARIMA", log_sheet_name="ARIMA"):
+    def __init__(
+        self,
+        source_path, log_path,
+        source_sheet_name="ARIMA", log_sheet_name="ARIMA",
+        columns=["group", "cluster", "kabko", "label", "order", "seasonal_order", "limit_fit", "loss"]
+    ):
         self.source_path = source_path
         self.log_path = log_path
         self.source_sheet_name = source_sheet_name
         self.log_sheet_name = log_sheet_name
         self.source_df = pd.read_excel(source_path, sheet_name=source_sheet_name)
+        self.columns = columns
         self.load_log()
 
     def load_log(self, log_path=None, log_sheet_name=None):
@@ -228,7 +234,7 @@ class ARIMASearchLog:
         try:
             self.log_df = pd.read_excel(log_path, sheet_name=log_sheet_name)
         except (FileNotFoundError, ValueError, XLRDError):
-            self.log_df = pd.DataFrame([], columns=["group", "cluster", "kabko", "label", "order", "seasonal_order", "limit_fit", "loss"])
+            self.log_df = pd.DataFrame([], columns=self.columns)
             self.save_log(log_path=log_path, log_sheet_name=log_sheet_name)
         return self.log_df
 
@@ -265,8 +271,17 @@ class ARIMASearchLog:
         return df[(df["kabko"] == kabko)][label].item()
 
 class ARIMAEvalLog(ARIMASearchLog):
-    def __init__(self, source_path, log_path, source_sheet_name="ARIMA", log_sheet_name="Eval"):
-        super().__init__(source_path, log_path, source_sheet_name=source_sheet_name, log_sheet_name=log_sheet_name)
+    def __init__(
+        self,
+        source_path, log_path,
+        source_sheet_name="ARIMA", log_sheet_name="Eval",
+        columns=["group", "cluster", "kabko", "label", "order", "seasonal_order", "limit_fit", "loss"]
+    ):
+        super().__init__(
+            source_path, log_path,
+            source_sheet_name=source_sheet_name,
+            log_sheet_name=log_sheet_name
+        )
 
     def is_search_done(self, group, cluster, kabko, label):
         return super().is_search_done(group, cluster, kabko, label, df=self.source_df)
