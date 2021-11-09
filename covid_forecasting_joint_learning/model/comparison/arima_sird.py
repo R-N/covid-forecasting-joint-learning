@@ -102,7 +102,7 @@ class ARIMASIRDEvalLog(ARIMAEvalLog):
             source_path, log_path,
             source_sheet_name=source_sheet_name,
             log_sheet_name=log_sheet_name,
-            columns=["group", "cluster", "kabko", "order", "seasonal_order", "limit_fit", "loss"]
+            columns=["group", "cluster", "kabko", "order", "seasonal_order", "limit_fit", "i", "r", "d"]
         )
 
     def is_eval_done(self, group, cluster, kabko):
