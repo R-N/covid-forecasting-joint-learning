@@ -8,6 +8,7 @@ class ARIMASIRDModel:
         assert len(models) == 3
         self.models = models
         self.reduction = reduction
+        self.population = population
 
     def fit(self, endo, exo=None):
         assert endo.ndim == 2 and endo.shape[1] == 3
