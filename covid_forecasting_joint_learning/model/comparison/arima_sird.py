@@ -80,6 +80,20 @@ class ARIMASIRDModel:
             loss_fn=loss_fn
         )
 
+    def eval_dataset(self, dataset, loss_fn=rmsse, use_exo=False, reduction=None):
+        reduction = reduction or self.reduction
+        losses = [self.eval_sample(sample, loss_fn=loss_fn, use_exo=use_exo) for sample in dataset]
+        sum_loss = sum(losses)
+        count = len(losses)
+        if reduction == "sum":
+            loss = sum_loss
+        elif reduction in ("mean", "avg"):
+            loss = sum_loss / count
+        else:
+            raise Exception(f"Invalid reduction \"{reduction}\"")
+        self.loss = loss
+        return loss
+
 
 class ARIMASIRDEvalLog(ARIMAEvalLog):
     def __init__(self, source_path, log_path, source_sheet_name="ARIMA", log_sheet_name="Eval"):
