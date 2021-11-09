@@ -86,8 +86,11 @@ def search_greedy(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
         order = order_set[0]
         seasonal_order = order_set[1] if len(order_set) > 1 else None
         for i in [*range(limit_fit_min, limit_fit_max + 1), None]:
-            model = Model(order, seasonal_order, reduction=reduction, limit_fit=i)
-            loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
+            try:
+                model = Model(order, seasonal_order, reduction=reduction, limit_fit=i)
+                loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
+            except (LinAlgError, IndexError, ValueError):
+                continue
             if loss < best_loss:
                 best_loss = loss
                 best_model = model
@@ -116,7 +119,7 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
                 model = Model(order, seasonal_order, limit_fit=limit_fit, reduction=reduction)
                 loss = model.eval_dataset(train_set, loss_fn=loss_fn, use_exo=use_exo)
                 return loss
-            except (LinAlgError, IndexError) as ex:
+            except (LinAlgError, IndexError, ValueError) as ex:
                 raise TrialPruned(str(ex))
         return objective
 
