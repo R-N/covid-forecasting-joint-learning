@@ -22,10 +22,10 @@ class ARIMASIRDModel:
     def _pred(self, start, end, exo=None):
         if exo is not None:
             assert len(exo) == (end - start + 1) and exo.ndim == 2 and exo.shape[1] == 3
-        preds = [self.models[i].predict(
+        preds = [self.models[i]._pred(
             start=start,
             end=end,
-            exog=exo[:, i] if (exo is not None and exo.ndim == 2) else exo
+            exo=exo[:, i] if (exo is not None and exo.ndim == 2) else exo
         ) for i in range(3)]
         return np.stack(preds).T
 
