@@ -59,7 +59,7 @@ class ARIMASIRDModel:
         assert future_final.ndim == 2 and future_final.shape[1] == 3
         if final_seed.ndim == 2:
             final_seed = final_seed[-1]
-        assert final_seed.ndim == 1 and final_seed.shape[1] == 4
+        assert final_seed.ndim == 1 and final_seed.shape[0] == 4
         self.fit(past, exo=past_exo)
         pred_final = self.pred_final(len(future_final), final_seed, exo=exo)
         self.loss = loss_fn(past, future_final, pred_final)
