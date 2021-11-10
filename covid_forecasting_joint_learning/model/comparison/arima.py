@@ -284,7 +284,8 @@ class ARIMAEvalLog(ARIMASearchLog):
         super().__init__(
             source_path, log_path,
             source_sheet_name=source_sheet_name,
-            log_sheet_name=log_sheet_name
+            log_sheet_name=log_sheet_name,
+            columns=columns
         )
 
     def is_search_done(self, group, cluster, kabko, label):
