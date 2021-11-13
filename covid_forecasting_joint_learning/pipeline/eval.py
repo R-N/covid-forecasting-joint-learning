@@ -18,21 +18,21 @@ def friedman_adj_f(avranks, n_datasets):
     x2f = friedman_chi_square(avranks, n_datasets)
     return _friedman_adj_f(x2f, k_algorithms, k_algorithms)
 
-def _bonferroni_dunn_z(rank_i, rank_j, k_algorithms, n_datasets):
+def _test_z(rank_i, rank_j, k_algorithms, n_datasets):
     return (rank_i - rank_j) / sqrt((k_algorithms * (k_algorithms + 1)) / (6 * n_datasets))
 
-def bonferroni_dunn_z(avranks, n_datasets, control_index=0):
+def test_z(avranks, n_datasets, control_index=0):
     k_algorithms = len(avranks)
     rank_c = avranks[control_index]
-    zs = [_bonferroni_dunn_z(rank_i, rank_c, k_algorithms, n_datasets) for rank_i in avranks]
+    zs = [_test_z(rank_i, rank_c, k_algorithms, n_datasets) for rank_i in avranks]
     return zs
 
-def _bonferroni_dunn_p(rank_i, rank_j, k_algorithms, n_datasets):
-    z = _bonferroni_dunn_z(rank_i, rank_j, k_algorithms, n_datasets)
+def _test_p(rank_i, rank_j, k_algorithms, n_datasets):
+    z = _test_z(rank_i, rank_j, k_algorithms, n_datasets)
     return z_to_p(z)
 
-def bonferroni_dunn_p(avranks, n_datasets, control_index=0):
-    zs = bonferroni_dunn_z(avranks, n_datasets, control_index=control_index)
+def test_p(avranks, n_datasets, control_index=0):
+    zs = test_z(avranks, n_datasets, control_index=control_index)
     ps = [z_to_p(z) for z in zs]
     return ps
 
