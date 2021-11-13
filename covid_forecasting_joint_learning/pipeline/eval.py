@@ -50,7 +50,8 @@ def f_to_p(f_stat, dfn, dfd):
 
 def friedman_adj_p(avranks, n_datasets):
     f = friedman_adj_f(avranks, n_datasets)
-    p = f_to_p(f)
+    k_algorithms = len(avranks)
+    p = f_to_p(f, k_algorithms - 1, n_datasets - k_algorithms)
     return p
 
 def bonferroni_dunn_cd(avranks, n_datasets, alpha="0.05"):
