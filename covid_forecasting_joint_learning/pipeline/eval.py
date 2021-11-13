@@ -39,8 +39,14 @@ def bonferroni_dunn_p(avranks, n_datasets, control_index=0):
 def z_to_p(z_stat):
     return z.cdf(z_stat)
 
-def f_to_p(f_stat):
-    return f.cdf(f_stat)
+def dfn(k):
+    return k - 1
+
+def dfd(k, n):
+    return n - k
+
+def f_to_p(f_stat, dfn, dfd):
+    return f.cdf(f_stat, dfn, dfd)
 
 def friedman_adj_p(avranks, n_datasets):
     f = friedman_adj_f(avranks, n_datasets)
