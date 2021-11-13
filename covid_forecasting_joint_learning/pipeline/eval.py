@@ -43,7 +43,7 @@ def dfn(k):
     return k - 1
 
 def dfd(k, n):
-    return n - k
+    return (k - 1) * (n - 1)
 
 def f_to_p(f_stat, dfn, dfd):
     return f.cdf(f_stat, dfn, dfd)
