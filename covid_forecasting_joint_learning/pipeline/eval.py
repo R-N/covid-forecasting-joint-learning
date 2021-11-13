@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 from math import sqrt
 from scipy.stats import norm as z, f
 
-def friedman_chi_square(avranks, k_algorithms, n_datasets):
+def friedman_chi_square(avranks, n_datasets):
+    k_algorithms = len(avranks)
     k14 = k_algorithms * (k_algorithms + 1)**2 / 4
     rk = sum([(r**2 - k14) for r in avranks])
     x2f = (12 * n_datasets / (k_algorithms * (k_algorithms + 1))) * rk
