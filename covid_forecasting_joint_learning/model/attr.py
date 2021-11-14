@@ -213,7 +213,12 @@ def label_layer_attr(attrs, labels=None):
     return attrs, labels
 
 
-def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.6, rotation=90, fmt="%.2g"):
+def filter_out_indices(arr, indices, n=None):
+    n = n or len(arr)
+    return [arr[i] for i in range(n) if i not in indices]
+
+
+def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="Weight", width=0.6, rotation=90, fmt="%.2g", exclude_outer=[], exclude_inner=[]):
     legend = True
     if not isinstance(labeled_attr, dict):
         labeled_attr = {"Model": labeled_attr}
@@ -225,12 +230,25 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     else:
         x = np.arange(len(full_label))
 
+    exclude_indices = [full_label.index(e) for e in exclude_inner if e in full_label]
+    n_inner = len(full_label)
+    if exclude_indices:
+        exclude_indices = sorted(exclude_indices, reverse=True)
+        full_label = filter_out_indices(full_label, exclude_indices, n=n_inner)
+        x = filter_out_indices(x, exclude_indices, n=n_inner)
+
     fig, ax = plt.subplots(1, 1)
 
     prev = None
     counter = [0 for i in range(len(full_label))]
     for k in sorted(labeled_attr.keys()):
+        if k in exclude_outer:
+            continue
         v = labeled_attr[k]
+        if exclude_indices:
+            v = filter_out_indices(v, exclude_indices, n=n_inner)
+            if not v:
+                continue
         p1 = ax.bar(x, v, width=width, bottom=prev, label=k)
         texts = ax.bar_label(p1, fmt=fmt, label_type='center', rotation=rotation)
         for i in range(len(texts)):
