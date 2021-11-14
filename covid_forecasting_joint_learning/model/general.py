@@ -745,7 +745,7 @@ class ObjectiveModel:
                 torch.save(target.model.state_dict(), f"{model_dir}target{suffix}.pt")
 
             input_attr = target.get_input_attr()
-            input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, target.dataset_labels))
+            input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, target.dataset_labels[:5]))
             input_fig.savefig(f"{model_dir}input_attr{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig)
 
