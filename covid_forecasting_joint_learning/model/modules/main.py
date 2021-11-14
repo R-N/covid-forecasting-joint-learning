@@ -10,6 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 from .. import attr as Attribution
 from contextlib import suppress
 from ..util import LINE_PROFILER
+import numpy as np
 
 
 class RepresentationModel(nn.Module):
@@ -463,6 +464,19 @@ class SingleModel(nn.Module):
 
         ret = ModelUtil.sequential_to_linear_tensor(torch.stack(outputs))
         return ret
+
+    def rebuild(self, pred_vars, prev, n, rebuild_f):
+        if isinstance(pred_vars, torch.Tensor):
+            pred_vars = pred_vars.detach().numpy()
+        if isinstance(prev, torch.Tensor):
+            prev = prev.detach().numpy()
+        pred_final = [rebuild_f(
+            pred_vars[i],
+            prev[i][-1],
+            n
+        ) for i in range(len(pred_vars))]
+        pred_final = np.stack(pred_final)
+        return pred_final
 
     def freeze_shared(self, freeze=True):
         self.past_model.freeze_shared(freeze)

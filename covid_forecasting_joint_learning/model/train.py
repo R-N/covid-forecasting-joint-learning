@@ -180,12 +180,7 @@ def test(
         prev, final = sample[5], sample[6]
         if isinstance(prev, torch.Tensor):
             prev, final = prev.numpy(), final.numpy()
-        pred_final = [sird.rebuild(
-            pred_vars[i],
-            prev[i][-1],
-            n
-        ) for i in range(len(pred_vars))]
-        pred_final = np.stack(pred_final)
+        pred_final = target.model.rebuild(pred_vars, prev, n, sird.rebuild)
         losses = [loss_fn(
             prev[i][:, 1:],
             final[i],
