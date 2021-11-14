@@ -415,7 +415,7 @@ def prepare_pred(
         past = [df.iloc[:]]
 
     future_exo_cols = future_exo.columns
-    indices = [x.index for x in future_exo]
+    indices = [future_exo.index]
     final_seed = [x.iloc[-seed_size:] for x in past]
 
     past_size = len(past[0])
