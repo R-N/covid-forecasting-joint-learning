@@ -828,10 +828,11 @@ def clean_params(
     past_cols,
     future_exo_cols
 ):
-    onecycle = params["onecycle"]
-    if onecycle:
-        params["lr"] = None
-    params.pop("onecycle", None)
+    if "onecycle" in params:
+        onecycle = params["onecycle"]
+        if onecycle:
+            params["lr"] = None
+        params.pop("onecycle", None)
 
     if not joint_learning:
         params.pop("source_weight", None)
