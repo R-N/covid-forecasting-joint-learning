@@ -749,6 +749,20 @@ class ObjectiveModel:
             input_fig.savefig(f"{model_dir}input_attr{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig)
 
+            input_fig_exo_only = Attribution.plot_attr(
+                *Attribution.label_input_attr(input_attr, target.dataset_labels),
+                exclude_inner=DataCol.SIRD_VARS
+            )
+            input_fig_exo_only.savefig(f"{model_dir}input_attr_exo_only{suffix}.jpg", bbox_inches="tight")
+            plt.close(input_fig_exo_only)
+
+            input_fig_date_only = Attribution.plot_attr(
+                *Attribution.label_input_attr(input_attr, target.dataset_labels),
+                exclude_inner=DataCol.SIRD_VARS + DataCol.COLS_NON_DATE
+            )
+            input_fig_date_only.savefig(f"{model_dir}input_attr_date_only{suffix}.jpg", bbox_inches="tight")
+            plt.close(input_fig_date_only)
+
             layer_attrs = target.get_aggregate_layer_attr()
             layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs), title="Layer importance")
             layer_fig.savefig(f"{model_dir}layer_attr{suffix}.jpg", bbox_inches="tight")
