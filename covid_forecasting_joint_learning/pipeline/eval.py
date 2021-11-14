@@ -62,14 +62,16 @@ def bonferroni_dunn_cd(avranks, n_datasets, alpha="0.05"):
         test="bonferroni-dunn"
     )
 
-def plot_bonferroni_dunn(names, avranks, cd, control_index=0, width=5, textspace=1.5):
+def plot_bonferroni_dunn(names, avranks, cd, control_index=0, width=5, textspace=1.5, file_name=None, **kwargs):
     return Orange.evaluation.graph_ranks(
         avranks,
         names,
         cd=cd,
         width=width,
         textspace=textspace,
-        cdmethod=control_index
+        cdmethod=control_index,
+        filename=file_name,
+        **kwargs
     )
 
 def nemenyi_cd(avranks, n_datasets, alpha="0.05"):
@@ -79,12 +81,14 @@ def nemenyi_cd(avranks, n_datasets, alpha="0.05"):
         alpha=str(alpha)
     )
 
-def plot_nemenyi(names, avranks, cd, width=5, textspace=1.5):
+def plot_nemenyi(names, avranks, cd, width=5, textspace=1.5, file_name=None, **kwargs):
     return Orange.evaluation.graph_ranks(
         avranks,
         names,
         cd=cd,
         width=width,
-        textspace=textspace
+        textspace=textspace,
+        filename=file_name,
+        **kwargs
     )
 
