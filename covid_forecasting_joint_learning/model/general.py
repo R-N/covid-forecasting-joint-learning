@@ -940,9 +940,9 @@ def eval(
     trial_id=-1,
     copy_group=False,
     early_stopping_kwargs={
-        # "rise_patience": 25,
-        # "still_patience": 25,
-        # "both_patience": 75
+        "rise_patience": 25,
+        "still_patience": 25,
+        "both_patience": 75
     }
 ):
     if device is None:
