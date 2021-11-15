@@ -938,7 +938,8 @@ def eval(
     val=0,  # use 2 for pred training
     continue_train=True,
     trial_id=-1,
-    copy_group=False
+    copy_group=False,
+    early_stopping_kwargs={}
 ):
     if device is None:
         device = ModelUtil.DEVICE
@@ -1019,7 +1020,8 @@ def eval(
                 label=model.label,
                 interval_mode=early_stopping_interval_mode,
                 wait=min_epoch,
-                max_epoch=max_epoch
+                max_epoch=max_epoch,
+                **early_stopping_kwargs
             )
 
             while not early_stopping.stopped:
@@ -1055,7 +1057,8 @@ def eval(
                     interval_mode=early_stopping_interval_mode,
                     wait=0,
                     max_epoch=int(best_epoch * (second_train_count / first_train_count)),
-                    update_state_mode=1
+                    update_state_mode=1,
+                    **early_stopping_kwargs
                 )
 
                 while not early_stopping_2.stopped:
