@@ -939,7 +939,11 @@ def eval(
     continue_train=True,
     trial_id=-1,
     copy_group=False,
-    early_stopping_kwargs={}
+    early_stopping_kwargs={
+        "rise_patience": 25,
+        "still_patience": 25,
+        "both_patience": 75
+    }
 ):
     if device is None:
         device = ModelUtil.DEVICE
