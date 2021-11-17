@@ -144,7 +144,7 @@ def calc_split(
     val_portion=0.25,
     test_portion=0.25,
     past_size=30,
-    future_size=14
+    future_size=0  # 14
 ):
     n = len(df) - past_size - future_size + 1
     val_len, test_len = int(val_portion * n), int(test_portion * n)
