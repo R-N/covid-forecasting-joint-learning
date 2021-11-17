@@ -143,9 +143,10 @@ def calc_split(
     df,
     val_portion=0.25,
     test_portion=0.25,
-    past_size=30
+    past_size=30,
+    future_size=14
 ):
-    n = len(df) - past_size
+    n = len(df) - past_size - future_size
     val_len, test_len = int(val_portion * n), int(test_portion * n)
     train_len = n - (val_len + test_len)
     val_start, test_start = train_len + past_size, train_len + val_len + past_size
