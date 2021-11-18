@@ -21,6 +21,7 @@ from ..data import cols as DataCol
 from .loss import MSSELoss, NaNPredException, NaNLossException
 import numpy as np
 from math import sqrt, log
+import pandas as pd
 
 from .util import LINE_PROFILER
 
@@ -745,11 +746,15 @@ class ObjectiveModel:
                 torch.save(target.model.state_dict(), f"{model_dir}target{suffix}.pt")
 
             input_attr = target.get_input_attr()
-            input_fig = Attribution.plot_attr(*Attribution.label_input_attr(input_attr, target.dataset_labels[:5]))
+            labeled_input_attr, input_attr_labels = Attribution.label_input_attr(input_attr, target.dataset_labels[:5])
+            input_fig = Attribution.plot_attr(labeled_input_attr, input_attr_labels)
             input_fig.savefig(f"{model_dir}input_attr{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig)
 
-            DataUtil.write_string(ModelUtil.str_dict(input_attr), f"{model_dir}input_attr{suffix}.json")
+            input_keys = sorted(labeled_input_attr.keys())
+            input_values = [labeled_input_attr[k] for k in input_keys]
+            input_df = pd.DataFrame(input_values, columns=input_attr_labels, index=input_keys)
+            input_df.to_excel(f"{model_dir}input_attr{suffix}.json", sheet_name="input_attr")
 
             input_fig_exo_only = Attribution.plot_attr(
                 *Attribution.label_input_attr(input_attr, target.dataset_labels),
