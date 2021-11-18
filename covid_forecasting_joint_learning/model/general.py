@@ -749,6 +749,8 @@ class ObjectiveModel:
             input_fig.savefig(f"{model_dir}input_attr{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig)
 
+            DataUtil.write_string(ModelUtil.str_dict(input_attr), f"{model_dir}input_attr{suffix}.json")
+
             input_fig_exo_only = Attribution.plot_attr(
                 *Attribution.label_input_attr(input_attr, target.dataset_labels),
                 exclude_inner=DataCol.SIRD_VARS
@@ -767,6 +769,8 @@ class ObjectiveModel:
             layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs), title="Layer importance")
             layer_fig.savefig(f"{model_dir}layer_attr{suffix}.jpg", bbox_inches="tight")
             plt.close(layer_fig)
+
+            DataUtil.write_string(ModelUtil.str_dict(layer_attrs), f"{model_dir}layer_attr{suffix}.json")
 
 
 def prepare_params(
@@ -974,10 +978,12 @@ def eval(
     )
 
     target_losses = {}
+    epoch_log = {}
 
     for group_0 in groups:
         group = group_0.copy() if copy_group else group_0
         target_losses[group.id] = {}
+        epoch_log[group.id] = {}
         clusters = [group.merge_clusters()] if merge_clusters else group.clusters
         for cluster in clusters:
             if debug and (group.id > 0 or cluster.id > 1):
@@ -1046,6 +1052,9 @@ def eval(
                     if not early_stopping.step_nan():
                         raise
 
+            last_epoch, stop_reason, best_epoch = early_stopping.last_epoch, early_stopping.stop_reason, early_stopping.best_epoch
+            last_epoch, best_epoch = str(last_epoch), str(best_epoch)
+
             if continue_train:
                 best_epoch = early_stopping.best_epoch
                 best_loss = early_stopping.best_val_loss_2
@@ -1086,10 +1095,18 @@ def eval(
                 if best_loss < early_stopping_2.best_val_loss:
                     print("Second training results in higher loss. Loading previous best state")
                     early_stopping.load_best_state()
+                else:
+                    last_epoch_2, stop_reason_2, best_epoch_2 = early_stopping_2.last_epoch, early_stopping_2.stop_reason, early_stopping_2.best_epoch
+                    last_epoch, stop_reason, best_epoch = last_epoch+last_epoch_2, stop_reason+stop_reason_2, best_epoch+best_epoch_2
 
             test_loss = model.test()
             print("Test loss:", test_loss)
             target_losses[group.id][cluster.id] = test_loss
+            epoch_log[group.id][cluster.id] = {
+                "last_epoch": last_epoch,
+                "stop_reason": stop_reason,
+                "best_epoch": best_epoch
+            }
 
             if model_dir:
                 model.posttrain_save_model(save_state=True)
@@ -1125,7 +1142,7 @@ def eval(
         if model_dir_i and (model_dir_copy_i or drive):
             ModelUtil.rmtree(model_dir_i)
 
-    return target_losses
+    return target_losses, epoch_log
 
 
 

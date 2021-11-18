@@ -89,6 +89,9 @@ class EarlyStopping:
         self.eps = eps
         self.update_state_mode = update_state_mode
 
+        self.last_epoch = 0
+        self.stop_reason = None
+
         if self.log_dir is not None:
             assert self.label is not None
             self.min_high_writer = SummaryWriter(log_dir + "/min_high")
@@ -339,6 +342,7 @@ class EarlyStopping:
         epoch = epoch if epoch is not None else self.epoch
         if self.max_epoch and epoch >= self.max_epoch:
             self.stop()
+            self.stop_reason = "max epoch"
             if self.debug >= 1:
                 loss = f"best_val_loss_2={self.best_val_loss_2}" if self.update_state_mode == 2 else f"best_val_loss={self.best_val_loss}"
                 print(f"INFO: Stopping at max epoch {epoch} with {loss} at epoch {self.best_epoch}")
@@ -389,6 +393,7 @@ class EarlyStopping:
         if not self.stopped:
             self.model.load_state_dict(self.best_state)
             self.stopped = True
+            self.last_epoch = self.epoch
 
     def early_stop(self, reason="idk", epoch=None):
         if not self.active:
@@ -396,6 +401,7 @@ class EarlyStopping:
             return
         epoch = epoch if epoch is not None else self.epoch
         self.stop()
+        self.stop_reason = reason
         if self.debug >= 1:
             loss = f"best_val_loss_2={self.best_val_loss_2}" if self.update_state_mode == 2 else f"best_val_loss={self.best_val_loss}"
             print(f"INFO: Early stopping due to {reason} at epoch {epoch} with {loss} at epoch {self.best_epoch}")
