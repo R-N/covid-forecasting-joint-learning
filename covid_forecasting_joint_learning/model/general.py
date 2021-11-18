@@ -754,7 +754,7 @@ class ObjectiveModel:
             input_keys = sorted(labeled_input_attr.keys())
             input_values = [labeled_input_attr[k] for k in input_keys]
             input_df = pd.DataFrame(input_values, columns=input_attr_labels, index=input_keys)
-            input_df.to_excel(f"{model_dir}input_attr{suffix}.xlsx", sheet_name="input_attr")
+            input_df.T.to_excel(f"{model_dir}input_attr{suffix}.xlsx", sheet_name="input_attr")
 
             input_fig_exo_only = Attribution.plot_attr(
                 *Attribution.label_input_attr(input_attr, target.dataset_labels),
