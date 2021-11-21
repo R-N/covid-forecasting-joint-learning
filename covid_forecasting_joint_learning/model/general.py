@@ -277,6 +277,7 @@ class ClusterModel:
         return {target.name: test(
             target,
             key=lambda k: k.dataloaders[-1],
+            scaler=target.scaler_2,
             **test_kwargs
         ) for target in self.targets}
 
@@ -748,7 +749,8 @@ class ObjectiveModel:
             excluded_dates = self.cluster.inverse_date_cols
 
             input_attr = target.get_input_attr()
-            labeled_input_attr, input_attr_labels = Attribution.label_input_attr(input_attr, target.dataset_labels[:5])
+            labels = target.dataset_labels[:5]
+            labeled_input_attr, input_attr_labels = Attribution.label_input_attr(input_attr, labels)
             input_fig = Attribution.plot_attr(
                 labeled_input_attr,
                 input_attr_labels,
@@ -763,14 +765,16 @@ class ObjectiveModel:
             input_df.T.to_excel(f"{model_dir}input_attr{suffix}.xlsx", sheet_name="input_attr")
 
             input_fig_exo_only = Attribution.plot_attr(
-                *Attribution.label_input_attr(input_attr, target.dataset_labels),
+                labeled_input_attr,
+                input_attr_labels,
                 exclude_inner=excluded_dates + DataCol.SIRD_VARS
             )
             input_fig_exo_only.savefig(f"{model_dir}input_attr_exo_only{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig_exo_only)
 
             input_fig_date_only = Attribution.plot_attr(
-                *Attribution.label_input_attr(input_attr, target.dataset_labels),
+                labeled_input_attr,
+                input_attr_labels,
                 exclude_inner=excluded_dates + DataCol.SIRD_VARS + DataCol.COLS_NON_DATE
             )
             input_fig_date_only.savefig(f"{model_dir}input_attr_date_only{suffix}.jpg", bbox_inches="tight")
