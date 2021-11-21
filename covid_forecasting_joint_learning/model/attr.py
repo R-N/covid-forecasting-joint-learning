@@ -235,7 +235,8 @@ def plot_attr(labeled_attr, full_label=None, title="Input importance", y_label="
     if exclude_indices:
         exclude_indices = sorted(exclude_indices, reverse=True)
         full_label = filter_out_indices(full_label, exclude_indices, n=n_inner)
-        x = filter_out_indices(x, exclude_indices, n=n_inner)
+        # x = filter_out_indices(x, exclude_indices, n=n_inner)
+        x = np.arange(len(full_label))
 
     fig, ax = plt.subplots(1, 1)
 
