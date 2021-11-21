@@ -465,7 +465,7 @@ class SingleModel(nn.Module):
         ret = ModelUtil.sequential_to_linear_tensor(torch.stack(outputs))
         return ret
 
-    def rebuild(self, pred_vars, prev, n, rebuild_f):
+    def rebuild(self, pred_vars, prev, n, rebuild_f, scaler=None):
         if isinstance(pred_vars, torch.Tensor):
             pred_vars = pred_vars.detach().numpy()
         if isinstance(prev, torch.Tensor):
@@ -475,6 +475,8 @@ class SingleModel(nn.Module):
             prev[i][-1],
             n
         ) for i in range(len(pred_vars))]
+        if scaler:
+            pred_final = [scaler.inverse_transform(x) for x in pred_final]
         pred_final = np.stack(pred_final)
         return pred_final
 

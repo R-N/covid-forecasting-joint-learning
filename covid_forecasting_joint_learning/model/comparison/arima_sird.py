@@ -4,11 +4,12 @@ from .arima import ARIMAModel, ARIMASearchLog, ARIMAEvalLog, rmsse, msse
 from ...pipeline import sird
 
 class ARIMASIRDModel:
-    def __init__(self, models, population, reduction="mean"):
+    def __init__(self, models, population, scaler=None, reduction="mean"):
         assert len(models) == 3
         self.models = models
         self.reduction = reduction
         self.population = population
+        self.scaler = scaler
 
     def fit(self, endo, exo=None):
         assert endo.ndim == 2 and endo.shape[1] == 3
@@ -37,11 +38,14 @@ class ARIMASIRDModel:
         return self._pred(start=0, end=days - 1, exo=exo)
 
     def rebuild_pred(self, pred_vars, final_seed):
-        return sird.rebuild(
+        pred_final = sird.rebuild(
             pred_vars,
             final_seed,
             self.population
         )
+        if self.scaler:
+            pred_final = self.scaler.inverse_transform(pred_final)
+        return pred_final
 
     def pred_final(self, days, final_seed, exo=None):
         return self.rebuild_pred(
