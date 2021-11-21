@@ -277,7 +277,7 @@ class ClusterModel:
         return {target.name: test(
             target,
             key=lambda k: k.dataloaders[-1],
-            scaler=target.scaler_2,
+            # scaler=target.scaler_2,
             **test_kwargs
         ) for target in self.targets}
 
