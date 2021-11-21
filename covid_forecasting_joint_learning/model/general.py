@@ -745,9 +745,15 @@ class ObjectiveModel:
             if save_state:
                 torch.save(target.model.state_dict(), f"{model_dir}target{suffix}.pt")
 
+            excluded_dates = self.cluster.inverse_date_cols
+
             input_attr = target.get_input_attr()
             labeled_input_attr, input_attr_labels = Attribution.label_input_attr(input_attr, target.dataset_labels[:5])
-            input_fig = Attribution.plot_attr(labeled_input_attr, input_attr_labels)
+            input_fig = Attribution.plot_attr(
+                labeled_input_attr,
+                input_attr_labels,
+                exclude_inner=excluded_dates
+            )
             input_fig.savefig(f"{model_dir}input_attr{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig)
 
@@ -758,14 +764,14 @@ class ObjectiveModel:
 
             input_fig_exo_only = Attribution.plot_attr(
                 *Attribution.label_input_attr(input_attr, target.dataset_labels),
-                exclude_inner=DataCol.SIRD_VARS
+                exclude_inner=excluded_dates + DataCol.SIRD_VARS
             )
             input_fig_exo_only.savefig(f"{model_dir}input_attr_exo_only{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig_exo_only)
 
             input_fig_date_only = Attribution.plot_attr(
                 *Attribution.label_input_attr(input_attr, target.dataset_labels),
-                exclude_inner=DataCol.SIRD_VARS + DataCol.COLS_NON_DATE
+                exclude_inner=excluded_dates + DataCol.SIRD_VARS + DataCol.COLS_NON_DATE
             )
             input_fig_date_only.savefig(f"{model_dir}input_attr_date_only{suffix}.jpg", bbox_inches="tight")
             plt.close(input_fig_date_only)

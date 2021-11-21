@@ -6,6 +6,7 @@ from collections import Counter
 import numpy as np
 from . import util as PipelineUtil
 import itertools
+from ..data import cols as DataCol
 
 def shortest(x):
     return (-len(x.data), x.data.last_valid_index(), x.data.first_valid_index())
@@ -88,6 +89,18 @@ class Cluster:
         for k in cluster.members:
             k.cluster = cluster
         return cluster
+
+    @property
+    def date_cols(self):
+        date_set = set()
+        for k in self.members:
+            date_set = date_set.union([d for d in DataCol.DATES if sum(k.data[d]) > 0])
+        return [d for d in DataCol.DATES if d in date_set]
+
+    @property
+    def inverse_date_cols(self):
+        date_set = self.date_cols
+        return [d for d in DataCol.DATES if d not in date_set]
 
 
 def merge_clusters(group):
