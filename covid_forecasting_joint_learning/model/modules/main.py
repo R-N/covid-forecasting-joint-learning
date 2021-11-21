@@ -470,13 +470,13 @@ class SingleModel(nn.Module):
             pred_vars = pred_vars.detach().numpy()
         if isinstance(prev, torch.Tensor):
             prev = prev.detach().numpy()
+        if scaler:
+            pred_vars = [scaler.inverse_transform(x) for x in pred_vars]
         pred_final = [rebuild_f(
             pred_vars[i],
             prev[i][-1],
             n
         ) for i in range(len(pred_vars))]
-        if scaler:
-            pred_final = [scaler.inverse_transform(x) for x in pred_final]
         pred_final = np.stack(pred_final)
         return pred_final
 

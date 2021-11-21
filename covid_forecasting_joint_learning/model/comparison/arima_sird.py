@@ -38,13 +38,13 @@ class ARIMASIRDModel:
         return self._pred(start=0, end=days - 1, exo=exo)
 
     def rebuild_pred(self, pred_vars, final_seed):
+        if self.scaler:
+            pred_vars = self.scaler.inverse_transform(pred_vars)
         pred_final = sird.rebuild(
             pred_vars,
             final_seed,
             self.population
         )
-        if self.scaler:
-            pred_final = self.scaler.inverse_transform(pred_final)
         return pred_final
 
     def pred_final(self, days, final_seed, exo=None):
