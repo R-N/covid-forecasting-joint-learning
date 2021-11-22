@@ -249,4 +249,7 @@ def round_digits(x, n_digits=0):
     return digits * 10**exp
 
 def torch_max(tensor, dim=0):
-    return torch.max(tensor, dim=dim).values
+    indices = torch.max(torch.abs(tensor), dim=dim, keepdim=True).indices
+    result = torch.take_along_dim(tensor, indices, dim=dim)
+    result = torch.sum(result, dim=dim)
+    return result

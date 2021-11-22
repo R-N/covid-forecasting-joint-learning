@@ -65,7 +65,7 @@ def postprocess_result(tup, reduction="max"):
         reduce = torch.sum
     else:
         raise Exception(f"Invalid reduction '{reduction}'")
-    ret = tuple(torch.abs(t) for t in ret)
+    # ret = tuple(torch.abs(t) for t in ret)
     while ret[0].dim() > 1:
         ret = tuple(reduce(t, dim=0) for t in ret)
     ret = tuple(x.cpu().detach().numpy() for x in ret)
