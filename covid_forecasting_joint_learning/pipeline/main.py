@@ -242,10 +242,14 @@ def clustering_1(
     max_silhouette_diff=0.1,
     scale=True,
     verbose=True,
+    limit_clustering=True,
     **kwargs
 ):
     for k in group.members:
-        k.data_clustering = k.data.loc[:k.split_indices[2], cols].copy()
+        if limit_clustering:
+            k.data_clustering = k.data.loc[:k.split_indices[2], cols].copy()
+        else:
+            k.data_clustering = k.data.loc[:, cols].copy()
         if scale:
             k.data_clustering = k.scaler.transform(k.data_clustering)
 
