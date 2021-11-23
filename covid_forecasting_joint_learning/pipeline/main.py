@@ -347,6 +347,7 @@ def preprocessing_4(
     cluster,
     cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler,
+    limit_split=True,
     scale=True
 ):
     kabkos = cluster.members
@@ -360,6 +361,7 @@ def preprocessing_4(
     scaler = __preprocessing_3(
         kabkos,
         cols=cols,
+        limit_split=limit_split,
         Scaler=Scaler
     )
     for kabko in kabkos:

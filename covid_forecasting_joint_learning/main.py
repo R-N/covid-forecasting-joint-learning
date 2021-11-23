@@ -24,7 +24,7 @@ def main_1(
     limit_length=[90, 180, 366],
     limit_date=["2021-01-21"],
     n_clusters=Pipeline.DEFAULT_GROUPS_N_CLUSTERS,
-    limit_clustering=True,
+    limit_data=True,
     clustering_callback=None
 ):
     loader = DataCenter()
@@ -45,19 +45,19 @@ def main_1(
     )
     # groups = [groups[2]]
     for group in groups:
-        Pipeline.preprocessing_3(group.members)
+        Pipeline.preprocessing_3(group.members, limit_split=limit_data)
 
     if n_clusters:
         clusters = [Pipeline.clustering_1(
             group,
             n_clusters_min=n_cluster,
             n_clusters_max=n_cluster,
-            limit_clustering=limit_clustering
+            limit_clustering=limit_data
         ) for group, n_cluster in zip(groups, n_clusters)]
     else:
         clusters = [Pipeline.clustering_1(
             group,
-            limit_clustering=limit_clustering
+            limit_clustering=limit_data
         ) for group in groups]
 
     if clustering_callback:
@@ -65,7 +65,7 @@ def main_1(
 
     for group in groups:
         for cluster in group.clusters:
-            Pipeline.preprocessing_4(cluster)
+            Pipeline.preprocessing_4(cluster, limit_split=limit_data)
 
     return groups
 
