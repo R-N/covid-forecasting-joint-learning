@@ -46,11 +46,16 @@ def main_1(
     for group in groups:
         Pipeline.preprocessing_3(group.members)
 
-    clusters = [Pipeline.clustering_1(
-        group,
-        n_clusters_min=n_cluster,
-        n_clusters_max=n_cluster
-    ) for group, n_cluster in zip(groups, n_clusters)]
+    if n_clusters:
+        clusters = [Pipeline.clustering_1(
+            group,
+            n_clusters_min=n_cluster,
+            n_clusters_max=n_cluster
+        ) for group, n_cluster in zip(groups, n_clusters)]
+    else:
+        clusters = [Pipeline.clustering_1(
+            group
+        ) for group in groups]
 
     if clustering_callback:
         clustering_callback(groups)
