@@ -94,7 +94,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
         up = df_fill.loc[(df_fill != 0)]
         # if len(up) == 1:
         plus_1 = up.last_valid_index() + pd.DateOffset(1)
-        if plus_1 <= df_fill.last_valid_index():
+        if plus_1 in df_fill.index:
             df_fill.loc[plus_1] = max_val
         df_fill.loc[(df_fill == 0)] = min_val
         ax.fill_between(
