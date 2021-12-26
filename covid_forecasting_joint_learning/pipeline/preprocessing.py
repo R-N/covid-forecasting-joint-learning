@@ -131,8 +131,8 @@ def split_groups(
     limit_date=["2021-01-21"]
 ):
     groups = [
-        *[[(kabko, df[:l].copy()) for kabko, df in kabko_dfs] for l in limit_length],
-        *[[(kabko, df[:l].copy()) for kabko, df in kabko_dfs] for l in limit_date]
+        *[[(kabko, (df[:l] if l else df).copy()) for kabko, df in kabko_dfs] for l in limit_length],
+        *[[(kabko, (df[:l] if l else df).copy()) for kabko, df in kabko_dfs] for l in limit_date]
     ]
     groups = [Group(i, groups[i]) for i in range(len(groups))]
     return groups
