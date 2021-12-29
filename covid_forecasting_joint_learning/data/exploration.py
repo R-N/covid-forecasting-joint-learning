@@ -111,7 +111,14 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
     ax.grid(which="both", alpha=0.3)
     ax.set_title(title)
     if legend:
-        ax.legend(loc="best")
+        # ax.legend(bbox_to_anchor=bbox, loc="best")
+        # Shrink current axis by 20%
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+
+        # Put a legend to the right of the current axis
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
     if interactive:
         fig = interactive_legend(fig, ax, alpha_unsel=alpha_unsel, alpha_over=alpha_over)
     if return_ax:
