@@ -111,7 +111,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
     ax.grid(which="both", alpha=0.3)
     ax.set_title(title)
     if legend:
-        ax.legend(bbox_to_anchor=bbox, loc="best")
+        ax.legend(loc="best")
     if interactive:
         fig = interactive_legend(fig, ax, alpha_unsel=alpha_unsel, alpha_over=alpha_over)
     if return_ax:
