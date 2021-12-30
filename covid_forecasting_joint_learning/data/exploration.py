@@ -110,7 +110,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
     for i in range(len(lines)):
         line = lines[i]
         if line_colors:
-            ax.plot(line, label=line.name, )
+            ax.plot(line, label=line.name, color=line_colors[i])
         else:
             ax.plot(line, label=line.name)
     if grid:
