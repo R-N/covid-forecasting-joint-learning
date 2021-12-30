@@ -71,7 +71,7 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.2, interactive=True, alpha_unsel=0.35, alpha_over=1.5):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.2, interactive=True, alpha_unsel=0.35, alpha_over=1.5, line_colors=None):
     if lines is not None and len(lines) > 0 and isinstance(lines[0], str):
         lines = [df[line] for line in lines]
     if fills is not None and len(fills) > 0 and isinstance(fills[0], str):
@@ -86,7 +86,8 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
     min_val = min([line.min() for line in lines])
     # x_zero = pd.Series(min_val, index=df.index)
 
-    for fill in fills:
+    for i in range(fills):
+        fill = fills[i]
         df_fill = fill.copy()
         if df_fill.max() <= 0:
             continue
@@ -106,8 +107,12 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
             # facecolor=next(cgen)['color'],
             alpha=alpha
         )
-    for line in lines:
-        ax.plot(line, label=line.name)
+    for i in range(lines):
+        line = lines[i]
+        if line_colors:
+            ax.plot(line, label=line.name, )
+        else:
+            ax.plot(line, label=line.name)
     ax.grid(which="both", alpha=0.3)
     ax.set_title(title)
     if legend:
