@@ -71,7 +71,7 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.2, interactive=True, alpha_unsel=0.35, alpha_over=1.5, line_colors=None):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.2, interactive=True, alpha_unsel=0.35, alpha_over=1.5, line_colors=None, grid=True):
     if lines is not None and len(lines) > 0 and isinstance(lines[0], str):
         lines = [df[line] for line in lines]
     if fills is not None and len(fills) > 0 and isinstance(fills[0], str):
@@ -113,7 +113,8 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
             ax.plot(line, label=line.name, )
         else:
             ax.plot(line, label=line.name)
-    ax.grid(which="both", alpha=0.3)
+    if grid:
+        ax.grid(which="both", alpha=0.3)
     ax.set_title(title)
     if legend:
         # ax.legend(bbox_to_anchor=bbox, loc="upper left")
