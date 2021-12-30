@@ -86,7 +86,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
     min_val = min([line.min() for line in lines])
     # x_zero = pd.Series(min_val, index=df.index)
 
-    for i in range(fills):
+    for i in range(len(fills)):
         fill = fills[i]
         df_fill = fill.copy()
         if df_fill.max() <= 0:
@@ -107,7 +107,7 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
             # facecolor=next(cgen)['color'],
             alpha=alpha
         )
-    for i in range(lines):
+    for i in range(len(lines)):
         line = lines[i]
         if line_colors:
             ax.plot(line, label=line.name, )
