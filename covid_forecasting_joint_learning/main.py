@@ -9,8 +9,9 @@ import torch
 import pandas as pd
 
 
-def init():
-    Attribution.init_ipython()
+def init(ipython=True):
+    if ipython:
+        Attribution.init_ipython()
     Attribution.init_matplotlib()
     pd.options.mode.chained_assignment = None
     device = ModelUtil.init(cuda=True, half=False)
