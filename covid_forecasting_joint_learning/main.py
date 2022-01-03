@@ -18,7 +18,7 @@ def init():
 
 
 def main_1(
-    data_path,
+    data,
     labeled_dates=DataCol.LABELED_DATES,
     cols=DataCol.COLS,
     limit_length=[90, 180, 366],
@@ -27,9 +27,12 @@ def main_1(
     limit_data=True,
     clustering_callback=None
 ):
-    loader = DataCenter()
-    loader.load_excel(data_path)
-    loader = Pipeline.preprocessing_0(loader)
+    if isinstance(data, DataCenter):
+        loader = data
+    else:
+        loader = DataCenter()
+        loader.load_excel(data)
+        loader = Pipeline.preprocessing_0(loader)
 
     kabkos = Pipeline.get_kabkos(loader)
     # kabko_indices = {kabkos[i].name: i for i in range(len(kabkos))}
