@@ -20,9 +20,8 @@ def get_sub_folders_files(path):
 
 
 def write_string(s, path):
-    text_file = open(path, "w")
-    n = text_file.write(s)
-    text_file.close()
+    with open(path, "w", encoding='utf-8') as text_file:
+        text_file.write(s)
 
 
 def add_dates(df, ranges, name):
