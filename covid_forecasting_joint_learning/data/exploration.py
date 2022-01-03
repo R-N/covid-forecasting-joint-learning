@@ -71,7 +71,7 @@ def init_matplotlib():
 # cgen = itertools.cycle(clist)
 
 
-def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.2, interactive=True, alpha_unsel=0.35, alpha_over=1.5, line_colors=None, grid=True):
+def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1), legend=True, return_ax=False, alpha=0.2, interactive=True, alpha_unsel=0.35, alpha_over=1.5, line_colors=None, grid=True, ipython=True):
     if lines is not None and len(lines) > 0 and isinstance(lines[0], str):
         lines = [df[line] for line in lines]
     if fills is not None and len(fills) > 0 and isinstance(fills[0], str):
@@ -129,13 +129,13 @@ def plot_fill(df=None, lines=[], fills=[], title="", figsize=None, bbox=(0, -0.1
             ax.legend(loc="best")
 
     if interactive:
-        fig = interactive_legend(fig, ax, alpha_unsel=alpha_unsel, alpha_over=alpha_over)
+        fig = interactive_legend(fig, ax, alpha_unsel=alpha_unsel, alpha_over=alpha_over, ipython=ipython)
     if return_ax:
         return fig, ax
     return fig
 
 
-def interactive_legend(fig, ax, alpha_unsel=0.5, alpha_over=1.5):
+def interactive_legend(fig, ax, alpha_unsel=0.5, alpha_over=1.5, ipython=True):
     handles, labels = ax.get_legend_handles_labels()  # return lines and labels
     interactive_legend = mpld3.plugins.InteractiveLegendPlugin(
         handles,
@@ -145,7 +145,10 @@ def interactive_legend(fig, ax, alpha_unsel=0.5, alpha_over=1.5):
         start_visible=True
     )
     mpld3.plugins.connect(fig, interactive_legend)
-    return mpld3.display(fig)
+    if ipython:
+        return mpld3.display(fig)
+    else:
+        return mpld3.fig_to_html(fig)
 
 # ADF test
 def print_adf(adf, name=""):
