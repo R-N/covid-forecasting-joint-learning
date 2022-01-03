@@ -104,7 +104,7 @@ class Group:
 
     @property
     def targets(self):
-        return [c.target for c in self.clusters]
+        return [t for c in self.clusters for t in c.targets]
 
     @property
     def target(self):
