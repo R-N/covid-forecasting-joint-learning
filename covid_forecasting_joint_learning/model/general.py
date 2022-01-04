@@ -742,9 +742,10 @@ class ObjectiveModel:
             torch.save(self.model.models.state_dict(), f"{model_dir}models.pt")
         for i in range(len(self.model.targets)):
             target = self.model.targets[i]
-            suffix = f"_{i}_{target.name}"
+            model_dir_2 = f"{model_dir}{target.name}/"
+            Path(model_dir_2).mkdir(parents=True, exist_ok=True)
             if save_state:
-                torch.save(target.model.state_dict(), f"{model_dir}target{suffix}.pt")
+                torch.save(target.model.state_dict(), f"{model_dir_2}model.pt")
 
             excluded_dates = self.cluster.inverse_date_cols
 
@@ -756,20 +757,20 @@ class ObjectiveModel:
                 input_attr_labels,
                 exclude_inner=excluded_dates
             )
-            input_fig.savefig(f"{model_dir}input_attr{suffix}.jpg", bbox_inches="tight")
+            input_fig.savefig(f"{model_dir_2}input_attr.jpg", bbox_inches="tight")
             plt.close(input_fig)
 
             input_keys = sorted(labeled_input_attr.keys())
             input_values = [labeled_input_attr[k] for k in input_keys]
             input_df = pd.DataFrame(input_values, columns=input_attr_labels, index=input_keys)
-            input_df.T.to_excel(f"{model_dir}input_attr{suffix}.xlsx", sheet_name="input_attr")
+            input_df.T.to_excel(f"{model_dir_2}input_attr.xlsx", sheet_name="input_attr")
 
             input_fig_exo_only = Attribution.plot_attr(
                 labeled_input_attr,
                 input_attr_labels,
                 exclude_inner=excluded_dates + DataCol.SIRD_VARS
             )
-            input_fig_exo_only.savefig(f"{model_dir}input_attr_exo_only{suffix}.jpg", bbox_inches="tight")
+            input_fig_exo_only.savefig(f"{model_dir_2}input_attr_exo_only.jpg", bbox_inches="tight")
             plt.close(input_fig_exo_only)
 
             input_fig_date_only = Attribution.plot_attr(
@@ -777,15 +778,15 @@ class ObjectiveModel:
                 input_attr_labels,
                 exclude_inner=excluded_dates + DataCol.SIRD_VARS + DataCol.COLS_NON_DATE
             )
-            input_fig_date_only.savefig(f"{model_dir}input_attr_date_only{suffix}.jpg", bbox_inches="tight")
+            input_fig_date_only.savefig(f"{model_dir_2}input_attr_date_only.jpg", bbox_inches="tight")
             plt.close(input_fig_date_only)
 
             layer_attrs = target.get_aggregate_layer_attr()
             layer_fig = Attribution.plot_attr(*Attribution.label_layer_attr(layer_attrs), title="Layer importance")
-            layer_fig.savefig(f"{model_dir}layer_attr{suffix}.jpg", bbox_inches="tight")
+            layer_fig.savefig(f"{model_dir_2}layer_attr.jpg", bbox_inches="tight")
             plt.close(layer_fig)
 
-            DataUtil.write_string(ModelUtil.str_dict(layer_attrs), f"{model_dir}layer_attr{suffix}.json")
+            DataUtil.write_string(ModelUtil.str_dict(layer_attrs), f"{model_dir_2}layer_attr.json")
 
 
 def prepare_params(
