@@ -1149,8 +1149,10 @@ def eval(
 
     if not posttrain_copy:
         if log_dir_copy_i:
+            ModelUtil.rmtree(log_dir_copy_i)
             ModelUtil.copytree(log_dir_i, log_dir_copy_i, dirs_exist_ok=True)
         if model_dir_copy_i:
+            ModelUtil.rmtree(model_dir_copy_i)
             ModelUtil.copytree(model_dir_i, model_dir_copy_i, dirs_exist_ok=True)
     if drive and not posttrain_upload:
         upload_logs(drive, trial_id, log_dir_i, log_dir_id, model_dir_i, model_dir_id)
