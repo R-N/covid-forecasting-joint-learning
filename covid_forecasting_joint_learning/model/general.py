@@ -796,9 +796,11 @@ def prepare_params(
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS
 ):
     params["batch_size"] = 16 * (2**params["batch_size"])
-    params["past_cols"] = past_cols[params["past_cols"]]
+    if isinstance(params["past_cols"], int):
+        params["past_cols"] = past_cols[params["past_cols"]]
     with suppress(KeyError):
-        params["future_exo_cols"] = future_exo_cols[params["future_exo_cols"]]
+        if isinstance(params["future_exo_cols"], int):
+            params["future_exo_cols"] = future_exo_cols[params["future_exo_cols"]]
     with suppress(KeyError):
         params["conv_activation"] = activations[params["conv_activation"]]
     with suppress(KeyError):
