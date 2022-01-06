@@ -94,13 +94,18 @@ def conv1d_to_linear_tensor(t):
     elif t.dim() == 2:
         return t.permute(1, 0)
 
+def __str_dict(x):
+    if isinstance(x, torch.nn.Module):
+        return type(x).__name__
+    return str(x)
+
 
 def str_dict(d):
     return json.dumps(
         d,
         sort_keys=True,
         indent=4,
-        default=str
+        default=__str_dict
     )
 
 
