@@ -802,11 +802,14 @@ def prepare_params(
         if isinstance(params["future_exo_cols"], int):
             params["future_exo_cols"] = future_exo_cols[params["future_exo_cols"]]
     with suppress(KeyError):
-        params["conv_activation"] = activations[params["conv_activation"]]
+        if isinstance(params["conv_activation"], str):
+            params["conv_activation"] = activations[params["conv_activation"]]
     with suppress(KeyError):
-        params["fc_activation"] = activations[params["fc_activation"]]
+        if isinstance(params["fc_activation"], str):
+            params["fc_activation"] = activations[params["fc_activation"]]
     with suppress(KeyError):
-        params["residual_activation"] = activations[params["residual_activation"]]
+        if isinstance(params["residual_activation"], str):
+            params["residual_activation"] = activations[params["residual_activation"]]
     return params
 
 
