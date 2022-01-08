@@ -97,6 +97,8 @@ def conv1d_to_linear_tensor(t):
 def __str_dict(x):
     if isinstance(x, torch.nn.Module):
         return type(x).__name__
+    elif issubclass(x, torch.nn.Module):
+        return x.__name__
     return str(x)
 
 

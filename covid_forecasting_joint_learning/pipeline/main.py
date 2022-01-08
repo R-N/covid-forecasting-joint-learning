@@ -68,8 +68,11 @@ def preprocessing_0(
     return data_center
 
 
-def get_kabkos(data_center):
-    kabkos = data_center.kabko
+def get_kabkos(data_center, kabkos=None, exclude=None):
+    if not kabkos:
+        kabkos = data_center.kabko
+    if exclude:
+        kabkos = [k for k in kabkos if k not in exclude]
     kabkos = [KabkoData(k, data_center) for k in kabkos]
     return kabkos
 
@@ -286,24 +289,24 @@ def clustering_1(
         raise Exception("Group can't be clustered well")
         clusters = [clustering.Cluster(0, group, [])]
         for k in group.members:
-            clusters[0].sources.append(k)
+            clusters[0].members.append(k)
             k.cluster = clusters[0]
     else:
         clusters = [clustering.Cluster(i, group, []) for i in range(best_clustering.n_clusters)]
         for k in group.members:
             k.cluster = clustering.predict(best_clustering.model, k.data_clustering)
-            clusters[k.cluster].sources.append(k)
+            clusters[k.cluster].members.append(k)
             k.cluster = clusters[k.cluster]
         # Remove single clusters as outliers
-        clusters = [c for c in clusters if len(c.sources) > 1]
+        clusters = [c for c in clusters if len(c.members) > 1]
 
     for c in clusters:
-        target = max(c.sources, key=lambda x: clustering.shortest(x))
-        c.sources.remove(target)
+        target = max(c.members, key=lambda x: clustering.shortest(x))
+        # c.sources.remove(target)
         c.target = target
         # Remove outliers if they're not target
-        c.sources = [k for k in c.sources if k not in outliers]
-        for s in c.sources:
+        c.members = [k for k in c.members if k not in outliers or k == target]
+        for s in c.members:
             assert c.target.data.last_valid_index() >= s.data.last_valid_index()
     group.clustering_info = best_clustering.get_info()
     group.clusters = clusters

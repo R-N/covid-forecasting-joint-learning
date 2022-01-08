@@ -98,6 +98,23 @@ class Group:
         self.clusters = clusters or []
         self.clustering_info = clustering_info
 
+    def remove_kabkos(self, kabkos):
+        if not kabkos:
+            return
+        if not isinstance(kabkos[0], str):
+            kabkos = [k.name for k in kabkos]
+        self.members = [k for k in self.members if k not in kabkos]
+        for c in self.clusters:
+            c.remove_kabkos(kabkos)
+
+    def remove_targets(self, targets):
+        for c in self.clusters:
+            c.remove_targets(targets)
+
+    def set_targets(self, targets):
+        for c in self.clusters:
+            c.set_targets(targets)
+
     @property
     def sources(self):
         return list(itertools.chain.from_iterable([c.sources for c in self.clusters]))

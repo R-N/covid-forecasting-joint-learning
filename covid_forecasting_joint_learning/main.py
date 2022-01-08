@@ -17,8 +17,7 @@ def init(ipython=True):
     device = ModelUtil.init(cuda=True, half=False)
     return device
 
-
-def main_1(
+def main_0(
     data,
     labeled_dates=DataCol.LABELED_DATES,
     cols=DataCol.COLS,
@@ -26,7 +25,8 @@ def main_1(
     limit_date=["2021-01-21"],
     n_clusters=Pipeline.DEFAULT_GROUPS_N_CLUSTERS,
     limit_data=True,
-    clustering_callback=None
+    kabkos=None,
+    exclude=None
 ):
     if isinstance(data, DataCenter):
         loader = data
@@ -35,7 +35,7 @@ def main_1(
         loader.load_excel(data)
         loader = Pipeline.preprocessing_0(loader)
 
-    kabkos = Pipeline.get_kabkos(loader)
+    kabkos = Pipeline.get_kabkos(loader, kabkos=kabkos, exclude=exclude)
     # kabko_indices = {kabkos[i].name: i for i in range(len(kabkos))}
     kabkos = Pipeline.preprocessing_1(kabkos)
 
@@ -63,10 +63,35 @@ def main_1(
             group,
             limit_clustering=limit_data
         ) for group in groups]
+    return groups
 
+def main_1(
+    data,
+    labeled_dates=DataCol.LABELED_DATES,
+    cols=DataCol.COLS,
+    limit_length=[90, 180, 366],
+    limit_date=["2021-01-21"],
+    n_clusters=Pipeline.DEFAULT_GROUPS_N_CLUSTERS,
+    limit_data=True,
+    clustering_callback=None,
+    kabkos=None,
+    exclude=None
+):
+    groups = main_0(
+        data=data,
+        labeled_dates=labeled_dates,
+        cols=cols,
+        limit_length=limit_length,
+        limit_date=limit_date,
+        n_clusters=n_clusters,
+        kabkos=kabkos,
+        exclude=exclude
+    )
     if clustering_callback:
+        print("clustering_callback call")
         clustering_callback(groups)
-
+    else:
+        print("clustering_callback is falsy", clustering_callback)
     for group in groups:
         for cluster in group.clusters:
             Pipeline.preprocessing_4(cluster, limit_split=limit_data)

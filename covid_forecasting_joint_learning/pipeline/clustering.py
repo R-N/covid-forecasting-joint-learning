@@ -17,13 +17,13 @@ class Cluster:
         self,
         id,
         group,
-        sources=None,
+        members=None,
         target=None,
         targets=[]
     ):
         self.id = id
         self.group = group
-        self.sources = sources
+        self.members = members
         self.__target = None
         self.__targets = []
 
@@ -33,6 +33,32 @@ class Cluster:
         else:
             self.target = target
             self.targets = targets
+
+
+    def remove_kabkos(self, kabkos):
+        if not kabkos:
+            return
+        if not isinstance(kabkos[0], str):
+            kabkos = [k.name for k in kabkos]
+        self.remove_targets(kabkos)
+        self.members = [k for k in self.members if k.name not in kabkos]
+
+    def remove_targets(self, targets):
+        if not targets:
+            return
+        if not isinstance(targets[0], str):
+            targets = [k.name for k in targets]
+        # self.sources += [k for k in self.targets if k.name in targets]
+        self.targets = [k for k in self.targets if k.name not in targets]
+        self.select_target()
+
+    def set_targets(self, targets):
+        if not targets:
+            return
+        if not isinstance(targets[0], str):
+            targets = [k.name for k in targets]
+        self.append_targets(targets)
+        self.remove_targets([t for t in self.targets if t.name not in targets])
 
     @property
     def target(self):
@@ -56,18 +82,36 @@ class Cluster:
         assert value is None or isinstance(value, list)
         self.__targets = value
         if value:
-            self.__select_target()
+            self.select_target()
 
-    def __select_target(self):
-        self.__target = max(self.__targets, key=lambda x: shortest(x))
+    def select_target(self):
+        if len(self.__targets) > 0:
+            self.__target = max(self.__targets, key=lambda x: shortest(x))
+        else:
+            self.target = max(self.sources, key=lambda x: shortest(x))
+        # self.sources = [k for k in self.sources if k not in self.targets]
 
     def append_target(self, value):
+        if not value:
+            return
+        if not isinstance(value, str):
+            value = value.name
+        value = [k for k in self.sources if k.name == value][0]
         self.__targets.append(value)
-        self.__select_target()
+        self.select_target()
+
+    def append_targets(self, values):
+        if not values:
+            return
+        if not isinstance(values[0], str):
+            values = [k.name for k in values]
+        values = [k for k in self.sources if k.name in values]
+        self.__targets.extend(values)
+        self.select_target()
 
     @property
-    def members(self):
-        return self.sources + self.targets
+    def sources(self):
+        return [k for k in self.members if k not in self.targets]
 
     @property
     def source_longest(self):
@@ -84,10 +128,11 @@ class Cluster:
         )
         if not copy_dict:
             copy_dict = {k: k.copy(cluster=cluster) for k in self.members}
-        cluster.sources = [copy_dict[k] for k in self.sources]
+        cluster.members = [copy_dict[k] for k in self.members]
         cluster.targets = [copy_dict[k] for k in self.targets]
         for k in cluster.members:
             k.cluster = cluster
+        cluster.select_target()
         return cluster
 
     @property
@@ -107,7 +152,7 @@ def merge_clusters(group):
     return Cluster(
         -1,
         group,
-        sources=group.sources,
+        members=group.members,
         targets=group.targets
     )
 
