@@ -29,7 +29,7 @@ setuptools.setup(
         "statsmodels>=0.12",
         "scikit-learn>=0.24.1",
         "tslearn",
-        "optuna",
+        "optuna==2.10.1",
         "torch",  # ==1.8.1",  # use 1.8.1 if using gpu
         "torchinfo",
         "scipy",
