@@ -22,7 +22,7 @@ setuptools.setup(
     install_requires=[
         "numpy==1.23.1",
         "requests",
-        "pandas",
+        "pandas==1.4.3",
         "matplotlib>=3.4.3",
         "mpld3",
         "seaborn",
