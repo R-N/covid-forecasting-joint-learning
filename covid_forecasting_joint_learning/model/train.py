@@ -66,6 +66,7 @@ def __eval(
 def prepare_kabkos(sources, targets, source_weight=1.0, train=False):
     weights = 0
     target_weights = 0
+    source_weight = source_weight / len(sources) if sources else 0
 
     for source in sources:
         source.is_target = 0
@@ -100,7 +101,8 @@ def eval(
     source_weight=1.0,
     key=lambda k: k.dataloaders[0],
     clip_grad_norm=None,
-    grad_scaler=None
+    grad_scaler=None,
+    scheduler_per_batch=True
 ):
     members = sources + targets
     shortest = min(members, key=lambda k: len(key(k).dataset))
@@ -114,11 +116,6 @@ def eval(
 
     joint_dataloader_enum = list(zip(*[key(k) for k in members]))
 
-    stepped = False
-
-    lr = None
-    if scheduler:
-        lr = scheduler.get_last_lr()[0]
     context = dummy_context if train else torch.no_grad()
     with context:
         for batch_id, samples in enumerate(joint_dataloader_enum):
@@ -131,7 +128,7 @@ def eval(
                 optimizer=optimizer,
                 clip_grad_norm=clip_grad_norm,
                 grad_scaler=grad_scaler,
-                lr=lr
+                lr=scheduler.get_last_lr()[0] if scheduler else None
             )
 
             avg_loss += loss_s
@@ -143,15 +140,14 @@ def eval(
                     scale = grad_scaler.get_scale()
                     grad_scaler.step(optimizer)
                     grad_scaler.update()
-                    stepped = stepped or scale == grad_scaler.get_scale()
+                    stepped = grad_scaler.get_scale() >= scale
                 else:
                     optimizer.step()
                     stepped = True
 
                 optimizer.zero_grad(set_to_none=True)
-
-    if train and scheduler and stepped:
-        scheduler.step()
+                if scheduler and scheduler_per_batch and stepped:
+                    scheduler.step()
 
     avg_loss /= size
     avg_target_loss /= size
@@ -176,10 +172,10 @@ def test(
     n = target.population
     for batch_id, sample in enumerate(dataloader):
         # sample, kabko = sample[:-1], sample[-1]
-        pred_vars = target.model(*sample[:5]).detach().numpy()
+        pred_vars = target.model(*sample[:5]).detach().cpu().numpy()
         prev, final = sample[5], sample[6]
         if isinstance(prev, torch.Tensor):
-            prev, final = prev.numpy(), final.numpy()
+            prev, final = prev.cpu().numpy(), final.cpu().numpy()
         pred_final = target.model.rebuild(pred_vars, prev, n, sird.rebuild, scaler=target.scaler_2)
         losses = [loss_fn(
             prev[i][:, 1:],

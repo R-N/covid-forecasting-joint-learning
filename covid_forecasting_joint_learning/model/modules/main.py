@@ -139,7 +139,7 @@ class PastModel(nn.Module):
 
         if isinstance(private_head, dict):
             private_head = PastHead2(
-                input_size_past if not use_representation else (hidden_size_past * (2 if self.use_shared_representation is not None else 1)),
+                input_size_past if not use_representation else (hidden_size_past * (2 if self.use_shared_representation else 1)),
                 private_state_size,
                 **private_head
             )
@@ -314,7 +314,7 @@ class SingleModel(nn.Module):
 
         if isinstance(private_head_future_cell, dict):
             private_head_future_cell = LILSTMCell2(
-                input_size_future if not use_representation_future else (hidden_size_future * (2 if use_shared_representation_future is not None else 1)),
+                input_size_future if not use_representation_future else (hidden_size_future * (2 if use_shared_representation_future else 1)),
                 private_state_size,
                 **private_head_future_cell
             )
@@ -365,7 +365,8 @@ class SingleModel(nn.Module):
                 o = torch.cat([o, o_exo], dim=o.dim() - 1)
             past_seed_full = torch.cat([past_seed_full, torch.stack([o])], dim=0)
         seed_length = seed_length or self.seed_length
-        past_seed_full = past_seed_full[:seed_length]
+        # Keep the most recent rates so each decoder step sees its prior output.
+        past_seed_full = past_seed_full[-seed_length:]
         x_private, x_shared = past_seed_full, past_seed_full
         if self.use_representation_future:
             # print("prepare_seed", "past_seed_full", past_seed_full.size())
@@ -467,9 +468,9 @@ class SingleModel(nn.Module):
 
     def rebuild(self, pred_vars, prev, n, rebuild_f, scaler=None):
         if isinstance(pred_vars, torch.Tensor):
-            pred_vars = pred_vars.detach().numpy()
+            pred_vars = pred_vars.detach().cpu().numpy()
         if isinstance(prev, torch.Tensor):
-            prev = prev.detach().numpy()
+            prev = prev.detach().cpu().numpy()
         if scaler:
             pred_vars = [scaler.inverse_transform(x) for x in pred_vars]
         pred_final = [rebuild_f(
@@ -493,7 +494,7 @@ class SingleModel(nn.Module):
         if self.use_representation_future:
             self.representation_future_model.freeze_private(freeze)
         self.private_head_future_cell.requires_grad_(not freeze)
-        self.post_future_model.freeze_shared(freeze)
+        self.post_future_model.freeze_private(freeze)
 
     def get_summary(self, sample):
         return summary(self, input_data=sample)

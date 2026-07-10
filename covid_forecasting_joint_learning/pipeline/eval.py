@@ -16,7 +16,7 @@ def _friedman_adj_f(friedman_chi_square, k_algorithms, n_datasets):
 def friedman_adj_f(avranks, n_datasets):
     k_algorithms = len(avranks)
     x2f = friedman_chi_square(avranks, n_datasets)
-    return _friedman_adj_f(x2f, k_algorithms, k_algorithms)
+    return _friedman_adj_f(x2f, k_algorithms, n_datasets)
 
 def _test_z(rank_i, rank_j, k_algorithms, n_datasets):
     return (rank_i - rank_j) / sqrt((k_algorithms * (k_algorithms + 1)) / (6 * n_datasets))
@@ -51,7 +51,7 @@ def f_to_p(f_stat, dfn, dfd):
 def friedman_adj_p(avranks, n_datasets):
     f = friedman_adj_f(avranks, n_datasets)
     k_algorithms = len(avranks)
-    p = f_to_p(f, k_algorithms - 1, n_datasets - k_algorithms)
+    p = f_to_p(f, dfn(k_algorithms), dfd(k_algorithms, n_datasets))
     return p
 
 def bonferroni_dunn_cd(avranks, n_datasets, alpha="0.05"):

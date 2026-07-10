@@ -113,14 +113,13 @@ class SIRDModel:
         if not self.fit_result:
             raise Exception("Please fit the model first!")
 
-        full_len = self.pred_start + days
         s, i, r, d = pred(
-            np.linspace(self.pred_start, full_len - 1, days),
+            np.arange(days + 1),
             self.prev,
             self.n,
             **self.fit_params
         )
-        return np.array([i, r, d]).T
+        return np.array([i[1:], r[1:], d[1:]]).T
 
     def pred_full(self, days):
         if not self.fit_result:

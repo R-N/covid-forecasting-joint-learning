@@ -173,7 +173,7 @@ class EarlyStopping:
         val_loss = train_loss if val_loss is None else val_loss
         val_loss_0, train_loss_0 = val_loss, train_loss
 
-        mean_train_loss, min_delta_train_2 = self.calculate_interval(val=True)
+        mean_train_loss, min_delta_train_2 = self.calculate_interval(val=False)
         mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
         if self.val_loss_history:
             mean_val_loss = sum(self.val_loss_history[-self.history_length:]) / min(self.history_length, len(self.val_loss_history))

@@ -17,6 +17,7 @@ class KabkoData:
         parent=None,
         split_indices=None,
         scaler=None,
+        scaler_global=None,
         group=None,
         cluster=None,
         scaler_2=None,
@@ -36,6 +37,7 @@ class KabkoData:
         self.parent = parent
         self.split_indices = split_indices
         self.scaler = scaler
+        self.scaler_global = scaler_global
         self.group = group
         self.cluster = cluster
         self.scaler_2 = scaler_2
@@ -84,6 +86,7 @@ class KabkoData:
             parent=self,
             split_indices=self.split_indices,
             scaler=self.scaler,
+            scaler_global=self.scaler_global,
             group=self.group,
             cluster=cluster or self.cluster,
             scaler_2=self.scaler_2,

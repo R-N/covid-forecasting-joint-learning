@@ -4,6 +4,7 @@ from torch import nn
 import numpy as np
 import line_profiler
 import os
+import random
 from shutil import copy2, Error, copystat, rmtree
 from pathlib import Path
 from math import sqrt
@@ -139,8 +140,13 @@ def single_batch(t):
 
 
 def global_random_seed(seed=257):
+    random.seed(seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def _copytree(entries, src, dst, symlinks, ignore, copy_function,

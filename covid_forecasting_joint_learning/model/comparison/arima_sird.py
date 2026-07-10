@@ -62,12 +62,13 @@ class ARIMASIRDModel:
     def eval(self, past, final_seed, future_final, exo=None, past_exo=None, loss_fn=rmsse):
         assert past.ndim == 2 and past.shape[1] == 3
         assert future_final.ndim == 2 and future_final.shape[1] == 3
+        past_final = final_seed[:, 1:] if final_seed.ndim == 2 else final_seed[None, 1:]
         if final_seed.ndim == 2:
             final_seed = final_seed[-1]
         assert final_seed.ndim == 1 and final_seed.shape[0] == 4
         self.fit(past, exo=past_exo)
         pred_final = self.pred_final(len(future_final), final_seed, exo=exo)
-        self.loss = loss_fn(past, future_final, pred_final)
+        self.loss = loss_fn(past_final, future_final, pred_final)
         return self.loss
 
     def eval_sample(self, sample, loss_fn=rmsse, use_exo=False):

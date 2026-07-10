@@ -61,9 +61,6 @@ def preprocessing_0(
     data_center.data_global = delta
     data_center.data_global = sird.calc_vars_global(data_center.data_global, df_shifted)
     data_center.data_global.dropna(inplace=True)
-    data_center.scaler = Scaler()
-    data_center.scaler.fit(data_center.data_global)
-    data_center.data_global.loc[:] = data_center.scaler.transform(data_center.data_global)
     data_center.data_global = data_center.data_global.copy()
     return data_center
 
@@ -199,7 +196,7 @@ def __preprocessing_3(
     limit_split=True
 ):
     if limit_split:
-        data = [kabko.data.loc[:kabko.split_indices[2], cols] for kabko in kabkos]
+        data = [kabko.data.loc[:kabko.split_indices[0], cols] for kabko in kabkos]
     else:
         data = [kabko.data.loc[:, cols] for kabko in kabkos]
     full_data = pd.concat(data)
@@ -213,7 +210,8 @@ def preprocessing_3(
     cols=DataCol.SIRD_VARS,
     Scaler=preprocessing.MinMaxScaler,
     limit_split=True,
-    scale=False
+    scale=False,
+    scaler_attr="scaler"
 ):
     scaler = __preprocessing_3(
         kabkos,
@@ -222,7 +220,8 @@ def preprocessing_3(
         limit_split=limit_split
     )
     for kabko in kabkos:
-        kabko.scaler = scaler
+        if scaler_attr:
+            setattr(kabko, scaler_attr, scaler)
         # This produces warnings for whatever reason idk
         # I've used loc everywhere
         if scale:
@@ -250,7 +249,7 @@ def clustering_1(
 ):
     for k in group.members:
         if limit_clustering:
-            k.data_clustering = k.data.loc[:k.split_indices[2], cols].copy()
+            k.data_clustering = k.data.loc[:k.split_indices[0], cols].copy()
         else:
             k.data_clustering = k.data.loc[:, cols].copy()
         if scale:
@@ -301,7 +300,14 @@ def clustering_1(
         clusters = [c for c in clusters if len(c.members) > 1]
 
     for c in clusters:
-        target = max(c.members, key=lambda x: clustering.shortest(x))
+        target = max(
+            c.members,
+            key=lambda x: (
+                -len(x.data_clustering),
+                x.data.loc[:x.split_indices[0]].last_valid_index(),
+                x.data.loc[:x.split_indices[0]].first_valid_index()
+            )
+        )
         # c.sources.remove(target)
         c.target = target
         # Remove outliers if they're not target
@@ -361,6 +367,15 @@ def preprocessing_4(
         assert target_last_index >= kabko.data.last_valid_index()
         kabko.data = kabko.parent.data[:target_last_index].copy()
         kabko.split_indices = target_split_indices
+        if kabko.scaler_global:
+            kabko.data.loc[:, DataCol.COLS_NON_DATE] = kabko.scaler_global.transform(
+                kabko.data[DataCol.COLS_NON_DATE]
+            )
+        clustering.check_cluster_data_indices(
+            kabko,
+            target_last_index,
+            target_split_indices[0]
+        )
     scaler = __preprocessing_3(
         kabkos,
         cols=cols,

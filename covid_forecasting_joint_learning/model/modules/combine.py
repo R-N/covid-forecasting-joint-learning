@@ -84,7 +84,11 @@ class CombineHead(nn.Module):
         return x
 
     def freeze_shared(self, freeze=True):
-        pass
+        if self.precombine is not None:
+            self.precombine.requires_grad_(not freeze)
 
     def freeze_private(self, freeze=True):
-        self.requires_grad_(not freeze)
+        if self.combiner is not None:
+            self.combiner.requires_grad_(not freeze)
+        if self.reducer is not None:
+            self.reducer.requires_grad_(not freeze)

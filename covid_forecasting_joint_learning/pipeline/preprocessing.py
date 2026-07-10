@@ -53,7 +53,8 @@ def fill_zero(
         df.loc[:, l] = zero_to_nan(df[l])
     df_full = df
     df = df.loc[:, labels] if labels is not None else df
-    df.interpolate(method=method, limit_direction='forward', axis=0, inplace=True)
+    # Forward fill only uses observations already available at each timestamp.
+    df.ffill(inplace=True)
     df.fillna(0, inplace=True)
     df_full.loc[:, labels] = df
     return df_full

@@ -50,6 +50,13 @@ def main_0(
     # groups = [groups[2]]
     for group in groups:
         Pipeline.preprocessing_3(group.members, limit_split=limit_data)
+        Pipeline.preprocessing_3(
+            group.members,
+            cols=DataCol.COLS_NON_DATE,
+            limit_split=limit_data,
+            scale=True,
+            scaler_attr="scaler_global"
+        )
 
     if n_clusters:
         clusters = [Pipeline.clustering_1(

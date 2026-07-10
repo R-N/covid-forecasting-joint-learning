@@ -12,7 +12,7 @@ class OneCycleLR:
         print("div_factor", self.div_factor)
         self.steps_per_epoch = steps_per_epoch
         self.max_epochs = epochs
-        self.epochs = 0
+        self.steps = 0
         self.scheduler = None
         self.autodecay = autodecay
         self.create()
@@ -65,12 +65,12 @@ class OneCycleLR:
                 )
             )
         self.create()
-        self.epochs = 0
+        self.steps = 0
 
     def step(self):
         ret = self.scheduler.step()
-        self.epochs += 1
-        if self.epochs >= self.max_epochs:
+        self.steps += 1
+        if self.steps >= self.max_epochs * self.steps_per_epoch:
             self.reset()
         return ret
 

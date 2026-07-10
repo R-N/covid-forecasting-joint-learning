@@ -222,26 +222,29 @@ class ClusterModel:
 
     def freeze_shared(self, freeze=True):
         for k in self.members:
-            self.k.model.freeze_shared(freeze)
+            k.model.freeze_shared(freeze)
 
     def freeze_private(self, freeze=True):
         for k in self.members:
-            self.k.model.freeze_private(freeze)
+            k.model.freeze_private(freeze)
 
     def find_lr(self, loss_fn=None, **kwargs):
         def objective(scheduler):
-            return self.train(
+            loss = self.train(
                 loss_fn=loss_fn,
                 scheduler=scheduler,
-                clip_grad_norm=False
+                clip_grad_norm=False,
+                scheduler_per_batch=False
             )[0].item()
+            scheduler.step()
+            return loss
 
         lr_finder = LRFinder(objective, self.models, self.optimizer)
         lr_finder.range_test(**kwargs)
         lr_finder.reset_state()
         return lr_finder.result
 
-    def train(self, grad_scaler=None, loss_fn=None, scheduler=None, clip_grad_norm=True):
+    def train(self, grad_scaler=None, loss_fn=None, scheduler=None, clip_grad_norm=True, scheduler_per_batch=True):
         grad_scaler = grad_scaler or self.grad_scaler
         scheduler = scheduler or self.scheduler
         # optimizer = self.create_optimizer()
@@ -253,6 +256,7 @@ class ClusterModel:
             self.targets,
             optimizer=self.optimizer,
             scheduler=scheduler,
+            scheduler_per_batch=scheduler_per_batch,
             key=lambda k: k.dataloaders[0],
             clip_grad_norm=self.clip_grad_norm if clip_grad_norm else None,
             grad_scaler=grad_scaler,
@@ -961,7 +965,7 @@ def eval(
     merge_clusters=False,
     debug=False,
     val=0,  # use 2 for pred training
-    continue_train=True,
+    continue_train=False,
     trial_id=-1,
     copy_group=False,
     early_stopping_kwargs={
@@ -1022,7 +1026,9 @@ def eval(
                 grad_scaler=grad_scaler,
                 # teacher_forcing=True,
                 min_epoch=min_epoch,
+                teacher_forcing=teacher_forcing,
                 use_shared=use_shared,
+                update_hx=update_hx,
                 source_pick=source_pick,
                 private_mode=private_mode,
                 shared_mode=shared_mode,
@@ -1077,48 +1083,7 @@ def eval(
             last_epoch, best_epoch = str(last_epoch), str(best_epoch)
 
             if continue_train:
-                best_epoch = early_stopping.best_epoch
-                best_loss = early_stopping.best_val_loss_2
-                first_train_count = len(model.model.target.datasets[0])
-                model.preprocessing(val=val+1)
-                second_train_count = len(model.model.target.datasets[0])
-
-                early_stopping_2 = EarlyStopping(
-                    model.model.models,
-                    debug=1,
-                    log_dir=model.log_dir,
-                    label=model.label + "a",
-                    interval_mode=early_stopping_interval_mode,
-                    wait=0,
-                    max_epoch=int(best_epoch * (second_train_count / first_train_count)),
-                    update_state_mode=1,
-                    **early_stopping_kwargs
-                )
-
-                while not early_stopping_2.stopped:
-                    train_loss_target, val_loss_target = np.nan, np.nan
-                    try:
-                        train_loss, train_loss_target, train_loss_targets = model.train()
-                        if torch.isnan(train_loss).any():
-                            raise NaNLossException()
-                        train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
-
-                        val_loss, val_loss_target, val_loss_targets = model.val()
-                        if torch.isnan(val_loss).any():
-                            raise NaNLossException()
-                        val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
-
-                        early_stopping_2(train_loss_target, val_loss_target)
-                    except (NaNPredException, NaNLossException):
-                        if not early_stopping_2.step_nan():
-                            raise
-
-                if best_loss < early_stopping_2.best_val_loss:
-                    print("Second training results in higher loss. Loading previous best state")
-                    early_stopping.load_best_state()
-                else:
-                    last_epoch_2, stop_reason_2, best_epoch_2 = early_stopping_2.last_epoch, early_stopping_2.stop_reason, early_stopping_2.best_epoch
-                    last_epoch, stop_reason, best_epoch = last_epoch+last_epoch_2, stop_reason+stop_reason_2, best_epoch+best_epoch_2
+                print("continue_train is disabled to avoid reusing validation data")
 
             test_loss = model.test()
             print("Test loss:", test_loss)
