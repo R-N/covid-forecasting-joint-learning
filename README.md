@@ -1,7 +1,7 @@
 # covid-forecasting-joint-learning
 COVID-19 forecasting model for East Java cities using Joint Learning 
 
-> **Research status:** the committed joint-learning experiment was produced with training and evaluation defects, and remaining metric-selection, baseline, and statistical issues still prevent a valid comparison. See [INVESTIGATION.md](INVESTIGATION.md) before reproducing or extending experiments.
+> **Research status:** the committed joint-learning experiment was produced with training and evaluation defects. Remaining training initialization, split-horizon, baseline, metric-selection, and statistical issues prevent a valid comparison. See [INVESTIGATION.md](INVESTIGATION.md) before reproducing or extending experiments.
 
 Undergrad thesis: https://digilib.uinsby.ac.id/52500/
 

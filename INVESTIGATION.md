@@ -32,3 +32,7 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 - ARIMA and SIRD baselines return scalar metrics where comparison logs require per-IRD values; the SIRD baseline also lacks a reliable adapter from standard pipeline data to three IRD-count columns.
 - `main_1(limit_data=False)` does not forward `limit_data` to `main_0`, allowing later SIRD scaling to include validation/test observations.
 - `SourcePick.CLOSEST` passes `KabkoData` objects rather than series arrays to DTW, and unconstrained SIRD-rate outputs can reconstruct invalid compartment counts.
+- `EarlyStopping.__call__()` computes intervals before recording the first losses, so the default interval helper can raise `IndexError` on the first epoch.
+- Split boundaries assume zero forecast horizon while datasets use 14-day horizons, leaving the requested validation/test portions with far fewer valid forecast windows.
+- ARIMA-SIRD cannot unpack the standard eight-field neural dataset correctly, and its exogenous path expects incompatible three-column inputs.
+- ARIMA and SIRD baseline Optuna studies use unseeded samplers, so selected comparison scores are not reproducible.
