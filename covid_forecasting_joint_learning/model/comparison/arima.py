@@ -134,23 +134,11 @@ def search_optuna(orders, train_set, loss_fn=msse, use_exo=False, reduction="mea
                 raise TrialPruned(str(ex))
         return objective
 
-    n_orders = len(orders)
-
     if n_trials is None:
         n_trials = (limit_fit_max - limit_fit_min + 1)
 
     study = optuna.create_study(sampler=optuna.samplers.TPESampler(seed=seed))
-    orders_id = list(range(n_orders))
-    study.optimize(
-        make_objective(
-            orders_id,
-            (limit_fit_max, limit_fit_max),
-            False
-        ),
-        n_trials=n_orders * n_orders,
-        n_jobs=1
-    )
-
+    orders_id = list(range(len(orders)))
     study.optimize(
         make_objective(
             orders_id,

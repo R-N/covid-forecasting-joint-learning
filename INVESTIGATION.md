@@ -17,6 +17,7 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 - `requirements-experiment.txt` pins the Python 3.8/CUDA 11.1 experiment environment, including TensorBoard required by `SummaryWriter`.
 - Group kabko removal now compares names correctly, `SourcePick.CLOSEST` supplies DTW with SIRD-rate arrays, and baseline Optuna searches use seeded samplers.
 - Neural trials use distinct deterministic seeds and `main.optimize()` rejects parallel execution, which would race process-global RNG state.
+- Model entrypoints default to CPU when `main.init()` was not called, and ARIMA treats `n_trials` as its total Optuna budget, matching SIRD.
 
 ## Required Rerun Design
 

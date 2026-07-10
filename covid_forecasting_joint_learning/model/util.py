@@ -22,7 +22,7 @@ NAIVE_EPS = 1e-6
 CUDA = False
 HALF = False
 DEFAULT_TENSOR = "torch.FloatTensor"
-DEVICE = None
+DEVICE = torch.device("cpu")
 
 
 def init(cuda=True, half=False):

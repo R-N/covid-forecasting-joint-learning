@@ -51,7 +51,7 @@ Everything hangs off `model/modules/main.py::SingleModel`, an encoder-decoder th
 
 Every block exposes `freeze_shared()` / `freeze_private()` for explicit branch-isolation experiments; the default training loop updates both branches. `SharedMode` and `SourcePick` enums (`model/general.py`) select whether/how sources feed the shared branch.
 
-`model/general.py` is the training driver: `ClusterModel` builds one shared model per cluster plus a private `SingleModel` per kabko; `ObjectiveModel` / `make_objective` / `eval` wire an **Optuna** hyperparameter search over architecture sizes, LR, teacher forcing, etc. `model/train.py::eval` is the per-batch train/val/test step (weighted source + target loss, gradient clipping, AMP grad scaler). `main.py::optimize` runs the study sequentially in batches with cache/GC between them; do not set `n_jobs > 1`.
+`model/general.py` is the training driver: `ClusterModel` builds one shared `SingleModel` plus per-kabko models and drives Optuna training; `model/baseline/` and `model/comparison/` hold ablations and comparisons. `model/train.py::eval` is the per-batch train/val/test step (weighted source + target loss, gradient clipping, AMP grad scaler). Model entrypoints default to CPU until `main.init()` is called. `main.py::optimize` runs the study sequentially in batches with cache/GC between them; do not set `n_jobs > 1`. ARIMA's `n_trials` is its total search budget.
 
 Baseline and comparison variants for ablation live in `model/baseline/` (fully_private, fully_shared, no_representation, source_all, source_longest) and `model/comparison/` (arima, sird, arima_sird).
 
