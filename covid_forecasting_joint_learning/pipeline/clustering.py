@@ -119,7 +119,11 @@ class Cluster:
 
     @property
     def source_closest(self):
-        return min(self.sources, key=lambda x: dtw(self.target, x))
+        target_data = self.target.data[DataCol.SIRD_VARS].to_numpy()
+        return min(
+            self.sources,
+            key=lambda x: dtw(target_data, x.data[DataCol.SIRD_VARS].to_numpy())
+        )
 
     def copy(self, group=None, copy_dict=None):
         cluster = Cluster(

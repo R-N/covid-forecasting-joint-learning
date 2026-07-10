@@ -104,7 +104,7 @@ class Group:
             return
         if not isinstance(kabkos[0], str):
             kabkos = [k.name for k in kabkos]
-        self.members = [k for k in self.members if k not in kabkos]
+        self.members = [k for k in self.members if k.name not in kabkos]
         for c in self.clusters:
             c.remove_kabkos(kabkos)
 

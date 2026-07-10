@@ -125,6 +125,8 @@ def make_objective(
 
 def optimize(study, model_objective, n_jobs=1, batch=None, n_trials=10000):
     # torch.autograd.set_detect_anomaly(True)
+    if n_jobs != 1:
+        raise ValueError("Parallel Optuna trials are unsupported because model RNG state is process-global")
 
     n_trials_remain = n_trials - PipelineUtil.count_trials_done(study.trials)
     batch = batch or n_trials_remain

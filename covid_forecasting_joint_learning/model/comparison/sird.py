@@ -163,7 +163,7 @@ class SIRDModel:
         return loss
 
 
-def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit_fit_min=7, limit_fit_max=366, no_limit=False, n_trials=None):
+def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit_fit_min=7, limit_fit_max=366, no_limit=False, n_trials=None, seed=257):
     def objective(trial):
         no_limit_1 = no_limit
         if no_limit_1 is None:
@@ -180,7 +180,7 @@ def search_optuna(params_hint, n, dataset, loss_fn=msse, reduction="mean", limit
     if n_trials is None:
         n_trials = (limit_fit_max - limit_fit_min + 1)
 
-    study = optuna.create_study()
+    study = optuna.create_study(sampler=optuna.samplers.TPESampler(seed=seed))
     study.optimize(objective, n_trials=n_trials, n_jobs=1)
     return study
 

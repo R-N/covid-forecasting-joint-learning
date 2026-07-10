@@ -7,7 +7,7 @@
 - For an executable smoke check beyond packaging, install editable and import the package or the changed module. Do not claim a test suite was run.
 - `covid_forecasting_joint_learning.main.init()` sets PyTorch's global default tensor type and selects CUDA only when available; call it deliberately in notebooks/scripts.
 - Current joint-learning results are not valid evidence of model performance. `INVESTIGATION.md` tracks remaining training, split-horizon, metric-selection, baseline, and statistical blockers; consult it before reproducing or extending experiments.
-- Recent fixes align Optuna scores with restored checkpoints, adapt standard exogenous samples for ARIMA, and record distinct seeds for clustering consistency checks.
+- Recent fixes align Optuna scores with restored checkpoints, adapt standard exogenous samples for ARIMA, record distinct clustering seeds, and seed sequential neural/baseline optimization. Parallel Optuna trials are intentionally unsupported because model RNG state is process-global.
 
 ## Data And Pipeline
 

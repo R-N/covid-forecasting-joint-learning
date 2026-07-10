@@ -5,7 +5,7 @@ COVID-19 forecasting model for East Java cities using Joint Learning
 
 GPU experiment environment: Python 3.8, CUDA 11.1, and the pinned dependencies in `requirements-experiment.txt`.
 
-The latest revision aligns Optuna scoring with restored checkpoints, supports standard exogenous ARIMA samples, and makes clustering-consistency runs reproducible.
+The latest revisions align Optuna scoring with restored checkpoints, make clustering/source selection reproducible, and correct kabko exclusion plus generic ARIMA sample handling.
 
 Undergrad thesis: https://digilib.uinsby.ac.id/52500/
 

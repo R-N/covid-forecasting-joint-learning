@@ -1211,7 +1211,7 @@ def make_objective(
         log_dir_copy_i, model_dir_copy_i = ModelUtil.prepare_log_model_dir(log_dir_copy, model_dir_copy, trial_id, mkdir=False)
 
         trial = TrialWrapper(trial)
-        ModelUtil.global_random_seed()
+        ModelUtil.global_random_seed(seed=257 + trial_id)
 
         params = {
             "private_state_size": trial.suggest_int("private_state_size", state_sizes),

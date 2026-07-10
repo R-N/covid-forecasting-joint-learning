@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI or test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance: training initialization, split horizons, baseline compatibility, and statistical testing remain unresolved. Optuna checkpoint scoring, generic ARIMA sample handling, and clustering-consistency seeds have been corrected. See `INVESTIGATION.md` before reproducing or extending them.
+Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI or test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance: training initialization, split horizons, baseline compatibility, and statistical testing remain unresolved. Optuna checkpoint scoring, sequential optimization seeds, generic ARIMA sample handling, and clustering/source selection have been corrected. See `INVESTIGATION.md` before reproducing or extending them.
 
 Key terminology: **kabko** = *kabupaten/kota* = an Indonesian regency/city, the fundamental data unit.
 
@@ -51,7 +51,7 @@ Everything hangs off `model/modules/main.py::SingleModel`, an encoder-decoder th
 
 Every block exposes `freeze_shared()` / `freeze_private()` for explicit branch-isolation experiments; the default training loop updates both branches. `SharedMode` and `SourcePick` enums (`model/general.py`) select whether/how sources feed the shared branch.
 
-`model/general.py` is the training driver: `ClusterModel` builds one shared model per cluster plus a private `SingleModel` per kabko; `ObjectiveModel` / `make_objective` / `eval` wire an **Optuna** hyperparameter search over architecture sizes, LR, teacher forcing, etc. `model/train.py::eval` is the per-batch train/val/test step (weighted source + target loss, gradient clipping, AMP grad scaler). `main.py::optimize` runs the study in batches with cache/GC between them.
+`model/general.py` is the training driver: `ClusterModel` builds one shared model per cluster plus a private `SingleModel` per kabko; `ObjectiveModel` / `make_objective` / `eval` wire an **Optuna** hyperparameter search over architecture sizes, LR, teacher forcing, etc. `model/train.py::eval` is the per-batch train/val/test step (weighted source + target loss, gradient clipping, AMP grad scaler). `main.py::optimize` runs the study sequentially in batches with cache/GC between them; do not set `n_jobs > 1`.
 
 Baseline and comparison variants for ablation live in `model/baseline/` (fully_private, fully_shared, no_representation, source_all, source_longest) and `model/comparison/` (arima, sird, arima_sird).
 
