@@ -2,7 +2,7 @@
 
 ## Status
 
-The prior experiment cannot support a conclusion that joint learning does or does not improve forecasting. Its core implementation defects have been corrected in this revision, but the experiment must be rerun with fresh data and repeated evaluation before comparing methods.
+The prior experiment cannot support a conclusion that joint learning does or does not improve forecasting. Core implementation defects were corrected in `96a0104`, but the blockers below must be fixed before a rerun can compare methods.
 
 ## Fixes Applied
 
@@ -18,7 +18,17 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 
 - Add a decoder regression test verifying that each generated output replaces the oldest seed entry.
 - Add regression tests for preprocessing boundaries, scheduler steps, freezing, GPU evaluation, and baseline metrics.
+- Use reconstructed IRD RMSSE consistently for early stopping, Optuna selection, and final reporting; tune and evaluate with identical epoch and scheduler budgets.
 - Select hyperparameters and epochs on validation data once. If refitting on train plus validation, use the selected fixed epoch count without validation monitoring.
 - Normalize source loss so all sources together have a configurable total weight, then test no-source and target-specific source-selection ablations.
 - Compare private-only, hard-shared, joint, pooled, and naive baselines with equal search budgets over multiple seeds and rolling forecast origins.
 - Verify corrected GPU evaluation, baselines, and statistical testing in the rerun before publishing comparisons.
+
+## Remaining Blockers
+
+- `pipeline/eval.py` computes Friedman chi-square incorrectly and uses signed one-sided post-hoc p-values.
+- Optuna/early stopping select scaled SIRD-rate MSSE, while final neural results report reconstructed IRD RMSSE; optimization and final evaluation also have different default epoch schedules.
+- Joint batches can overweight longer member datasets because batch truncation and loss normalization use different sample counts.
+- ARIMA and SIRD baselines return scalar metrics where comparison logs require per-IRD values; the SIRD baseline also lacks a reliable adapter from standard pipeline data to three IRD-count columns.
+- `main_1(limit_data=False)` does not forward `limit_data` to `main_0`, allowing later SIRD scaling to include validation/test observations.
+- `SourcePick.CLOSEST` passes `KabkoData` objects rather than series arrays to DTW, and unconstrained SIRD-rate outputs can reconstruct invalid compartment counts.

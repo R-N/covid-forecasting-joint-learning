@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI or test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance; see `INVESTIGATION.md` before reproducing or extending them.
+Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI or test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance: metric selection, baseline compatibility, and statistical testing remain unresolved. See `INVESTIGATION.md` before reproducing or extending them.
 
 Key terminology: **kabko** = *kabupaten/kota* = an Indonesian regency/city, the fundamental data unit.
 

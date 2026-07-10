@@ -6,7 +6,7 @@
 - Dependency compatibility is intentional: `numpy==1.23.1`, `pandas==1.4.3`, and `optuna==2.10.1` are pinned; PyTorch is unpinned, with `1.8.1` noted for GPU use. `pipeline/eval.py` requires `orange3`.
 - For an executable smoke check beyond packaging, install editable and import the package or the changed module. Do not claim a test suite was run.
 - `covid_forecasting_joint_learning.main.init()` sets PyTorch's global default tensor type and selects CUDA only when available; call it deliberately in notebooks/scripts.
-- Current joint-learning results are not valid evidence of model performance; consult `INVESTIGATION.md` before reproducing or extending experiments.
+- Current joint-learning results are not valid evidence of model performance. `INVESTIGATION.md` tracks remaining metric-selection, baseline, and statistical blockers; consult it before reproducing or extending experiments.
 
 ## Data And Pipeline
 
