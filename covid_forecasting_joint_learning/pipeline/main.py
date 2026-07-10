@@ -325,14 +325,17 @@ DEFAULT_GROUPS_N_CLUSTERS = (4, 4, 4, 2)
 def clustering_consistency(
     groups,
     n_samples=3,
+    random_state=257,
     **kwargs
 ):
     clustering_results = []
     silhouettes = []
     n_groups = len(groups)
-    for i in range(n_samples):
+    random_states = [random_state + i for i in range(n_samples)]
+    for i, random_state_i in enumerate(random_states):
         clusters = [clustering_1(
             group,
+            random_state=random_state_i,
             **kwargs
         ) for group in groups]
         silhouettes_i = [group.clustering_info.silhouette for group in groups]
@@ -349,6 +352,8 @@ def clustering_consistency(
         total_similarity += similarity
     consistency = total_similarity / len(comb)
     silhouette = sum(silhouettes) / n_samples
+    for group in groups:
+        group.clustering_consistency_random_states = random_states
     return consistency, silhouette
 
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI or test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance: training initialization, split horizons, metric selection, baseline compatibility, and statistical testing remain unresolved. See `INVESTIGATION.md` before reproducing or extending them.
+Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI or test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance: training initialization, split horizons, baseline compatibility, and statistical testing remain unresolved. Optuna checkpoint scoring, generic ARIMA sample handling, and clustering-consistency seeds have been corrected. See `INVESTIGATION.md` before reproducing or extending them.
 
 Key terminology: **kabko** = *kabupaten/kota* = an Indonesian regency/city, the fundamental data unit.
 
@@ -14,11 +14,12 @@ Windows-first (`.bat` helpers), but the underlying commands are cross-platform:
 
 ```bash
 python -m pip install --user --upgrade setuptools wheel   # prebuild.bat
+pip install -r requirements-experiment.txt                # Python 3.8 + CUDA 11.1 experiment environment
 pip install -e .                                           # install.bat (editable install)
 python setup.py sdist bdist_wheel                          # build.bat (build wheel)
 ```
 
-There are **no tests, no linter, and no run entry point**. You exercise the code by importing `covid_forecasting_joint_learning` and calling the pipeline stage functions (see below). Pin-sensitive deps: `numpy==1.23.1`, `pandas==1.4.3`, `optuna==2.10.1`; `torch` is unpinned (use 1.8.1 for GPU). `orange3` (Orange) is required by `pipeline/eval.py`.
+There are **no tests, no linter, and no run entry point**. You exercise the code by importing `covid_forecasting_joint_learning` and calling the pipeline stage functions (see below). `requirements-experiment.txt` pins the Python 3.8/CUDA 11.1 research environment, including `torch==1.8.1+cu111`; `orange3` (Orange) is required by `pipeline/eval.py`.
 
 ## Data flow
 

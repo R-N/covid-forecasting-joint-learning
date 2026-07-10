@@ -51,11 +51,22 @@ class ARIMAModel:
         return self.loss
 
     def eval_sample(self, sample, loss_fn=rmsse, use_exo=False):
-        if use_exo:
-            past, past_exo, future, future_exo = sample[:4]
-        else:
-            past, future = sample[:2]
+        if len(sample) == 8:
+            _, past, past_exo, future, future_exo, *_ = sample
+            if not use_exo:
+                past_exo, future_exo = None, None
+        elif len(sample) == 3:
+            if use_exo:
+                raise ValueError("Exogenous ARIMA requires label_dataset_0 samples")
+            past, future, _ = sample
             past_exo, future_exo = None, None
+        elif len(sample) == 5:
+            if use_exo:
+                raise ValueError("Exogenous ARIMA requires label_dataset_0 samples")
+            past, future, *_ = sample
+            past_exo, future_exo = None, None
+        else:
+            raise ValueError("Unsupported ARIMA dataset sample layout")
         return self.eval(
             past=past,
             future=future,

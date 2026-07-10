@@ -1353,7 +1353,6 @@ def make_objective(
                     max_epoch=max_epoch
                 )
 
-                best_loss = np.inf
                 while not early_stopping.stopped:
                     train_loss_target, val_loss_target = np.nan, np.nan
                     try:
@@ -1365,14 +1364,13 @@ def make_objective(
                         if torch.isnan(val_loss).any():
                             raise NaNLossException()
                         val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
-                        best_loss = min(best_loss, val_loss_target)
-
                         early_stopping(train_loss_target, val_loss_target)
                     except (NaNPredException, NaNLossException):
                         if not early_stopping.step_nan():
                             raise
 
-                sum_val_loss_target_group += best_loss
+                # Score the validation value that selected the restored checkpoint.
+                sum_val_loss_target_group += early_stopping.best_val_loss_2
                 if model_dir:
                     model.posttrain_save_model()
 
