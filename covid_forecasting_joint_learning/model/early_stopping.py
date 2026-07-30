@@ -110,10 +110,13 @@ class EarlyStopping:
             self.rise_writer = SummaryWriter(log_dir + "/rise")
             self.both_writer = SummaryWriter(log_dir + "/both")
 
-    def calculate_interval(self, val=None, history=None, *args, **kwargs):
+    def calculate_interval(self, val=None, history=None, default=None, *args, **kwargs):
         assert val is not None or history is not None
         if history is None:
             history = self.val_loss_history_2 if val else self.train_loss_history_2
+        if not history:
+            # First epoch: nothing recorded yet, so the current loss is the whole interval.
+            return default, self.eps
         mid, delta = self.interval_funcs[self.interval_mode](history, *args, **kwargs)
         delta = max(delta, self.eps)
         return mid, delta
@@ -173,8 +176,8 @@ class EarlyStopping:
         val_loss = train_loss if val_loss is None else val_loss
         val_loss_0, train_loss_0 = val_loss, train_loss
 
-        mean_train_loss, min_delta_train_2 = self.calculate_interval(val=False)
-        mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True)
+        mean_train_loss, min_delta_train_2 = self.calculate_interval(val=False, default=train_loss)
+        mean_val_loss, min_delta_val_2 = self.calculate_interval(val=True, default=val_loss)
         if self.val_loss_history:
             mean_val_loss = sum(self.val_loss_history[-self.history_length:]) / min(self.history_length, len(self.val_loss_history))
             mean_val_loss_half = sum(self.val_loss_history[-self.half_history_length:]) / min(self.half_history_length, len(self.val_loss_history))

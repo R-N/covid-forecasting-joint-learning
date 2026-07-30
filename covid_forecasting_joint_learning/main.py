@@ -91,6 +91,7 @@ def main_1(
         limit_length=limit_length,
         limit_date=limit_date,
         n_clusters=n_clusters,
+        limit_data=limit_data,
         kabkos=kabkos,
         exclude=exclude
     )
