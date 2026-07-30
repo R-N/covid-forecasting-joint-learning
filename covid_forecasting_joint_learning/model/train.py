@@ -39,7 +39,11 @@ def __eval(
         for sample in samples:
             sample, kabko = sample[:-1], sample[-1]
             pred = kabko.model(*sample[:5])
-            loss_s = loss_fn(sample[1], sample[3], pred)
+            # loss_fn sums over the batch, and members hand out batches of different
+            # sizes once a dataloader runs short, so divide by the samples actually
+            # in this member's batch. Otherwise a longer member gets more weight
+            # than its kabko.weight says.
+            loss_s = loss_fn(sample[1], sample[3], pred) / sample[0].shape[0]
             weight = kabko.weight
             loss += weight * loss_s
 
@@ -105,8 +109,6 @@ def eval(
     scheduler_per_batch=True
 ):
     members = sources + targets
-    shortest = min(members, key=lambda k: len(key(k).dataset))
-    size = len(key(shortest).dataset)
 
     weights, target_weights = prepare_kabkos(sources, targets, source_weight, train=train)
 
@@ -114,11 +116,16 @@ def eval(
     avg_target_loss = 0
     avg_target_losses = [0 for i in range(len(targets))]
 
-    joint_dataloader_enum = list(zip(*[key(k) for k in members]))
+    # zip is lazy and stops at the member that runs out first, which is the
+    # intended joint-batch alignment. Materializing it would hold every batch of
+    # every member for the whole epoch.
+    joint_dataloader_enum = zip(*[key(k) for k in members])
 
+    batch_count = 0
     context = dummy_context if train else torch.no_grad()
     with context:
         for batch_id, samples in enumerate(joint_dataloader_enum):
+            batch_count += 1
             loss_s, target_loss_s, target_losses = __eval(
                 samples,
                 loss_fn,
@@ -149,9 +156,10 @@ def eval(
                 if scheduler and scheduler_per_batch and stepped:
                     scheduler.step()
 
-    avg_loss /= size
-    avg_target_loss /= size
-    avg_target_losses = [x / size for x in avg_target_losses]
+    batch_count = max(1, batch_count)
+    avg_loss /= batch_count
+    avg_target_loss /= batch_count
+    avg_target_losses = [x / batch_count for x in avg_target_losses]
     return avg_loss, avg_target_loss, avg_target_losses
 
 def train(*args, **kwargs):

@@ -840,12 +840,18 @@ class TrialWrapper:
         self.number = trial.number
 
     def suggest_int(self, name, param, *args, **kwargs):
-        if isinstance(param, tuple) or isinstance(param, list):  # and param[0] != param[1]:
+        if isinstance(param, tuple) or isinstance(param, list):
+            if param[0] == param[1]:
+                # A collapsed range is a constant. Suggesting it anyway adds a
+                # dimension the sampler has to model for no information.
+                return param[0]
             return self.trial.suggest_int(name, *param, *args, **kwargs)
         return param
 
     def suggest_float(self, name, param, *args, **kwargs):
-        if isinstance(param, tuple) or isinstance(param, list):  # and param[0] != param[1]:
+        if isinstance(param, tuple) or isinstance(param, list):
+            if param[0] == param[1]:
+                return param[0]
             return self.trial.suggest_float(name, *param, *args, **kwargs)
         return param
 
@@ -1168,7 +1174,7 @@ def make_objective(
     onecycles=(0, 1),
     lrs=(1e-5, 1e-2),
     weight_decays=(0, 0.3),
-    source_weights=(0.5, 1.0),
+    source_weights=(0.0, 1.0),
     batch_sizes=(0, 5),
     additional_past_lengths=(0, 4),
     seed_lengths=30,
@@ -1305,10 +1311,12 @@ def make_objective(
             group = group_0.copy()
             clusters = [group.merge_clusters()] if merge_clusters else group.clusters
             sum_val_loss_target_group = 0
+            cluster_count = 0
             for cluster in clusters:
 
                 if debug and (group.id > 0 or cluster.id > 1):
                     continue
+                cluster_count += 1
 
                 print(f"Model for {trial_id}.{group.id}.{cluster.id}")
 
@@ -1371,8 +1379,10 @@ def make_objective(
 
                 # Score the validation value that selected the restored checkpoint.
                 sum_val_loss_target_group += early_stopping.best_val_loss_2
-                if model_dir:
-                    model.posttrain_save_model()
+                # No posttrain_save_model() here: with save_state=False it only
+                # produces captum attributions, figures and a spreadsheet per
+                # target, which nothing in the search reads. The final evaluation
+                # regenerates them for the selected parameters.
 
                 if posttrain_copy:
                     if log_dir_copy_i:
@@ -1388,7 +1398,8 @@ def make_objective(
                 torch.cuda.empty_cache()
                 gc.collect()
 
-            sum_val_loss_target_group /= len(clusters)
+            # Average over the clusters actually trained, which debug reduces.
+            sum_val_loss_target_group /= max(1, cluster_count)
             sum_val_loss_target += sum_val_loss_target_group
             del group
             del clusters
