@@ -21,11 +21,12 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 - `main_1()` forwards `limit_data` to `main_0()`, so `limit_data=False` no longer leaves scalers and clustering silently split-limited while `preprocessing_4` honours the caller.
 - `EarlyStopping.calculate_interval()` handles the empty first-epoch history by treating the current loss as the whole interval, covered by `tests/test_early_stopping.py`.
 - Each member's batch loss is divided by that member's own batch size before weighting, so a member with more data no longer contributes more than `kabko.weight` states, and epoch losses are averaged over the batches actually consumed.
+- `pipeline/sird.py::rebuild` bounds reconstruction: rates are clamped at zero, removal from I is capped at I, and inflow to I is capped at S, so no rebuilt series has a falling cumulative R or D, a rising S, or a negative compartment. The clamps are inert for valid rates and leave NaN predictions visible. Covered by `tests/test_sird_rebuild.py`.
 
 ## Required Rerun Design
 
 - Add a decoder regression test verifying that each generated output replaces the oldest seed entry.
-- Add regression tests for preprocessing boundaries, scheduler steps, freezing, GPU evaluation, and baseline metrics. `tests/test_early_stopping.py` and `tests/test_trial_budget.py` show the pattern: plain `assert`, stubbed research dependencies, runnable as `python tests/<name>.py`.
+- Add regression tests for preprocessing boundaries, scheduler steps, freezing, GPU evaluation, and baseline metrics. `tests/test_early_stopping.py`, `tests/test_trial_budget.py`, and `tests/test_sird_rebuild.py` show the pattern: plain `assert`, stubbed research dependencies, runnable as `python tests/<name>.py`.
 - Use reconstructed IRD RMSSE consistently for early stopping, Optuna selection, and final reporting; tune and evaluate with identical epoch and scheduler budgets.
 - Select hyperparameters and epochs on validation data once. If refitting on train plus validation, use the selected fixed epoch count without validation monitoring.
 - Normalize source loss so all sources together have a configurable total weight, then test no-source and target-specific source-selection ablations.
@@ -37,7 +38,6 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 - `pipeline/eval.py` computes Friedman chi-square incorrectly and uses signed one-sided post-hoc p-values.
 - Optuna/early stopping select scaled SIRD-rate MSSE, while final neural results report reconstructed IRD RMSSE; optimization and final evaluation also have different default epoch schedules.
 - ARIMA and SIRD baselines return scalar metrics where comparison logs require per-IRD values; the SIRD baseline also lacks a reliable adapter from standard pipeline data to three IRD-count columns.
-- Unconstrained SIRD-rate outputs can reconstruct invalid compartment counts.
 - Split boundaries assume zero forecast horizon while datasets use 14-day horizons, leaving the requested validation/test portions with far fewer valid forecast windows.
 - ARIMA-SIRD cannot unpack the standard eight-field neural dataset correctly, and its exogenous path expects incompatible three-column inputs.
 
@@ -54,13 +54,10 @@ Applied:
 - The joint dataloader is iterated lazily instead of being materialised as a list, so an epoch no longer holds every batch of every member at once (`model/train.py`).
 - The tuning objective no longer calls `posttrain_save_model()`. With `save_state=False` it only produced captum attributions, four figures and a spreadsheet per target per trial, none of which the search reads; the final evaluation still generates them for the selected parameters.
 - `TrialWrapper.suggest_int`/`suggest_float` return the constant when a range has equal bounds. The default strides and dilations are `(1, 1)`, so TPE was modelling four dimensions carrying no information. Existing studies cannot be resumed across this change, since the recorded distributions differ.
+- The learning-rate range test runs once per trial rather than once per cluster. It costs `0.5 * min_epoch` extra epochs over every member and ran for each of the roughly nine clusters, while every cluster of a trial builds the same architecture from the same parameters. `eval()` and `make_objective()` take `find_lr_once=True` and thread an `lr_cache` down to `ClusterModel`; both default to it, so the search and the final fit still choose their learning rate the same way. Pass `find_lr_once=False` for a per-cluster search.
 
 Outstanding, in rough order of payoff per unit of work:
 
-- `model/general.py:170` runs a learning-rate range test costing `0.5 * min_epoch` extra epochs per cluster per trial whenever `onecycle` is selected. Caching it needs a key over sizes and model kwargs, so it is a real cache with invalidation rather than a one-liner.
-- `pipeline/main.py:469` gives each member a `DataLoader` with `num_workers=0` over tensors that are already on the GPU, plus a `collate_fn` that re-stacks per batch. Pre-stacking each split once and indexing with a random permutation removes the machinery, but epochs run only a handful of batches, so the saving is small next to the member loop.
-- `pipeline/preprocessing.py:212-216` and `:236-246` build every sliding window with per-window pandas `.iloc` and `to_numpy()`, repeated for each Optuna trial. `np.lib.stride_tricks.sliding_window_view` over one `to_numpy()` gives the same windows as views, but it changes the interface between `slice_dataset` and all three `label_dataset_*` variants.
-- `model/general.py:564` reruns `preprocessing_5`/`preprocessing_6` every trial and `:1305` deep-copies each group. Windowing depends only on past length, seed length, and the column sets; batching only on batch size. Memoising on that key is seconds per trial against minutes of training.
 - `model/modules/main.py:358-381` recomputes the future representation over the whole seed window at every decoder step and uses only the last position, and reallocates the seed with `cat` plus a slice each step. Currently masked because `use_representation_future` defaults to false, which forces `seed_length` to 1.
 - `model/general.py:206-216` hardcodes `clip_grad_norm_(..., 1)` with the autoclip implementation commented out, leaving `grad_clip_percentile` threaded through the constructor with no effect. Restoring autoclip and deleting the parameter both change behaviour, so this needs a decision rather than a patch.
 - Automatic mixed precision is deliberately left off (`model/general.py:1019`, `:1315`), and the `autocast` path in `model/train.py:36` is ready for it. These models are small enough to be kernel-launch bound rather than FLOP bound, so AMP is not expected to pay for itself here.
@@ -68,9 +65,14 @@ Outstanding, in rough order of payoff per unit of work:
 
 ### Quick wins — forecast accuracy
 
-- Early stopping and the Optuna objective consume scaled SIRD-rate MSSE while results report reconstructed IRD RMSSE, so selection optimises a proxy of the reported metric through a nonlinear rebuild. Scoring the validation loader through the same `test()` path fixes it. This is the blocker above, listed here because it is also the cheapest accuracy gain.
-- Bound the three SIRD-rate outputs, for example with `softplus`. This is required for valid compartment counts and additionally removes a class of `NaNPredException` trials.
-- Applied: `source_weights` now defaults to `(0.0, 1.0)` rather than `(0.5, 1.0)`, so the search can reach the low-transfer regime and produce a within-search no-transfer comparison.
+Applied:
+
+- Reconstruction is bounded in `pipeline/sird.py::rebuild`, listed under Fixes Applied. Bounding the network's three outputs directly with `softplus` was rejected: the outputs live in the scaled space, and the scaler does not map raw zero to scaled zero, so a non-negative scaled output is not a non-negative rate. Clamping where the counts are built is both correct and shared by the SIRD baselines. A differentiable bound is still worth having for training, and is the IRD-space loss item under Big wins.
+- `source_weights` now defaults to `(0.0, 1.0)` rather than `(0.5, 1.0)`, so the search can reach the low-transfer regime and produce a within-search no-transfer comparison.
+
+Outstanding:
+
+- Early stopping and the Optuna objective consume scaled SIRD-rate MSSE while results report reconstructed IRD RMSSE, so selection optimises a proxy of the reported metric through a nonlinear rebuild. Scoring the validation loader through the same `test()` path fixes it. This is the blocker above, listed here because it is also the cheapest accuracy gain. It is not a pure substitution: `EarlyStopping` compares the training loss against the validation loss, so both have to move to the same metric together.
 - Teacher forcing is all-or-nothing per trial (`model/modules/main.py:393`, `:459-462`). Scheduled sampling, decaying the forcing probability across epochs, targets the exposure bias expected at a 14-step horizon.
 
 ### Big wins
@@ -95,4 +97,5 @@ Outstanding:
 - The default `n_trials` of 10000 in `main.optimize()` is not a reachable budget at current per-trial cost, even after the changes above.
 - Not a defect, contrary to an earlier note here: `check_conv_kwargs` does not reject trials at the default ranges. With `stride` and `dilation` fixed at 1 it requires `kernel_size <= (past_length + 1) / 2`, and `past_length` is 30 to 34 against kernels of at most 14. The same holds for the future representation, which is disabled by default anyway.
 - The objective now averages over the clusters it actually trained, so `debug` no longer divides by the full cluster count.
-- The applied training-loop and pruning changes are syntax-checked only, apart from the two `tests/` scripts. No environment on the development machine has torch installed, so they have not been executed; run them in the pinned Python 3.8 experiment environment before trusting a rerun.
+- Dropped from the cost list as not worth their churn: rebuilding the sliding windows with `sliding_window_view`, pre-stacking each split instead of using a `DataLoader`, and memoising `preprocessing_5`/`preprocessing_6` across trials. All three are seconds of window building against minutes of training per trial, the first two change the interface between `slice_dataset` and every `label_dataset_*`, and the third would hold `datasets_torch` for every parameter combination it has seen. Those tensors are allocated under the CUDA default tensor type, so the cache would compete with the model for VRAM.
+- The applied training-loop, pruning, and learning-rate changes are syntax-checked only, apart from the three `tests/` scripts. No environment on the development machine has torch installed, so they have not been executed; run them in the pinned Python 3.8 experiment environment before trusting a rerun.

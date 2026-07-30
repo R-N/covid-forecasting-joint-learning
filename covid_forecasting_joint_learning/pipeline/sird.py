@@ -65,10 +65,28 @@ def rebuild(sird_vars, prev, n, index=None, return_s=False):
     s, i, r, d = prev
 
     for beta, gamma, delta in sird_vars:
+        # Rates are non-negative by construction, but nothing bounds a predicted
+        # one, and a negative rate rebuilds a shrinking cumulative R or D. The
+        # clamps below are inert for valid rates, and written as comparisons so a
+        # NaN prediction still propagates instead of being silently zeroed.
+        if beta < 0:
+            beta = 0.0
+        if gamma < 0:
+            gamma = 0.0
+        if delta < 0:
+            delta = 0.0
+
+        # No more can be removed from I than is in it, and no more can leave S
+        # than is in it, so neither compartment can turn negative.
+        removed = gamma + delta
+        if removed > 1:
+            gamma, delta = gamma / removed, delta / removed
 
         delta_r = gamma * i
         delta_d = delta * i
         delta_i_in = beta * i * (s / n)
+        if delta_i_in > s:
+            delta_i_in = s
         delta_s = -delta_i_in
         delta_i = delta_i_in - (delta_r + delta_d)
 

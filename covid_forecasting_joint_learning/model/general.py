@@ -84,6 +84,7 @@ class ClusterModel:
         grad_scaler=None,
         min_epoch=50,
         shared_model=None,
+        lr_cache=None,
         device="cpu"
     ):
         self.cluster = cluster
@@ -168,11 +169,20 @@ class ClusterModel:
         self.optimizer = self.create_optimizer()
         self.scheduler = None
         if lr is None:
-            lr_result = self.find_lr(num_iter=int(0.5 * self.min_epoch))
-            lr = min(1, lr_result.best_lr)
-            div = lr_result.descend_lr
-            if div:
-                self.div_factor = lr / div
+            # The range test costs 0.5 * min_epoch extra epochs over every member,
+            # and it runs once per cluster. Every cluster of one trial builds the
+            # same architecture from the same parameters, so lr_cache lets the
+            # first cluster pay for it and the rest reuse the result. Pass None to
+            # search per cluster.
+            cached = lr_cache.get("onecycle") if lr_cache is not None else None
+            if cached is None:
+                lr_result = self.find_lr(num_iter=int(0.5 * self.min_epoch))
+                lr = min(1, lr_result.best_lr)
+                div = lr_result.descend_lr
+                cached = (lr, (lr / div) if div else self.div_factor)
+                if lr_cache is not None:
+                    lr_cache["onecycle"] = cached
+            lr, self.div_factor = cached
             self.set_onecycle(lr)
         else:
             self.set_lr(lr)
@@ -404,6 +414,7 @@ class ObjectiveModel:
         debug=False,
         min_epoch=50,
         shared_model=None,
+        lr_cache=None,
         use_shared=True,
         update_hx=True,
         use_exo=True,
@@ -609,7 +620,8 @@ class ObjectiveModel:
                 "loss_fn": loss_fn,
                 "source_weight": source_weight
             },
-            shared_model=shared_model
+            shared_model=shared_model,
+            lr_cache=lr_cache
         )
 
         if debug:
@@ -958,6 +970,7 @@ def eval(
     early_stopping_interval_mode=1,
     min_epoch=100,
     max_epoch=None,
+    find_lr_once=True,
     teacher_forcing=True,
     activations=DEFAULT_ACTIVATIONS,
     past_cols=DEFAULT_PAST_COLS,
@@ -1018,6 +1031,10 @@ def eval(
     target_losses = {}
     epoch_log = {}
 
+    # One learning-rate range test for the whole run instead of one per cluster.
+    # The search does the same, so both fit under the same learning rate.
+    lr_cache = {} if find_lr_once else None
+
     for group_0 in groups:
         group = group_0.copy() if copy_group else group_0
         target_losses[group.id] = {}
@@ -1039,6 +1056,7 @@ def eval(
                 grad_scaler=grad_scaler,
                 # teacher_forcing=True,
                 min_epoch=min_epoch,
+                lr_cache=lr_cache,
                 teacher_forcing=teacher_forcing,
                 use_shared=use_shared,
                 update_hx=update_hx,
@@ -1161,6 +1179,7 @@ def make_objective(
     early_stopping_interval_mode=1,
     min_epoch=50,
     max_epoch=150,
+    find_lr_once=True,
     teacher_forcing=True,
     activations=DEFAULT_ACTIVATIONS,
     hidden_sizes=(3, 37),
@@ -1317,6 +1336,11 @@ def make_objective(
         report_step = 0
         prune = False
 
+        # Every cluster of this trial builds the same architecture, so the
+        # learning-rate range test runs once and the rest of the clusters reuse
+        # its result. It costs 0.5 * min_epoch epochs over every member.
+        lr_cache = {} if find_lr_once else None
+
         for group_0 in groups:
             group = group_0.copy()
             clusters = [group.merge_clusters()] if merge_clusters else group.clusters
@@ -1340,6 +1364,7 @@ def make_objective(
                     grad_scaler=grad_scaler,
                     # teacher_forcing=True,
                     min_epoch=min_epoch,
+                    lr_cache=lr_cache,
                     use_shared=use_shared,
                     source_pick=source_pick_1,
                     private_mode=private_mode,
