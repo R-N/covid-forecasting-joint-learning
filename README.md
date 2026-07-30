@@ -1,11 +1,11 @@
 # covid-forecasting-joint-learning
 COVID-19 forecasting model for East Java cities using Joint Learning 
 
-> **Research status:** the committed joint-learning experiment was produced with training and evaluation defects. Remaining training initialization, split-horizon, baseline, metric-selection, and statistical issues prevent a valid comparison. See [INVESTIGATION.md](INVESTIGATION.md) before reproducing or extending experiments.
+> **Research status:** the committed joint-learning experiment was produced with training and evaluation defects. Remaining split-horizon, metric-selection, baseline-compatibility, and statistical issues prevent a valid comparison. See [INVESTIGATION.md](INVESTIGATION.md) before reproducing or extending experiments.
 
 GPU experiment environment: Python 3.8, CUDA 11.1, and the pinned dependencies in `requirements-experiment.txt`.
 
-The latest revisions align Optuna scoring with restored checkpoints, make clustering/source selection reproducible, correct kabko exclusion plus generic ARIMA sample handling, and default model execution to CPU when initialization is skipped. `INVESTIGATION.md` also records accuracy and training/tuning cost improvements identified for the rerun.
+The latest revisions align Optuna scoring with restored checkpoints, make clustering/source selection reproducible, correct kabko exclusion plus generic ARIMA sample handling, and default model execution to CPU when initialization is skipped. They also bound the SIRD reconstruction so no rebuilt series has a negative compartment or a falling cumulative count, and cut tuning cost by pruning hopeless Optuna trials and reusing one learning-rate range test per trial. `INVESTIGATION.md` records the remaining accuracy and cost work identified for the rerun.
 
 Undergrad thesis: https://digilib.uinsby.ac.id/52500/
 
