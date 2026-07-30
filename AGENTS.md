@@ -2,12 +2,13 @@
 
 ## Workflow
 
-- This is an import-driven Python package, not a CLI application. There are no committed tests, linter, formatter, CI workflow, or lockfile. Use `pip install -e .` for development; package with `python setup.py sdist bdist_wheel`.
+- This is an import-driven Python package, not a CLI application. There is no linter, formatter, CI workflow, or lockfile. Use `pip install -e .` for development; package with `python setup.py sdist bdist_wheel`.
+- `tests/` holds standalone regression checks, not a suite: plain `assert`, heavy dependencies stubbed, run one at a time with `python tests/<name>.py`. Match that pattern; there is no runner to register with.
 - For reproducible GPU experiments, use Python 3.8 with CUDA 11.1 and run `pip install -r requirements-experiment.txt` before `pip install -e .`. `pipeline/eval.py` requires `orange3`.
-- For an executable smoke check beyond packaging, install editable and import the package or the changed module. Do not claim a test suite was run.
+- For an executable smoke check beyond packaging, install editable and import the package or the changed module, or run the relevant script in `tests/`. Do not claim a test suite was run.
 - `covid_forecasting_joint_learning.main.init()` sets PyTorch's global default tensor type and selects CUDA only when available; call it deliberately in notebooks/scripts.
 - Model entrypoints default to CPU before `main.init()`; use `main.init()` deliberately when GPU execution or its global tensor-type side effect is required.
-- Current joint-learning results are not valid evidence of model performance. `INVESTIGATION.md` tracks remaining training, split-horizon, metric-selection, baseline, and statistical blockers; consult it before reproducing or extending experiments.
+- Current joint-learning results are not valid evidence of model performance. `INVESTIGATION.md` tracks remaining training, split-horizon, metric-selection, baseline, and statistical blockers, plus an Improvement Opportunities section covering accuracy and training/tuning cost work; consult it before reproducing or extending experiments.
 - Recent fixes align Optuna scores with restored checkpoints, adapt standard exogenous samples for ARIMA, record distinct clustering seeds, and seed sequential neural/baseline optimization. Parallel Optuna trials are intentionally unsupported because model RNG state is process-global.
 
 ## Data And Pipeline
