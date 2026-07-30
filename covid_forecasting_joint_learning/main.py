@@ -5,6 +5,7 @@ from .pipeline import util as PipelineUtil
 from .model import attr as Attribution
 from .model import util as ModelUtil
 import gc
+import optuna
 import torch
 import pandas as pd
 
@@ -123,6 +124,24 @@ def make_objective(
         debug=debug,
         **kwargs
     )
+
+def create_study(seed=257, n_startup_trials=10, **kwargs):
+    # multivariate/group let TPE model the conditional space (lr only exists when
+    # onecycle is off, the shared parameters only when use_shared is on) instead of
+    # treating every parameter as independent. The pruner consumes the per-cluster
+    # values make_objective() reports, and only after the first cluster of a trial.
+    kwargs.setdefault("direction", "minimize")
+    kwargs.setdefault("sampler", optuna.samplers.TPESampler(
+        seed=seed,
+        multivariate=True,
+        group=True,
+        n_startup_trials=n_startup_trials
+    ))
+    kwargs.setdefault("pruner", optuna.pruners.MedianPruner(
+        n_startup_trials=n_startup_trials,
+        n_warmup_steps=1
+    ))
+    return optuna.create_study(**kwargs)
 
 def optimize(study, model_objective, n_jobs=1, batch=None, n_trials=10000):
     # torch.autograd.set_detect_anomaly(True)

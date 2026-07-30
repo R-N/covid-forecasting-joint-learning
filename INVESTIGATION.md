@@ -25,7 +25,7 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 ## Required Rerun Design
 
 - Add a decoder regression test verifying that each generated output replaces the oldest seed entry.
-- Add regression tests for preprocessing boundaries, scheduler steps, freezing, GPU evaluation, and baseline metrics. `tests/test_early_stopping.py` is the first of these and shows the pattern: plain `assert`, stubbed research dependencies, runnable as `python tests/<name>.py`.
+- Add regression tests for preprocessing boundaries, scheduler steps, freezing, GPU evaluation, and baseline metrics. `tests/test_early_stopping.py` and `tests/test_trial_budget.py` show the pattern: plain `assert`, stubbed research dependencies, runnable as `python tests/<name>.py`.
 - Use reconstructed IRD RMSSE consistently for early stopping, Optuna selection, and final reporting; tune and evaluate with identical epoch and scheduler budgets.
 - Select hyperparameters and epochs on validation data once. If refitting on train plus validation, use the selected fixed epoch count without validation monitoring.
 - Normalize source loss so all sources together have a configurable total weight, then test no-source and target-specific source-selection ablations.
@@ -75,9 +75,15 @@ Outstanding, in rough order of payoff per unit of work:
 
 ### Big wins
 
+Applied:
+
+- Optuna pruning is enabled. The objective reports the running validation objective after each cluster and raises `TrialPruned` when the pruner rejects it, so a hopeless trial stops instead of training every remaining cluster. Clusters are visited in a fixed order, so a given step holds the same clusters in every trial. `main.create_study()` supplies the matching defaults: `MedianPruner(n_warmup_steps=1)`, which prunes from the second cluster onward, and `TPESampler(multivariate=True, group=True)` so the sampler models the conditional space (`lr` exists only when `onecycle` is off, the shared parameters only when `use_shared` is on) instead of treating every parameter as independent.
+- `count_trials_done()` now counts pruned trials. It previously counted them as undone, which was harmless while nothing pruned but would have made `main.optimize()` loop until `n_trials` trials survived pruning. Covered by `tests/test_trial_budget.py`.
+
+Outstanding:
+
 - Batch the cluster members. `model/train.py:39-48` runs each member model sequentially, and each performs a 14-step autoregressive decode of small cells, so a training step is dominated by kernel-launch latency rather than compute. Member models are architecturally identical, so the member dimension can be folded into the batch with stacked per-member weights driven by `bmm` and grouped convolutions, with the shared branch run once over the concatenated batch. This is the largest available speedup. `torch.func.stack_module_state` with `vmap` would express it directly but needs a newer torch than the pinned 1.8.
-- Enable Optuna pruning. The objective trains every cluster of every group to completion and never calls `trial.report()` or `should_prune()`, against a default `n_trials` of 10000. Reporting running validation loss with `HyperbandPruner`, or `MedianPruner` wrapped in `PatientPruner` given the noisy curves, cuts the budget several-fold. `NaNLossException` already subclasses `TrialPruned`.
-- Shrink the search space further. The collapsed strides and dilations are handled, but convolution depths of up to 20 over a 30-day window with kernels up to 14 overrun the window and are rejected by `check_conv_kwargs`, wasting trials. `TPESampler(multivariate=True, group=True)` suits this conditional space.
+- Pruning currently acts only at cluster boundaries, which is the coarsest useful granularity. Per-epoch reporting would prune sooner but early stopping gives each trial a different epoch count per cluster, so a global epoch step would compare different clusters across trials. Reporting per epoch within a fixed step budget per cluster would fix that.
 - Replace the recursive decoder with a direct multi-horizon head emitting all 14 steps at once. This removes exposure bias and the sequential launch cost together, and direct strategies are usually competitive at this horizon.
 - Compute the loss on reconstructed IRD counts rather than scaled rates, which requires a differentiable torch `rebuild`. A rate error is harmless at low infected counts and severe at high ones, so this aligns the optimisation target with the evaluation target.
 - Rotate the cluster target instead of fixing it to the shortest training series (`pipeline/main.py:303-310`). Leave-one-city-out within each cluster multiplies evaluation data at unchanged per-fit cost and tests the transfer claim in both directions.
@@ -87,5 +93,6 @@ Outstanding, in rough order of payoff per unit of work:
 ### Notes
 
 - The default `n_trials` of 10000 in `main.optimize()` is not a reachable budget at current per-trial cost, even after the changes above.
+- Not a defect, contrary to an earlier note here: `check_conv_kwargs` does not reject trials at the default ranges. With `stride` and `dilation` fixed at 1 it requires `kernel_size <= (past_length + 1) / 2`, and `past_length` is 30 to 34 against kernels of at most 14. The same holds for the future representation, which is disabled by default anyway.
 - The objective now averages over the clusters it actually trained, so `debug` no longer divides by the full cluster count.
-- The applied training-loop changes are syntax-checked only. No environment on the development machine has torch installed, so they have not been executed; run them in the pinned Python 3.8 experiment environment before trusting a rerun.
+- The applied training-loop and pruning changes are syntax-checked only, apart from the two `tests/` scripts. No environment on the development machine has torch installed, so they have not been executed; run them in the pinned Python 3.8 experiment environment before trusting a rerun.

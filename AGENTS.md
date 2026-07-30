@@ -10,6 +10,7 @@
 - Model entrypoints default to CPU before `main.init()`; use `main.init()` deliberately when GPU execution or its global tensor-type side effect is required.
 - Current joint-learning results are not valid evidence of model performance. `INVESTIGATION.md` tracks remaining training, split-horizon, metric-selection, baseline, and statistical blockers, plus an Improvement Opportunities section covering accuracy and training/tuning cost work; consult it before reproducing or extending experiments.
 - Recent fixes align Optuna scores with restored checkpoints, adapt standard exogenous samples for ARIMA, record distinct clustering seeds, and seed sequential neural/baseline optimization. Parallel Optuna trials are intentionally unsupported because model RNG state is process-global.
+- Build the neural study with `main.create_study()`. The objective reports its running value after every cluster and prunes there, so a study without a pruner silently loses that saving, and pruned trials count against the `main.optimize()` budget.
 
 ## Data And Pipeline
 

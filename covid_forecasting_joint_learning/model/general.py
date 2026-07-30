@@ -19,6 +19,7 @@ from ..pipeline.main import preprocessing_5, preprocessing_6
 from copy import deepcopy
 from ..data import cols as DataCol
 from .loss import MSSELoss, NaNPredException, NaNLossException
+from optuna.exceptions import TrialPruned
 import numpy as np
 from math import sqrt, log
 import pandas as pd
@@ -865,6 +866,12 @@ class TrialWrapper:
             return self.trial.suggest_categorical(name, param, *args, **kwargs)
         return param
 
+    def report(self, *args, **kwargs):
+        return self.trial.report(*args, **kwargs)
+
+    def should_prune(self, *args, **kwargs):
+        return self.trial.should_prune(*args, **kwargs)
+
 
 def clean_params(
     params,
@@ -1306,6 +1313,9 @@ def make_objective(
         params["use_exo"] = use_exo
 
         sum_val_loss_target = 0
+        groups_done = 0
+        report_step = 0
+        prune = False
 
         for group_0 in groups:
             group = group_0.copy()
@@ -1398,12 +1408,30 @@ def make_objective(
                 torch.cuda.empty_cache()
                 gc.collect()
 
+                # Report the running objective after every cluster so a hopeless
+                # trial can be dropped instead of training the clusters that are
+                # left. Clusters are visited in a fixed order, so the same step
+                # holds the same clusters in every trial and the pruner compares
+                # like with like.
+                trial.report(
+                    (sum_val_loss_target + sum_val_loss_target_group / cluster_count) / (groups_done + 1),
+                    report_step
+                )
+                report_step += 1
+                if trial.should_prune():
+                    prune = True
+                    break
+
             # Average over the clusters actually trained, which debug reduces.
-            sum_val_loss_target_group /= max(1, cluster_count)
-            sum_val_loss_target += sum_val_loss_target_group
+            if cluster_count:
+                sum_val_loss_target += sum_val_loss_target_group / cluster_count
+                groups_done += 1
             del group
             del clusters
             gc.collect()
+
+            if prune:
+                break
 
         if not posttrain_copy:
             if log_dir_copy_i:
@@ -1418,6 +1446,11 @@ def make_objective(
             if model_dir_i and (model_dir_copy_i or drive):
                 ModelUtil.rmtree(model_dir_i)
 
-        return sum_val_loss_target / len(groups)
+        # Raised after the copy and cleanup above so a pruned trial leaves no
+        # log or model directory behind.
+        if prune:
+            raise TrialPruned()
+
+        return sum_val_loss_target / max(1, groups_done)
 
     return objective
