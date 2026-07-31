@@ -310,6 +310,164 @@ Rejected, with the reason, so they are not reconsidered:
   chunking model is a representation learner rather than a forecaster. Useful as thesis framing, with
   nothing to implement.
 
+#### Third review pass: snowball from the forecasting and evaluation literature
+
+Followed the citation neighbourhoods of the seeds above rather than searching by keyword. This pass
+turned up the strongest single result in the whole review, several items that refine open blockers,
+and one criticism that was checked against the code and found not to apply.
+
+##### The result that reframes the project
+
+- **At this geographic scale, the naive baseline is a hard bar, and most published models do not clear
+  it.** The retrospective evaluation of the US COVID-19 Forecast Hub case forecasts covers roughly 9.7
+  million forecasts from 24 teams at 1 to 4 weeks ahead over 18 months. Only 7 of 22 team forecasts beat
+  `COVIDhub-baseline`, which merely carries the last observed value forward, and skill degraded
+  substantially at county level relative to state level. Interval coverage collapsed exactly when
+  forecasts mattered: nominal 95% intervals covered under 50% of observations during epidemic growth
+  phases. *Evidence: as close to this project's setting as published work gets. The horizon (1 to 4 weeks
+  against 14 days), the target (reported cases, not deaths or hospitalisations), and the geographic scale
+  (county, against Indonesian regencies and cities) all line up, and the sample is prospective rather
+  than retrospective. Two consequences. First, the naive baseline listed under Quick wins is not a
+  formality, it is the result most likely to decide whether this project has a finding. Second, the fact
+  that case forecasting at sub-state scale mostly fails is itself the context any honest write-up needs,
+  whichever way the rerun lands.*
+  ([Challenges of COVID-19 case forecasting, PLOS Comput Biol 2023](https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1011200))
+
+##### New and actionable
+
+- **Hierarchical reconciliation across the kabko/province/national hierarchy.** The hierarchy already
+  exists in the input workbook: `DataCenter.load_excel` reads `covid_indo` and `covid_jatim` alongside
+  the per-kabko series, so the aggregation structure the method needs is loaded and unused. MinT
+  reconciliation projects independently produced forecasts onto the aggregation constraints and is
+  provably no worse than the base forecasts in expected squared error under standard conditions. It is
+  post-hoc, touches no model code, and applies to every arm of the comparison equally. *Evidence: strong
+  method, with one caveat specific to this scale. The optimality result assumes a well-estimated
+  forecast-error covariance, and estimating a full covariance over roughly 38 series from a short test
+  period is exactly the regime where sample covariance is unstable; use the shrinkage or diagonal
+  variants rather than full MinT. Note also that reconciliation improves the set of forecasts jointly,
+  so it can move an individual kabko's error in either direction.*
+  ([Wickramasuriya, Athanasopoulos and Hyndman, MinT](https://robjhyndman.com/papers/mint.pdf),
+  [COVID temporal hierarchies](https://www.medrxiv.org/content/10.1101/2025.06.26.25330355.full.pdf))
+- **Ensemble over multiple clusterings instead of committing to one.** `clustering.py` fits
+  `TimeSeriesKMeans` with `n_init=3` and picks a single clustering by silhouette, then the entire
+  experiment is conditioned on that one partition. The closest published design instead trains a global
+  model per cluster across *several* clusterings, varying both the cluster count and the seed, and
+  ensembles the results; it reports significantly higher accuracy than both single global models and
+  univariate methods across eight datasets. *Evidence: strong and unusually well matched, since this is
+  the same groups-to-clusters-to-members hierarchy the project already builds, and it addresses a real
+  and currently unmeasured variance source. It also composes with the seed ensembling already listed,
+  at the same multiplied cost. If only one thing here is adopted, note that measuring the spread across
+  clusterings is nearly free and tells you whether the single-partition commitment is load-bearing.*
+  ([Godahewa et al., Ensembles of Localised Models](https://arxiv.org/abs/2012.15059))
+- **The statistical-testing blocker needs a different test, not a fixed one.** `pipeline/eval.py` is
+  already flagged for computing Friedman chi-square incorrectly and using signed one-sided post-hoc
+  p-values. The literature says the post-hoc design itself is the problem: mean-ranks tests of the
+  Nemenyi family are inconsistent, because whether A beats B depends on which other methods happened to
+  be in the pool. The recommended replacements are the sign test or the Wilcoxon signed-rank test, whose
+  verdicts do not depend on the pool. For forecast comparison specifically the native test is
+  Diebold-Mariano, with the Harvey-Leybourne-Newbold small-sample correction, which is advised whenever
+  the test set is under about 20 observations or the horizon exceeds one step, both true here. *Evidence:
+  strong, and it changes the fix rather than merely confirming the bug. Caveat: Diebold-Mariano is not
+  valid for nested model comparisons, and several arms of this comparison are nested, so it applies to
+  the neural-versus-baseline contrasts and not to every pair.*
+  ([Benavoli, Corani and Mangili, JMLR 2016](https://jmlr.org/papers/v17/benavoli16a.html),
+  [Harvey, Leybourne and Newbold correction](https://pkg.robjhyndman.com/forecast/reference/dm.test.html))
+- **Budget five seeds, not three.** The deep-ensembles literature reports that five members capture most
+  of the gain and that returns beyond about ten are negligible. This bounds the seed-ensembling item
+  above, which otherwise has no guidance on how many runs to pay for. *Evidence: measured on
+  classification uncertainty rather than forecasting, so treat five as a starting budget rather than an
+  optimum, but the shape of the curve is consistent across the ensembling literature.*
+  ([Lakshminarayanan et al., deep ensembles](https://arxiv.org/abs/1612.01474))
+- **Augment the series rather than oversample the windows.** Last pass rejected the generative
+  oversampling cluster as classification-only. The forecasting-side equivalent does exist and is
+  evaluated in precisely the less-data-abundant setting this project is in: generating synthetic series
+  with moving block bootstrap, DTW barycentric averaging or GRATIS, then either pooling them with the
+  originals or pretraining on them and transferring. *Evidence: moderate to strong, and the closest
+  transfer found for the small-dataset problem. DBA in particular reuses the DTW machinery already
+  present for clustering. The caveat is that bootstrapping a series with a structural break, which every
+  wave is, can manufacture series that no epidemic would produce.*
+  ([Bandara et al., Pattern Recognition 2021](https://arxiv.org/pdf/2008.02663),
+  [Bergmeir et al., bagged ETS](https://robjhyndman.com/papers/BaggedETSForIJF_rev1.pdf))
+
+##### Refines items already listed
+
+- **The pooled-with-identity arm should be expected to be competitive, not merely cheaper.** The global
+  model item above was graded on the cost argument alone, since the empirical wins come from collections
+  of thousands of series. A simulation study narrows this: global models are most valuable precisely when
+  series are *short*, heterogeneous, and the underlying process is not known in advance, which describes
+  this dataset. Upgrade that arm's expectation accordingly.
+  ([Hewamalage et al., simulation study](https://arxiv.org/abs/2012.12485))
+- **Add Theta to the baseline set.** The Monash archive benchmarks report that for short, noisy,
+  unrelated series the Theta method still outperforms more sophisticated methods, while global machine
+  learning wins on high-entropy and intermittent data. Theta is a few lines and closes the gap between
+  the naive baseline and the neural arms.
+  ([Godahewa et al., Monash archive](https://arxiv.org/abs/2105.06643))
+- **Deseasonalise if the weekly cycle is heterogeneous across kabko.** The RNN forecasting best-practice
+  study finds RNNs model seasonality directly only when seasonal patterns are homogeneous across the
+  dataset, and recommends an explicit deseasonalisation step otherwise. This is testable directly and
+  bears on the frequency-filter item above: the weekly reporting artifact in epidemic surveillance data
+  is documented, and if its shape differs by kabko then neither the convolution nor a shared spectral
+  filter will absorb it cleanly.
+  ([Hewamalage, Bergmeir and Bandara, IJF 2021](https://arxiv.org/abs/1909.00590),
+  [weekly periodic bias in epidemiological series](https://www.medrxiv.org/content/10.1101/2023.06.13.23290903.full.pdf))
+- **A second, independent argument against learned source weights.** That item was already downgraded for
+  weak sourcing. The forecast combination puzzle supplies the mechanism: combinations with estimated
+  optimal weights routinely lose to the simple average, because treating the weights as estimated rather
+  than fixed introduces bias and inflates variance enough to erase the theoretical advantage. Uniform
+  source weighting is the equal-weight combination, and it is the harder baseline it looks.
+  ([Claeskens et al., IJF 2016](https://www.sciencedirect.com/science/article/abs/pii/S0169207016000327),
+  [Wang and Hyndman, 50-year review](https://arxiv.org/pdf/2205.04216))
+- **Epidemic waves are textbook concept drift.** Handling it in global forecasting models by continuously
+  reweighting a model fitted on recent data against one fitted on all data is a studied approach with
+  reported gains. Relevant to the split-horizon blocker, since a fixed train/validation/test cut assumes
+  a stationarity these series do not have. *Evidence: evaluated on simulated data with LightGBM, so the
+  transfer to a small neural model on real epidemic data is untested.*
+  ([Liu et al., 2023](https://arxiv.org/abs/2304.01512))
+- **The SIRD rate targets may be partly non-identifiable, independent of the model.** Structural
+  identifiability analyses of compartmental models report the transmission rate identifiable in only 59
+  of 98 SIR model variants and the recovery rate in 51 of 98, with identifiability degrading further when
+  only a fraction of true incidence is observed, which is certainly the case for reported COVID cases.
+  The network predicts exactly these rates. *Evidence: a mathematical property of the model class rather
+  than an empirical claim, and it strengthens the existing IRD-space loss item: if the rate targets are
+  not uniquely determined by the data, optimising in rate space is optimising a partly arbitrary
+  quantity, while the reconstructed counts remain observable.*
+  ([structural identifiability of COVID compartmental models](https://arxiv.org/pdf/2006.14295),
+  [comparative practical identifiability for SEIR](https://arxiv.org/pdf/2401.15076))
+- **Task grouping is the multi-task analogue of cluster and source selection**, with published methods
+  for deciding which tasks help each other and which transfer negatively. *Evidence: weak for adoption.
+  It is measured on vision benchmarks, and the scalarization critique from the previous pass applies with
+  equal force. Listed because it is the correct literature to cite when describing what clustering plus
+  `SourcePick` is doing, not because a method should be imported from it.*
+  ([Standley et al.](https://arxiv.org/abs/1905.07553), [Fifty et al., TAG](https://arxiv.org/pdf/2109.04617))
+
+##### Checked and found not to apply
+
+- **"Clustering of time series subsequences is meaningless" does not apply here.** That result concerns
+  clustering sliding-window subsequences extracted from a *single* series, where the cluster centres come
+  out as sine waves regardless of the input. This pipeline clusters whole series, one per kabko, over the
+  training portion, which is ordinary whole-series clustering and is unaffected. Recorded so the
+  criticism is not misapplied later. What *does* apply from that line of work is plain k-means
+  initialisation instability, and `cluster()` uses `n_init=3`, which is low for a partition the entire
+  experiment is then conditioned on. That is an argument for the clustering-ensemble item above.
+  ([Keogh and Lin](https://www.cs.ucr.edu/~eamonn/meaningless.pdf))
+- **Conformal prediction and quantile forecasting are premature.** The coverage failures documented in
+  the Forecast Hub retrospective make probabilistic evaluation clearly the right long-run target, and
+  the weighted interval score is the standard proper scoring rule for it. But this project currently
+  produces point forecasts only, and adding a probabilistic output is a scope expansion that should not
+  precede establishing whether the point forecast beats the naive baseline.
+  ([Bracher et al., evaluating epidemic forecasts in an interval format](https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1008618&type=printable))
+- **Random search instead of TPE is not worth the change.** Random search is competitive with model-based
+  search when the objective has low effective dimensionality, which this search plausibly has, since most
+  of the roughly two dozen parameters are unlikely to matter. But TPE with pruning is already in place
+  and is not the bottleneck; the bottleneck is per-trial cost.
+  ([Bergstra and Bengio, JMLR 2012](https://jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf))
+- **Foundation models, N-BEATS/N-HiTS transfer, and LoRA-style adaptation** are the modern answer to
+  "one model across many short series", and N-HiTS is the direct multi-horizon architecture the decoder
+  item gestures at. All of them replace the model rather than improve it, and none fit the pinned torch
+  1.8 environment without work. Recorded as the honest answer to "what would you build instead", not as
+  a change to make now.
+  ([N-BEATS](https://arxiv.org/abs/1905.10437), [Monash archive baselines](https://arxiv.org/abs/2105.06643))
+
 #### On memory specifically
 
 These models are tiny: hidden sizes 3 to 37, states 3 to 56, batches 16 to 512. Nothing here is
