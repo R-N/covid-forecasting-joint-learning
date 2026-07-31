@@ -41,6 +41,80 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 - Split boundaries assume zero forecast horizon while datasets use 14-day horizons, leaving the requested validation/test portions with far fewer valid forecast windows.
 - ARIMA-SIRD cannot unpack the standard eight-field neural dataset correctly, and its exogenous path expects incompatible three-column inputs.
 
+## Recommendations
+
+Consolidated priority across everything below, which runs to seven review passes and is organised by
+where each item was found rather than by what to do first. This section is the reading order. Items are
+cross-referenced to the sections that carry the evidence and the caveats; nothing here is applied.
+
+### Must do — the rerun is not interpretable without these
+
+1. **Add a naive baseline arm and report against it.** Not the scaled-error denominator, which answers a
+   different question, but an explicit last-value-carried-forward forecast at the same 14-day horizon,
+   evaluated identically. This is the single result most likely to decide whether the project has a
+   finding, and at this geographic scale most published models fail it.
+2. **Fix metric selection to match reporting.** Optuna and early stopping consume scaled SIRD-rate MSSE
+   while results report reconstructed IRD RMSSE, so selection optimises a proxy of the reported metric
+   through a nonlinear rebuild. Both sides must move together, since `EarlyStopping` compares training
+   against validation loss.
+3. **Fix the split horizon.** Boundaries assume a zero forecast horizon while datasets use 14 days, so
+   the validation and test portions hold far fewer valid windows than intended.
+4. **Fix the statistical testing, and report two tests.** The Friedman chi-square is computed
+   incorrectly and post-hoc p-values are signed one-sided. Report Multiple Comparisons with the Best,
+   which is the forecasting convention and what reviewers expect, alongside pairwise sign or Wilcoxon
+   signed-rank tests, which do not depend on which other methods were in the pool. Say so when they
+   disagree.
+5. **Evaluate over multiple seeds and rolling forecast origins.** On a single split and seed, run-to-run
+   variation exceeds the effects being measured, so every other item is unmeasurable without this.
+6. **Make the baselines usable.** ARIMA and SIRD return scalar metrics where comparison logs need
+   per-IRD values, and ARIMA-SIRD cannot unpack the standard dataset. A comparison whose baselines do
+   not run is not a comparison.
+
+### Quick wins — cheap, low risk, do alongside the above
+
+| Item | Why it is cheap | Where |
+|---|---|---|
+| Fuse the past encoder into `nn.LSTM` | An identity, not a research claim; removes ~30 of ~44 sequential cell calls per member per forward | Fifth pass, Quick wins — cost |
+| Median-ensemble the seeds the rerun already requires | The runs are already being paid for; budget five | Second pass, Quick wins — accuracy |
+| Add Theta and a tuned linear baseline | Minutes each, and both are standard | Third pass; seventh pass |
+| Add a gradient-boosted tree with lag features | Three independent literature lines put it ahead of the linear baseline | Sixth pass |
+| Report spectral-entropy forecastability per kabko | Cheap to compute, and converts an unmeasured confounder into a covariate | Seventh pass |
+| Measure spread across clusterings | Nearly free, and tells you whether the single-partition commitment is load-bearing | Third pass |
+| Hierarchical reconciliation with a shrinkage estimator | Post-hoc, no model code, aggregation structure already loaded from `covid_indo` and `covid_jatim` | Third pass; fourth pass |
+| Scheduled sampling / horizon curriculum | Training-schedule change only, and the curriculum makes early epochs cheaper | Second pass |
+
+### Big wins — larger effort, larger payoff
+
+1. **Member batching via HFTA rather than by hand.** The largest available speedup, and it exists as a
+   published torch-1.8-era library rather than needing a newer torch. Cluster members within a trial are
+   architecturally identical and fuse cleanly. *Sixth pass.*
+2. **Direct multi-horizon head replacing the recursive decoder.** Now supported by in-domain evidence at
+   1 to 4 week horizons, not just by the general strategy literature. Removes exposure bias and the
+   sequential launch cost together. *Fourth pass.*
+3. **Loss on reconstructed IRD counts rather than scaled rates.** Aligns optimisation with evaluation,
+   and the SIRD rate targets are in any case only partly identifiable, so the counts are the observable
+   quantity. Decide the error distribution at the same time. *Existing Big wins; fifth pass.*
+4. **Rotate the cluster target instead of fixing it to the shortest training series.** Multiplies
+   evaluation data at unchanged per-fit cost and tests transfer in both directions. *Existing Big wins.*
+5. **Use the branch-freezing hooks that already exist.** `freeze_shared()` and `freeze_private()` are
+   never called, so source and target gradients compete every step. *Existing Big wins.*
+6. **External generalisation check on EpiCastBench.** The only way to show a method generalises beyond
+   one province of one country in one epidemic, and its baselines are already implemented. *Fourth pass.*
+
+### Do not bother
+
+Efficient attention, low-rank factorisation, gradient surgery, learned loss functions, active learning,
+sample-level curricula, generative oversampling, Mamba and xLSTM replacements, and random search in
+place of TPE. Each was checked and rejected on arithmetic, regime mismatch, or contrary evidence; the
+reasons are recorded in the passes below so they are not revisited.
+
+### Framing the result, whichever way it lands
+
+Two constraints the write-up has to respect. This evaluation is retrospective on finalised data, which
+is a weaker claim than operational forecasting skill, because real-time forecasting must predict values
+still being revised. And forecastability rises with target population, so comparisons aggregated across
+kabko of very different sizes may be measuring population rather than method unless that is controlled.
+
 ## Improvement Opportunities
 
 Distinct from the blockers above: these are not correctness defects but accuracy and
