@@ -578,6 +578,119 @@ say so rather than let the reader assume otherwise.*
   evidence about this task.
   ([GIFT-Eval](https://arxiv.org/abs/2410.10393), [fev-bench](https://arxiv.org/html/2509.26468v1))
 
+#### Fifth review pass: general forecasting practice and PyTorch engineering
+
+Broader than the previous passes, and less about this architecture than about the metric, the loss, and
+the runtime. Two items are defects in the current code rather than opportunities.
+
+##### The scaled-error denominator is non-seasonal, and probably should not be
+
+`loss_common.py::naive()` defaults to `step=1`, so `msse` and `rmsse` scale against first differences.
+The convention for scaled errors on daily data is the *seasonal* naive at the seasonal period, which is
+7 for daily series, and this project has a documented reason to use it: epidemic surveillance data
+carries a strong weekly reporting cycle, already noted above as the motivation for the frequency-filter
+item. First differences of a weekly-cycled series include the weekend reporting dip, which inflates the
+denominator and flatters every model scored against it, including the naive baseline the whole
+comparison now rests on.
+
+*Verdict: change `step` to 7 for the daily series here, or state explicitly why not. This is close to
+free, it affects both Optuna selection and the reported numbers, and getting it wrong biases the
+headline comparison in the project's own favour. Two related notes. `limit_naive=30` restricts the
+denominator to the last 30 observations, whereas the standard definition uses the whole in-sample
+period; that is defensible as local scaling but it is a deviation and should be documented as one.
+And changing the denominator invalidates comparison with previously recorded numbers, which costs
+nothing here since those numbers are already known to be invalid.*
+([Hyndman and Koehler](https://robjhyndman.com/papers/mase.pdf),
+[seasonal period convention](https://epftoolbox.readthedocs.io/en/latest/modules/metrics/mase.html))
+
+##### Generic PyTorch tuning advice mostly does not apply here, and one piece of it would hurt
+
+Every performance guide recommends the same checklist. Against this codebase most of it is inert and one
+item is actively harmful, which is worth recording so it is not adopted wholesale.
+
+- **`cudnn.benchmark = True` would hurt.** The autotuner re-benchmarks whenever an input shape changes,
+  and this training loop produces varying batch sizes by design: `zip` stops at whichever member's
+  dataloader runs out first, and members hand out different batch sizes when they run short. Constant
+  shapes are the precondition for the setting to pay off. Either leave it off, or make shapes constant
+  with `drop_last` first and measure.
+- **`num_workers` and `pin_memory` are inert.** Both exist to overlap host-to-device transfer. This
+  pipeline allocates whole splits as CUDA tensors under the global default tensor type, so there is no
+  host-side loading to overlap and worker processes cannot share those tensors anyway.
+- **`torch.compile` and CUDA graphs, the standard answers to precisely this bottleneck, do not exist in
+  torch 1.8.** Recent guidance reports 1.5x to 3x from `torch.compile(mode="reduce-overhead")` on
+  launch-bound workloads. That is this project's bottleneck exactly, and it is out of reach without
+  moving off the pinned environment. TorchScript is the era-appropriate substitute, already listed under
+  Quick wins. *Note the spread in reported TorchScript gains: the PyTorch engineering write-up measures
+  roughly 1.2x from better fusion on an LSTM forward pass, while tutorials and forum reports claim 3x to
+  4.5x. The larger figures are generally inference-mode, and backward-pass fusion was the weaker part of
+  the 1.8-era fuser, which matters because training is the cost here. Expect the low end.*
+  ([PyTorch performance tuning guide, 1.8](https://h-huang.github.io/tutorials/recipes/recipes/tuning_guide.html),
+  [JIT performance notes](https://residentmario.github.io/pytorch-training-performance-guide/jit.html))
+
+##### New and actionable
+
+- **CUDA MPS converts "cannot parallelise trials" into "can, at the process level".** `main.optimize()`
+  refuses `n_jobs > 1` because model RNG state is process-global, and that reasoning is correct for
+  threads. It does not apply across OS processes, which have independent RNG state. NVIDIA's Multi-Process
+  Service lets several processes submit work through one shared GPU context so their kernels interleave
+  rather than time-slice, which is the exact remedy for many small kernels underfilling the device.
+  Reported utilisation improvements in that regime are large. *Evidence: an engineering mechanism rather
+  than a research claim, and it targets the measured bottleneck. Three preconditions: each process needs
+  its own explicit seed, or the reproducibility work already done is undone; Optuna needs a shared RDB
+  storage backend instead of in-memory to coordinate trials across processes; and VRAM is per-process,
+  though these models are small enough that this is unlikely to bind. This is the largest available
+  throughput gain that does not require touching the model.*
+  ([NVIDIA MPS](https://docs.nvidia.com/deploy/mps/index.html),
+  [PyTorch forum, per-process training on one GPU](https://discuss.pytorch.org/t/multiprocessing-vs-nvidia-mps-for-parallel-training-on-a-single-gpu/99877))
+- **Do not refit at every rolling origin.** The rerun design calls for rolling forecast origins, which is
+  the most expensive item in it. Recent work finds that reducing retraining frequency costs little
+  accuracy, typically within 5 to 6%, while cutting compute substantially, and that global models are
+  especially robust to it because cross-series learning damps sensitivity to any single series update.
+  It also reports that less frequent retraining does not harm, and may improve, forecast stability.
+  *Evidence: retail demand data rather than epidemic data, and epidemic series drift harder than retail,
+  so the 5 to 6% figure should not be assumed to transfer. But the design question, refit every origin
+  versus refit periodically and roll the origin within each fit, should be answered deliberately rather
+  than by default, because the default is the expensive one.*
+  ([Zanotti, retraining frequency](https://arxiv.org/abs/2505.00356),
+  [stability of global models](https://arxiv.org/abs/2506.05776))
+- **Reconsider the error distribution when the loss moves to counts.** The IRD-space loss item above
+  changes what is being predicted but not how error is priced. Squared error on counts assumes constant
+  Gaussian noise, which puts probability mass on negative and fractional counts and underweights the
+  peaks that matter. Poisson respects non-negativity and integrality but assumes mean equals variance,
+  which epidemic counts violate; negative binomial is the standard overdispersion fix. *Evidence:
+  genuinely mixed, which is why this is a flag rather than a recommendation. Comparative work on epidemic
+  counts finds negative binomial fits better by information criteria while Poisson produced smaller MSE
+  and one-step prediction error when fitted on short histories of 3 to 7 periods, which is the data-poor
+  regime this project is in. Decide it empirically alongside the IRD-space loss, not in advance.*
+  ([Poisson versus negative binomial for outbreak counts](https://www.sciencedirect.com/science/article/pii/S1876034125002552))
+
+##### Considered and filed with caveats
+
+- **Variance-stabilising transforms.** The RNN best-practice study recommends them, and epidemic counts
+  are the textbook case of variance growing with level. Two objections keep this off the actionable list.
+  Back-transforming a mean forecast without bias adjustment is systematically too low, and the bias-free
+  correction assumes Gaussianity on the transformed scale, which is rarely true. Box-Cox is also
+  undefined at zero, and kabko-level daily counts contain zeros, so it needs an arbitrary shift.
+  `log1p` sidesteps the zero problem and is the pragmatic choice, but the retransformation bias remains
+  and must be corrected or stated.
+  ([bias in reversing Box-Cox with neural networks](https://www.sciencedirect.com/science/article/abs/pii/S0925231214001167))
+- **Forecast stability as a reported metric.** Rolling-origin instability, the tendency of a forecast for
+  a fixed target date to jump as the origin advances, is measurable for free once rolling origins exist,
+  via the symmetric mean absolute percentage change. Worth reporting because a forecast that is accurate
+  on average but revises violently is not usable for the decisions this work claims to support. Not worth
+  optimising for until accuracy clears the baseline.
+  ([Van Belle et al., improving forecast stability](https://www.sciencedirect.com/science/article/abs/pii/S016920702200098X),
+  [on forecast stability](https://arxiv.org/html/2310.17332v2))
+- **Mobility and other exogenous covariates.** Reported gains for COVID forecasting with mobility
+  covariates are large, and this pipeline already carries exogenous date flags so the plumbing exists.
+  Filed rather than recommended for two reasons: a fairness assessment found mobility-based models work
+  markedly better in counties with higher income, smartphone ownership and education, and that
+  heterogeneity is likely sharper across East Java regencies than across US counties; and mobility data
+  at kabko granularity for the study period may simply not exist. Check availability before designing
+  around it.
+  ([exogenous variables for COVID forecasting](https://arxiv.org/abs/2107.10397),
+  [fairness assessment of mobility-based models](https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0292090))
+
 #### On memory specifically
 
 These models are tiny: hidden sizes 3 to 37, states 3 to 56, batches 16 to 512. Nothing here is
