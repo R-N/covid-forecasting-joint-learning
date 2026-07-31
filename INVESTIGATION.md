@@ -581,29 +581,41 @@ say so rather than let the reader assume otherwise.*
 #### Fifth review pass: general forecasting practice and PyTorch engineering
 
 Broader than the previous passes, and less about this architecture than about the metric, the loss, and
-the runtime. Two items are defects in the current code rather than opportunities.
+the runtime.
 
-##### The scaled-error denominator is non-seasonal, and probably should not be
+##### The scaled-error denominator: checked, and the current choice is defensible
 
-`loss_common.py::naive()` defaults to `step=1`, so `msse` and `rmsse` scale against first differences.
-The convention for scaled errors on daily data is the *seasonal* naive at the seasonal period, which is
-7 for daily series, and this project has a documented reason to use it: epidemic surveillance data
-carries a strong weekly reporting cycle, already noted above as the motivation for the frequency-filter
-item. First differences of a weekly-cycled series include the weekend reporting dip, which inflates the
-denominator and flatters every model scored against it, including the naive baseline the whole
-comparison now rests on.
+`loss_common.py::naive()` defaults to `step=1`, so `msse` and `rmsse` scale against first differences
+rather than against a seasonal naive at lag 7. Since these series carry a strong weekly reporting cycle,
+this looks at first glance like the wrong benchmark. It is not, and the reasoning that says it is does
+not hold up:
 
-*Verdict: change `step` to 7 for the daily series here, or state explicitly why not. This is close to
-free, it affects both Optuna selection and the reported numbers, and getting it wrong biases the
-headline comparison in the project's own favour. Two related notes. `limit_naive=30` restricts the
-denominator to the last 30 observations, whereas the standard definition uses the whole in-sample
-period; that is defensible as local scaling but it is a deviation and should be documented as one.
-And changing the denominator invalidates comparison with previously recorded numbers, which costs
-nothing here since those numbers are already known to be invalid.*
-([Hyndman and Koehler](https://robjhyndman.com/papers/mase.pdf),
-[seasonal period convention](https://epftoolbox.readthedocs.io/en/latest/modules/metrics/mase.html))
+- **M5 is the canonical RMSSE reference and made the same choice.** M5 forecast daily retail series with
+  pronounced weekly seasonality and defined RMSSE with `s = 1`, the non-seasonal naive, not the seasonal
+  one. Same data frequency, same seasonality situation, same decision this code makes.
+- **The denominator is model-independent, so it cannot bias a model comparison.** For a given series it
+  is one constant dividing every model's error identically, including the naive baseline's. A larger
+  denominator lowers all scores together and changes no within-series ranking. The earlier claim that it
+  "flatters every model" was wrong on this point: flattering everything equally is not a bias.
+- Hyndman and Koehler define both variants and treat the seasonal denominator as the option for seasonal
+  series, so the seasonal form is a defensible alternative, not a correction.
 
-##### Generic PyTorch tuning advice mostly does not apply here, and one piece of it would hurt
+*Two real but smaller points survive.* The choice does change how series are weighted when scores are
+averaged **across** kabko, since it changes each series' divisor by a different factor depending on how
+much of that series' short-run variance is the weekly cycle. That affects aggregate numbers, not
+per-series rankings, and it is worth one sentence in the write-up rather than a code change. Separately,
+`limit_naive=30` restricts the denominator to the last 30 observations, whereas both Hyndman's
+definition and M5's use the full in-sample period; that is a genuine deviation, defensible as local
+scaling given non-stationary series, but it should be stated rather than left implicit.
+
+*The point worth carrying forward is a different one.* `rmsse < 1` means beating the **in-sample
+one-step** naive, which is not the same claim as beating an **out-of-sample 14-step** naive forecast.
+The scaled metric does not answer the question the Forecast Hub result makes central, so the explicit
+naive baseline arm listed under Quick wins is still required and is not made redundant by the metric.
+([M5 accuracy competition](https://www.sciencedirect.com/science/article/pii/S0169207021001874),
+[Hyndman and Koehler](https://robjhyndman.com/papers/mase.pdf))
+
+##### Generic PyTorch tuning advice mostly does not apply here, and one piece of it is a real defect
 
 Every performance guide recommends the same checklist. Against this codebase most of it is inert and one
 item is actively harmful, which is worth recording so it is not adopted wholesale.
