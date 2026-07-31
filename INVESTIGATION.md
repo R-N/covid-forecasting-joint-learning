@@ -703,6 +703,100 @@ item is actively harmful, which is worth recording so it is not adopted wholesal
   ([exogenous variables for COVID forecasting](https://arxiv.org/abs/2107.10397),
   [fairness assessment of mobility-based models](https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0292090))
 
+#### Sixth review pass: general forecasting and systems literature
+
+Broader reading, not tied to this architecture. One paper supersedes the largest outstanding cost item,
+one quantifies the regime the runtime is in, and a third line of work converges on a baseline this
+project does not yet have.
+
+##### Supersedes the largest outstanding cost item
+
+- **Horizontally Fused Training Array (HFTA) already implements "batch the cluster members".** The Big
+  wins section describes folding the member dimension into the batch with stacked per-member weights,
+  `bmm` and grouped convolutions, and notes that `torch.func.stack_module_state` would express it
+  directly but needs a newer torch than the pinned 1.8. HFTA is that idea, published at MLSys 2021 as a
+  PyTorch extension library: it horizontally fuses models from repetitive jobs down to the operator
+  level and trains them simultaneously on one accelerator, exploiting the fact that inter-model fusion
+  of same-shape operators is mathematically equivalent to already-optimised operators. Reported
+  throughput is 2.42x to 11.50x over running the jobs unshared, and up to 15.1x against one accelerator
+  per job. *Evidence: peer-reviewed, with a released library, and contemporaneous with torch 1.8 rather
+  than requiring a newer one, which is exactly the constraint that blocked the `torch.func` route. The
+  important qualification is what it can and cannot fuse. Fusion requires the same operator types at the
+  same shapes. Cluster members within a trial are architecturally identical, so they fuse cleanly, which
+  is the case the Big wins item is about. Optuna trials that differ in hidden size, kernel size or depth
+  are not shape-identical and will not fuse; only trials varying non-structural hyperparameters would.
+  So HFTA addresses member batching squarely and trial parallelism only partially.*
+  ([HFTA, MLSys 2021](https://proceedings.mlsys.org/paper_files/paper/2021/hash/4b1648906c25077d5232aa166af08eb0-Abstract.html),
+  [project page](https://uoft-ecosystem.github.io/hfta/))
+- **It also reorders the CUDA MPS item recorded last pass.** HFTA reports 1.25x to 4.72x over MPS and
+  1.33x to 4.88x over MIG on the same workloads. MPS remains the low-effort option, since it needs no
+  code change at all, but it is the fallback rather than the answer, and the two are alternatives rather
+  than complements for the same jobs.
+
+##### Quantifies the runtime regime
+
+- **The "framework tax" paper measures the overhead-bound regime directly.** It documents that
+  reductions in FLOPs and faster kernels do not translate into wall-clock latency when execution is
+  bound by fixed framework overhead, and that the gap grows as hardware gets faster. Concretely, at
+  batch size 1, where inference is framework-bound, TorchScript averaged 34.16% and ONNX Runtime 71.38%
+  FP16 speedup over eager PyTorch. *Evidence: this is the best available quantification of the situation
+  the cost items above assume, and it independently supports both the TorchScript item and the earlier
+  conclusion that AMP is not worth pursuing here, since fewer FLOPs do not help an overhead-bound
+  workload. Two caveats. The measurements are inference at small batch, and training adds a backward
+  pass whose fusion support was weaker in that era, so these are upper bounds on what to expect. And
+  ONNX Runtime's larger figure is not directly usable, since it is an inference path and this project's
+  cost is training.*
+  ([Framework tax, 2023](https://arxiv.org/abs/2302.06117))
+
+##### Three independent lines converge on a baseline this project lacks
+
+The baseline set so far is naive, Theta and a one-layer linear model. The literature points harder at a
+gradient-boosted tree with window features than at any of those:
+
+- A study casting gradient boosting into a window-based regression framework with proper feature
+  engineering found it competes with and often outperforms eight deep architectures (LSTNet, DARNN,
+  DeepGlo, TFT, DeepAR, DeepState, DAQFF, TRMF) across nine datasets.
+  ([Elsayed et al., 2021](https://arxiv.org/abs/2101.02118))
+- EpiCastBench, from the previous pass, found XGBoost, Random Forest and KAN competitive with and in
+  several cases beating the deep models across 40 epidemic datasets.
+- M5 was dominated by LightGBM-family methods, with the top ten submissions beating the benchmark by
+  over 20%.
+
+*Evidence: strong in aggregate, precisely because the three are independent, span different domains, and
+include the epidemic case. The caveats are the authors' own: the gradient-boosting comparison had to work
+around missing code and datasets in the papers it compared against, subsampled some datasets, and used a
+single-target wrapper that forecasts each horizon independently, which at 14 steps means either 14 models
+or a recursive scheme. It is also the strongest argument yet that the project needs a well-tuned
+non-neural comparator, since the fair-comparison literature already warns that under-tuned baselines
+manufacture apparent gains.*
+
+##### Context worth citing rather than acting on
+
+- **M4 and M5 point in different directions, and the difference is informative.** M4 concluded that
+  popular pure machine-learning methods were dominated by statistical methods across accuracy measures
+  and horizons while costing considerably more compute, and its winner was a statistical-neural hybrid.
+  M5 was won outright by machine learning. The distinguishing feature is that M5's series were many,
+  related, and accompanied by exogenous features, which is the setting where cross-learning pays, while
+  M4's were largely unrelated. That is the same locality-globality axis as the global-model item above,
+  and it is the honest frame for where this project sits: roughly 38 related series is far closer to M5's
+  structure than to M4's, but far smaller than either.
+  ([M4 conclusions](https://www.sciencedirect.com/science/article/abs/pii/S0169207018300785),
+  [M5 conclusions](https://www.sciencedirect.com/science/article/pii/S0169207021001874))
+- **`Forecasting: theory and practice` is the reference work to cite for methodology choices.** Eighty
+  authors across 22 countries, encyclopedic coverage of models, evaluation and practice, in IJF 2022.
+  Useful as the citation of record for the metric, combination and evaluation decisions this project has
+  to defend, rather than assembling them from scattered sources.
+  ([Petropoulos et al., IJF 2022](https://arxiv.org/abs/2012.03854))
+- **The reproducibility problem in deep forecasting research is documented, and this project is already
+  on the right side of it.** Surveys report that a considerable number of works could not be included in
+  comparisons because source code or datasets were unavailable, that some published models are not
+  reproducible, and that hyperparameters needed for reproduction are often unstated. Recent work adds
+  that evaluations averaged over fixed windows obscure variable-level differences and diverge from
+  real-world rolling-forecast scenarios, which is a direct argument for the rolling-origin design already
+  in the rerun plan.
+  ([do we need deep learning](https://arxiv.org/abs/2101.02118),
+  [backbone survey and systematic comparison](https://link.springer.com/article/10.1007/s11704-026-50462-z))
+
 #### On memory specifically
 
 These models are tiny: hidden sizes 3 to 37, states 3 to 56, batches 16 to 512. Nothing here is
