@@ -797,6 +797,103 @@ manufacture apparent gains.*
   ([do we need deep learning](https://arxiv.org/abs/2101.02118),
   [backbone survey and systematic comparison](https://link.springer.com/article/10.1007/s11704-026-50462-z))
 
+#### Seventh review pass: 2025 to 2026, forecasting and PyTorch broadly
+
+A theme runs through the recent literature that none of the earlier passes covered: measure how
+forecastable the target is before attributing the residual gap to the model. For a project whose entire
+question is whether joint learning adds anything, that is close to the missing instrument.
+
+##### Forecastability is measurable, varies by population size, and this project's targets are small
+
+- **Small-population targets are intrinsically harder to forecast, independent of method.** A 2026 study
+  measured spectral-entropy forecastability across California influenza seasons and COVID-19 and
+  influenza hospital admissions. Forecastability varied from 19.5% to 41.6% across influenza seasons
+  alone, and, critically, *increased with the population size of the forecasting target* for both
+  pathogens. Ensemble forecast performance tracked forecastability once population differences were
+  handled by log-transformation. Their recommendations are directly transferable: use relative or
+  log-transformed scoring to mitigate population-size effects, control for signal predictability when
+  scoring across periods, standardise scores using forecastability as a covariate, and explicitly
+  disclaim reliability for smaller-population targets. *Evidence: strong and unusually well matched.
+  Kabko populations span roughly an order of magnitude, from Surabaya down to small regencies, and
+  clusters are formed on series shape rather than population, so aggregate comparisons across kabko may
+  currently be measuring population size rather than method. Spectral entropy is cheap to compute and
+  converts an unmeasured confounder into a reported covariate. Caveat: their targets are hospital
+  admissions at state and region scale, so kabko-level daily case counts sit below the range studied and
+  the direction should transfer while the numbers should not.*
+  ([White and León, PLOS Comput Biol 2026](https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1014175))
+- **Predictability-aligned evaluation separates model capability from instance difficulty.** Standard
+  metrics conflate the two, so a good model can look worse than a baseline simply because its test
+  instances were easier. The proposed framework supplies Spectral Coherence Predictability, a per-instance
+  linear-MSE lower bound computable in `O(N log N)`, and a Linear Utilization Ratio measuring how well a
+  model exploits the linearly available structure across frequency bands. *Evidence: recent, from May
+  2026, and not yet replicated, so treat the specific metrics as provisional. But the diagnostic is
+  close to the one this project actually needs: the Linear Utilization Ratio distinguishes "the shared
+  branch captured structure a private model could not" from "the signal was linear all along and every
+  arm found it", which is exactly the ambiguity a joint-learning claim has to resolve.*
+  ([Feng et al., 2026](https://arxiv.org/html/2509.23074v3),
+  [forecastability measures, KDD 2025](https://arxiv.org/pdf/2507.13556))
+- **The honest counterweight: the entropy ceiling is probably not what is binding at 14 days.** Work
+  using permutation entropy as a model-independent predictability measure across chlamydia, dengue,
+  gonorrhoea, hepatitis A, influenza, measles, mumps, polio and whooping cough found a genuine
+  fundamental entropy barrier, but one that for most diseases lies well beyond the timescale of a single
+  outbreak. Short-horizon forecasting is generally feasible. *So forecastability belongs in the analysis
+  as a covariate explaining variation between kabko, not as an excuse for weak results at this horizon.*
+  ([Scarpino and Petri, Nat Commun 2019](https://www.nature.com/articles/s41467-019-08616-0))
+
+##### Methodological reinforcement from recent work
+
+- **A second, independent endorsement of the sign test, and a warning about fragile champions.** A 2025
+  position paper trained over 3,500 networks across 14 datasets and applied Friedman and *sign* tests,
+  finding that most models show no statistically significant differences from one another, and that
+  removing a single dataset erased iTransformer's apparent superiority entirely. *Two consequences. The
+  eval.py fix now has two independent supports for the sign test, one from the machine-learning
+  statistics literature and one from forecasting practice. And the fragility demonstration is a direct
+  warning for this project: with one province, one epidemic and roughly 38 series, a "joint learning
+  wins" conclusion is exposed to exactly the single-dataset sensitivity they document, which is a further
+  argument for the external generalisation check recorded two passes ago.*
+  ([Brigato et al., 2025](https://arxiv.org/html/2502.14045v1))
+- **The linear-baseline argument strengthened, and connected to the diagnostic above.** A 2026 study
+  reports that most of what determines accuracy on standard benchmarks is long-range *linear* signal
+  exploited through an appropriate context length, that the additional nonlinear structure higher-capacity
+  models capture is real but yields little accuracy benefit, and that a tuned linear model matched or beat
+  Transformer, MLP and CNN baselines on six of eight benchmarks. *Their own stated limitation is that this
+  holds for the standard long-horizon numeric regime rather than universally, and epidemic dynamics are
+  genuinely nonlinear, so this is not a claim that linear will win here. It is a claim that the linear
+  baseline must be tuned rather than token, and it pairs with the Linear Utilization Ratio above: if the
+  joint model beats the linear baseline, that diagnostic tells you whether it did so by capturing
+  nonlinear structure or by better exploiting the same linear signal.*
+  ([How good can linear models be, 2026](https://arxiv.org/abs/2606.27282))
+- **Benchmark quality is itself under revision.** A 2026 benchmark paper argues existing suites are
+  compromised on four axes — data composition dominated by reused legacy sources, weak data integrity,
+  task formulations detached from real operations, and rigid dataset-level analysis — and responds with
+  50 fresh leakage-free datasets plus a pattern-level evaluation perspective. *Reinforces the leakage
+  caveat already attached to any foundation-model baseline, and supports reporting results stratified by
+  series characteristics rather than as a single averaged number.*
+  ([It's TIME, 2026](https://arxiv.org/abs/2602.12147))
+
+##### PyTorch, recent
+
+- **Newer is not automatically faster, which matters if an upgrade is ever proposed.** The cost items
+  above note that `torch.compile` is the standard remedy for an overhead-bound workload and does not
+  exist in torch 1.8. Two recent qualifications. A documented regression has `mode="reduce-overhead"`
+  losing 40 to 55% throughput in torch 2.10 versus 2.9 on production inference, with at least 17%
+  attributed to inductor changes rather than the CUDA toolkit. And the standing friction with
+  `torch.compile` is a 30 to 90 second cold-start compile. *That second point is the one that matters
+  here and cuts against the item: this workload is many short trials, so a per-process compile of that
+  order could consume a large share of a trial's runtime. If an upgrade is ever done for this reason,
+  benchmark it against the actual trial length rather than assuming the published speedups apply, and
+  pin a specific version rather than tracking latest.*
+  ([reduce-overhead regression report](https://github.com/pytorch/pytorch/issues/174575),
+  [CUDA graph trees](https://docs.pytorch.org/docs/stable/torch.compiler_cudagraph_trees.html))
+- **Determinism is close to free, and its limits are worth stating.** Studies report the performance
+  difference between deterministic and non-deterministic settings usually within about 1%, so the
+  reproducibility work already done costs little. The limits are equally documented: floating-point
+  non-associativity compounds through training, and bit-exact reproducibility does not hold across
+  CPU/GPU boundaries, GPU microarchitectures, or framework versions. *Useful for stating what the
+  project's seeding actually guarantees, which is repeatability on a fixed platform and release, not
+  portability of exact numbers.*
+  ([floating-point non-associativity and reproducibility](https://arxiv.org/pdf/2408.05148))
+
 #### On memory specifically
 
 These models are tiny: hidden sizes 3 to 37, states 3 to 56, batches 16 to 512. Nothing here is
