@@ -468,6 +468,116 @@ and one criticism that was checked against the code and found not to apply.
   a change to make now.
   ([N-BEATS](https://arxiv.org/abs/1905.10437), [Monash archive baselines](https://arxiv.org/abs/2105.06643))
 
+#### Fourth review pass: 2025 to 2026 work
+
+Restricted to recent literature. Two findings change what the rerun should contain, one resolves an
+apparent contradiction in the evidence already collected, and one upgrades an item previously graded
+on out-of-domain evidence.
+
+##### The literature disagrees about the naive baseline, and the split is the evaluation protocol
+
+The previous pass recorded that only 7 of 22 Forecast Hub teams beat a last-value baseline. Recent work
+points the other way, and the disagreement is systematic rather than noise:
+
+- Prospective, real-time, operational: most models lose to naive at sub-state scale
+  ([PLOS Comput Biol 2023](https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1011200)).
+- Retrospective, curated, finalised data: deep learning substantially beats naive, which "consistently
+  produces the highest median errors across all forecasting horizons"
+  ([EpiCastBench, 2026](https://arxiv.org/abs/2605.11598)).
+- In between: deep models trained only on surveillance data show "high variance and systematic
+  instability", often failing to beat naive at 4-week horizons, while a zero-shot foundation model does
+  beat it ([From naive to foundation, 2026](https://www.medrxiv.org/content/10.64898/2026.05.11.26352889v1.full)).
+
+The reconciling variable is data vintage. Real-time forecasting must predict values that have not
+finished being revised, and backfill in epidemic surveillance is large enough that forecasting the
+revision is its own research problem. Retrospective evaluation on finalised series removes that error
+source entirely.
+
+*What this means here: this project is retrospective on finalised data, so EpiCastBench is the
+comparable setting and the pessimistic Forecast Hub number should not be read as the expected result.
+But the converse constrains the claim. Any result obtained here measures retrospective skill on
+finalised data, which is a weaker statement than operational forecasting skill, and the write-up should
+say so rather than let the reader assume otherwise.*
+([Delphi revision forecasting, PLOS Comput Biol 2025](https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1013709))
+
+##### New and actionable
+
+- **EpiCastBench is an external validation set and a ready-made baseline suite.** Forty curated
+  multivariate epidemic datasets across COVID-19, dengue, influenza, measles, chickenpox, chikungunya,
+  Zika and tuberculosis, with standardised preprocessing, a unified horizon, and 15 implemented models
+  spanning Naive, DLinear, TSMixer, KAN, Random Forest, XGBoost and LSTM. Datasets and code are public.
+  *Evidence: this is the most useful single artifact found in the whole review. It supplies exactly what
+  this project cannot generate from 38 kabko: evidence that a method generalises beyond one province of
+  one country in one epidemic. It also removes the excuse for a thin baseline set, since the baselines
+  are already implemented against the same metrics. Caveat: their datasets are mostly coarser-grained
+  and longer than kabko-level daily series, so it is a generalisation check, not a substitute for the
+  local evaluation.*
+- **The statistical-testing blocker has a field-standard answer, and it conflicts with the
+  statistically-preferred one.** EpiCastBench uses Friedman followed by post-hoc Multiple Comparisons
+  with the Best, which is the convention in the forecasting literature going back to the M3 statistical
+  tests. That is what reviewers in this field expect to see. *But note the conflict, which is worth
+  stating rather than papering over: MCB as used in forecasting is a mean-ranks procedure, and mean-ranks
+  post-hoc tests are exactly what the JMLR critique in the previous pass objects to, since the verdict
+  between two methods depends on which others were in the pool. The defensible resolution is to report
+  MCB, because it is the convention and makes the work comparable, alongside pairwise Wilcoxon or sign
+  tests, which do not depend on the pool, and to say plainly when the two disagree.*
+  ([Koning et al., M3 statistical tests](https://search.r-project.org/CRAN/refmans/tsutils/html/nemenyi.html),
+  [Benavoli et al., JMLR 2016](https://jmlr.org/papers/v17/benavoli16a.html))
+- **TabPFN-TS is the foundation-model baseline that actually fits these constraints.** Roughly 11M
+  parameters, runs zero-shot on CPU, and reframes forecasting as tabular regression over lagged and
+  calendar features. In the ILI benchmark it overcame extreme data scarcity to consistently outperform
+  every other individual architecture, at times rivalling a multi-model ensemble. *Evidence: strong, and
+  with an unusual property that matters here. The 2025 to 2026 contamination literature shows time
+  series foundation models can post enormous gains simply from having seen the benchmark during
+  pretraining, with one study measuring up to 184% lower MSE for models pretrained on leaking datasets.
+  TabPFN's prior is synthetic rather than scraped real series, so that critique does not land on it the
+  way it lands on Chronos, TimesFM or Moirai. That makes it the honest choice of foundation baseline
+  regardless of leaderboard position. Two caveats: adding it is a baseline, not a fix, and if it wins,
+  the paper's finding is about data scarcity rather than about joint learning; and any foundation
+  baseline still needs a check that Indonesian kabko-level data is not in its pretraining corpus, which
+  for a synthetic prior is trivially satisfied and for the others is not.*
+  ([TabPFN-TS](https://arxiv.org/abs/2501.02945),
+  [leakage in TSFM evaluation](https://arxiv.org/abs/2510.13654))
+
+##### Upgrades an item already listed
+
+- **The direct multi-horizon head now has in-domain evidence.** It was previously graded "moderate",
+  resting on one competition of 111 cash-withdrawal series. A 2026 study across 17 architectures on ILI
+  and hospitalisation forecasting at operational 1 to 4 week horizons reports that direct multi-output
+  forecasting consistently beat iterative approaches by avoiding error accumulation. That is the same
+  mechanism, in this domain, at this horizon. Upgrade to well supported, and note it costs nothing extra
+  to test alongside the decoder since the rest of the pipeline is unchanged. The same study also finds
+  that transfer from mechanistically aligned domains beats transfer from generic corpora, which is an
+  argument for selecting sources by epidemiological similarity rather than by DTW distance on rates
+  alone. *Caveat: point forecasting only, 10 regions, no calibration metrics, by the authors' own
+  statement.* ([Jafari et al., 2026](https://arxiv.org/html/2606.19560))
+- **Shrinkage for the reconciliation covariance is confirmed, not just prudent.** The MinT item was
+  filed with a hand-waved caveat about covariance instability at 38 series. Recent work states it
+  directly: using the full-sample covariance leads to large bias in most cases and shrinking the
+  off-diagonal elements greatly reduces it. Use the shrinkage estimator, not sample MinT.
+  ([shrinkage estimator for hierarchical series](https://link.springer.com/chapter/10.1007/978-3-031-96736-8_24),
+  [covariance uncertainty in probabilistic reconciliation](https://arxiv.org/html/2506.19554))
+- **Ensemble size has a second, domain-specific figure.** Retrospective hub work reports more than three
+  models needed for a robust ensemble with diminishing returns after, which sits alongside the
+  five-member figure from the deep-ensembles literature. Five remains a reasonable seed budget.
+  ([influenza ensemble retrospective](https://pmc.ncbi.nlm.nih.gov/articles/PMC13091824/))
+
+##### Rejected after checking
+
+- **Mamba, xLSTM and state-space replacements for the recurrent core.** These dominate recent sequence
+  modelling and would be the obvious thing to reach for. Rejected on three counts: their advantage is
+  long-range dependency modelling over long sequences, and the past window here is 30 to 34 steps; a
+  recent comparative study on short-horizon financial forecasting found xLSTM both the slowest to train
+  and the least accurate of the variants tested, so the win is not automatic even in sequence-model
+  terms; and none of it exists in the pinned torch 1.8 environment. The encoder-fusion item under Quick
+  wins delivers the speedup this would be reached for, without changing the model.
+  ([sLSTM/mLSTM/xLSTM comparison](https://www.mdpi.com/2227-7390/14/8/1282))
+- **GIFT-Eval and fev-bench as evaluation targets.** Both are serious general-purpose forecasting
+  benchmarks and are the right venue for a general method. Neither is epidemic data, and EpiCastBench
+  covers the domain question directly. Recorded so the general leaderboards are not mistaken for
+  evidence about this task.
+  ([GIFT-Eval](https://arxiv.org/abs/2410.10393), [fev-bench](https://arxiv.org/html/2509.26468v1))
+
 #### On memory specifically
 
 These models are tiny: hidden sizes 3 to 37, states 3 to 56, batches 16 to 512. Nothing here is
