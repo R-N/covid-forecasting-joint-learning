@@ -293,3 +293,17 @@ def teacher_forcing_ratio_schedule(epoch, decay_epochs, start=1.0, end=0.0):
         return end
     t = min(1.0, epoch / decay_epochs)
     return start + (end - start) * t
+
+
+def alternate_branch_freeze(epoch, period=1):
+    """Which branch to freeze this epoch under an alternating shared/private
+    freeze schedule. INVESTIGATION.md, Big wins: "Use the branch-freezing
+    hooks that already exist. freeze_shared() and freeze_private() are
+    never called, so source and target gradients compete every step."
+    Freezing one branch for `period` epochs at a time, alternating with the
+    other, means only one branch's gradient is live in a given epoch
+    instead of both updating (and competing) on every step. Returns
+    "shared" or "private" -- the branch to freeze that epoch, never both.
+    """
+    period = max(1, period)
+    return "shared" if (epoch // period) % 2 == 0 else "private"

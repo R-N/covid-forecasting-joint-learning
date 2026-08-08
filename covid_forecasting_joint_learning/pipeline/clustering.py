@@ -139,6 +139,19 @@ class Cluster:
         cluster.select_target()
         return cluster
 
+    def rotate_targets(self):
+        # INVESTIGATION.md, Big wins: "Rotate the cluster target instead of
+        # fixing it to the shortest training series. Multiplies evaluation
+        # data at unchanged per-fit cost and tests transfer in both
+        # directions." Every other member already gets trained as a source
+        # each run; this just also scores each of them as a target, once
+        # per rotation, on an independent `copy()` so no rotation shares
+        # mutable state with another or with the original cluster.
+        for member in self.members:
+            rotated = self.copy()
+            rotated.targets = [k for k in rotated.members if k.name == member.name]
+            yield rotated
+
     @property
     def date_cols(self):
         date_set = set()

@@ -43,7 +43,13 @@ def __eval(
             # sizes once a dataloader runs short, so divide by the samples actually
             # in this member's batch. Otherwise a longer member gets more weight
             # than its kabko.weight says.
-            loss_s = loss_fn(sample[1], sample[3], pred) / sample[0].shape[0]
+            if getattr(loss_fn, "reconstructed", False):
+                # Opt-in reconstructed-IRD loss (ReconstructedRMSSELoss):
+                # needs population/scaler/raw IRD samples, not just (past,
+                # future, pred) in scaled-rate space.
+                loss_s = loss_fn(pred, sample[5], sample[6], kabko.population, kabko.scaler_2) / sample[0].shape[0]
+            else:
+                loss_s = loss_fn(sample[1], sample[3], pred) / sample[0].shape[0]
             weight = kabko.weight
             loss += weight * loss_s
 

@@ -92,21 +92,29 @@ All eight items below are applied at the code level (syntax-checked and covered 
 
 ### Big wins — larger effort, larger payoff
 
+4/6 applied at the code level (same caveat as Quick wins: syntax-checked and unit/equivalence-tested, not run against real data). The other 2 are genuinely blocked in this environment, not skipped -- see their notes.
+
 1. **Member batching via HFTA rather than by hand.** The largest available speedup, and it exists as a
    published torch-1.8-era library rather than needing a newer torch. Cluster members within a trial are
    architecturally identical and fuse cleanly. *Sixth pass.*
+   **Blocked**: HFTA (`pip install git+https://github.com/UofT-EcoSystem/hfta`) is real and installable, but its fusion is CUDA/TPU-specific (tested on V100/RTX6000/A100/TPU v3) with no meaningful CPU path -- this dev environment has no NVIDIA GPU (integrated AMD graphics only), so a correctness-preserving fusion of `SingleModel`'s layers can't be validated, and the entire payoff (throughput) is unmeasurable here. Installing an unverifiable GPU-only dependency into the pinned `requirements-experiment.txt` without a way to test it isn't a real integration. Needs a CUDA machine.
 2. **Direct multi-horizon head replacing the recursive decoder.** Now supported by in-domain evidence at
    1 to 4 week horizons, not just by the general strategy literature. Removes exposure bias and the
    sequential launch cost together. *Fourth pass.*
+   **Applied**: `model/modules/head.py::DirectFutureHead` (non-autoregressive, one batched op per forward: past encoding + learned per-horizon embedding + future_exo, feeding the existing unmodified `CombineHead`/`post_future_model`) + `SingleModel(..., direct_multi_horizon=True)` opt-in, default `False` preserves the exact existing recursive decoder. Threads through `ClusterModel`/`ObjectiveModel` for free via the existing `model_kwargs` passthrough -- no extra wiring needed. `tests/test_direct_multi_horizon.py`.
 3. **Loss on reconstructed IRD counts rather than scaled rates.** Aligns optimisation with evaluation,
    and the SIRD rate targets are in any case only partly identifiable, so the counts are the observable
    quantity. Decide the error distribution at the same time. *Existing Big wins; fifth pass.*
+   **Applied**: `model/torch_sird.py` (differentiable torch port of `pipeline/sird.py::rebuild`'s per-step recurrence + MinMaxScaler inverse-transform) + `model/loss.py::ReconstructedRMSSELoss` (opt-in via `loss_fn=ReconstructedRMSSELoss()`, `reconstructed=True` flag routes `model/train.py`'s per-batch loop to the extended call signature; default `MSSELoss`/`RMSSELoss` path is untouched). `tests/test_reconstructed_loss.py`, including an independent cross-check against the original numpy `pipeline.sird.rebuild` + `loss_common.rmsse`.
 4. **Rotate the cluster target instead of fixing it to the shortest training series.** Multiplies
    evaluation data at unchanged per-fit cost and tests transfer in both directions. *Existing Big wins.*
+   **Applied**: `pipeline/clustering.py::Cluster.rotate_targets()` yields one independent `Cluster` copy per member with that member as sole target (reuses `Cluster.copy()`). `tests/test_cluster_target_rotation.py`.
 5. **Use the branch-freezing hooks that already exist.** `freeze_shared()` and `freeze_private()` are
    never called, so source and target gradients compete every step. *Existing Big wins.*
+   **Applied**: `model/util.py::alternate_branch_freeze` (alternates which branch is frozen every `freeze_period` epochs) wired into both epoch loops in `model/general.py` (`eval()`/`make_objective()`) via opt-in `freeze_schedule="alternate"` (default `None` -- neither hook ever called, exact prior behavior). `tests/test_freeze_schedule.py`.
 6. **External generalisation check on EpiCastBench.** The only way to show a method generalises beyond
    one province of one country in one epidemic, and its baselines are already implemented. *Fourth pass.*
+   **Blocked**: EpiCastBench (arXiv:2605.11598) is a real, recent 40-dataset multivariate epidemic-forecasting benchmark, but running this repo's model against it needs: downloading its released datasets (no network-fetched external data lives in this repo), adapting `SingleModel`'s hard-wired Indonesia-kabko/SIRD Excel schema to whatever multivariate format EpiCastBench's 40 datasets use, and real training compute across them (no GPU here). This is an empirical contribution, not a code change -- there's no correctness proxy for "did the method generalise" short of actually running it.
 
 ### Do not bother
 

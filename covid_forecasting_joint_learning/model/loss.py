@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from optuna.structs import TrialPruned
 from . import util as ModelUtil
+from . import torch_sird as TorchSird
 
 class NaNPredException(TrialPruned):
     def __init__(self):
@@ -69,3 +70,34 @@ class RMSSELoss(nn.Module):
 
     def forward(self, past, future, pred):
         return reduce(rmsse(past, future, pred, limit_naive=self.limit_naive, eps=self.eps), reduction=self.reduction)
+
+class ReconstructedRMSSELoss(nn.Module):
+    """RMSSE on reconstructed IRD counts, differentiable through the SIRD
+    rebuild recurrence (`model/torch_sird.py`) -- unlike `RMSSELoss`, which
+    scores the model's raw scaled-rate output directly. Aligns the training
+    objective with what `pipeline/train.py::test` (and hence
+    `ClusterModel.metric`, see `model/general.py`) actually reports.
+
+    Needs more context than a plain `(past, future, pred)` loss: population,
+    the rate scaler, and the raw final_seed/future_final IRD samples. Opt in
+    via the `reconstructed = True` class attribute -- `model/train.py`'s
+    per-batch loop branches on that flag to call this with the extended
+    signature below instead of the usual one, so `RMSSELoss`/`MSSELoss`
+    remain the unchanged default.
+    """
+    reconstructed = True
+
+    def __init__(self, reduction="sum", limit_naive=30, eps=ModelUtil.NAIVE_EPS):
+        super().__init__()
+        self.reduction = reduction
+        self.limit_naive = limit_naive
+        self.eps = eps
+
+    def forward(self, pred_vars, prev, future_final, n, scaler):
+        pred_vars = TorchSird.inverse_scale(pred_vars, scaler)
+        pred_final = TorchSird.rebuild(pred_vars, prev[:, -1, :], n)
+        past_ird = prev[:, :, 1:]  # drop S, matching pipeline.train.test's `prev[i][:, 1:]`
+        return reduce(
+            rmsse(past_ird, future_final, pred_final, limit_naive=self.limit_naive, eps=self.eps),
+            reduction=self.reduction,
+        )

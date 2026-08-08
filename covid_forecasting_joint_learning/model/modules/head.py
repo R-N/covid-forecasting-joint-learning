@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from .. import util as ModelUtil
+from .residual import ResidualFC
 
 
 # Learnable Init LSTM
@@ -106,6 +107,51 @@ class PastHead2(nn.Module):
         hx, cx = self.head(*args, **kwargs)
 
         return (hx, cx) if return_cx else hx
+
+
+class DirectFutureHead(nn.Module):
+    """Non-autoregressive alternative to the recurrent private/shared
+    future-decoder cells (`LILSTMCell2`, looped per step in
+    `SingleModel.forward`). Predicts every future step's private/shared
+    hidden state in one batched op from the past encoding plus a learned
+    per-horizon-step embedding (and future exogenous features, if used),
+    instead of feeding each step's own (or teacher-forced) output back in
+    as the next step's input. INVESTIGATION.md, Big wins: "Direct
+    multi-horizon head replacing the recursive decoder. Now supported by
+    in-domain evidence at 1 to 4 week horizons ... Removes exposure bias
+    and the sequential launch cost together."
+
+    `hidden_size` is the past encoder's output state size (`hx`); output
+    is the same size, so it can feed straight into the existing
+    `CombineHead` (`post_future_model`) unchanged -- `hidden_size` and
+    `state_size` are equal in `SingleModel`'s usage, kept distinct here
+    only because a non-identity projection is legal too.
+    """
+
+    def __init__(self, hidden_size, state_size, future_length, exo_size=0, project={}):
+        super().__init__()
+        self.future_length = future_length
+        # One learned embedding per horizon step -- the only signal this
+        # head has for *which* future step it is producing, since (unlike
+        # the recurrent cells) it never sees its own intermediate outputs.
+        self.horizon_embedding = nn.Parameter(torch.randn(future_length, hidden_size) * 0.01)
+        self.project = ResidualFC(
+            input_size=hidden_size + exo_size,
+            output_size=state_size,
+            **project
+        )
+
+    def forward(self, hx, future_exo=None):
+        # hx: (Batch, hidden_size) -> (Batch, future_length, hidden_size)
+        x = hx.unsqueeze(1) + self.horizon_embedding.unsqueeze(0)
+        if future_exo is not None:
+            # future_exo: (Batch, future_length, exo_size), linear/batch-major layout
+            x = torch.cat([x, future_exo], dim=-1)
+        return self.project(x)
+
+    def freeze(self, freeze=True):
+        self.project.requires_grad_(not freeze)
+        self.horizon_embedding.requires_grad_(not freeze)
 
 
 class FutureSingle:

@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from .residual import ResidualFC
 from .representation import RepresentationBlock
-from .head import PastHead2, LILSTMCell2
+from .head import PastHead2, LILSTMCell2, DirectFutureHead
 from .combine import CombineRepresentation, CombineHead
 from .. import util as ModelUtil
 from torchinfo import summary
@@ -279,7 +279,17 @@ class SingleModel(nn.Module):
         post_future_model={},
         teacher_forcing=True,
         use_exo=True,
-        update_hx=True
+        update_hx=True,
+        # False preserves the exact existing recursive decoder
+        # (LILSTMCell2 looped per future step, autoregressive on its own
+        # -- or teacher-forced -- prior output). True replaces it with
+        # DirectFutureHead: predicts every future step in one batched,
+        # non-autoregressive shot from the past encoding + a learned
+        # per-horizon embedding + future_exo. INVESTIGATION.md, Big wins:
+        # "Direct multi-horizon head replacing the recursive decoder ...
+        # removes exposure bias and the sequential launch cost together."
+        direct_multi_horizon=False,
+        direct_future_head={}
     ):
         super(SingleModel, self).__init__()
 
@@ -366,6 +376,23 @@ class SingleModel(nn.Module):
         self.use_exo = use_exo
         self.update_hx = update_hx
 
+        self.direct_multi_horizon = direct_multi_horizon
+        self.direct_private_head, self.direct_shared_head = None, None
+        if direct_multi_horizon:
+            # Same channel width prepare_seed() would have concatenated
+            # per step (`o` [output_size] + `o_exo`); exo_size derives
+            # from input_size_future the same way, without a new param.
+            exo_size = (input_size_future - output_size) if use_exo else 0
+            self.direct_private_head = DirectFutureHead(
+                private_state_size, private_state_size, future_length,
+                exo_size=exo_size, project=direct_future_head
+            )
+            if use_shared_head:
+                self.direct_shared_head = DirectFutureHead(
+                    shared_state_size, shared_state_size, future_length,
+                    exo_size=exo_size, project=direct_future_head
+                )
+
     def set_teacher_forcing_ratio(self, ratio):
         self.teacher_forcing_ratio = ratio
 
@@ -403,6 +430,12 @@ class SingleModel(nn.Module):
             hx_private, hx_shared = self.past_model(past)
         else:
             hx_private = self.past_model(past)
+
+        if self.direct_multi_horizon:
+            exo = future_exo if self.use_exo else None
+            cx_private = self.direct_private_head(hx_private, exo)
+            cx_shared = self.direct_shared_head(hx_shared, exo) if self.use_shared_head else None
+            return self.post_future_model(cx_private, cx_shared)
 
         scheduled_sampling = self.teacher_forcing_ratio is not None
         teacher_forcing_enabled = (self.teacher_forcing_ratio > 0 if scheduled_sampling else self.teacher_forcing) and self.training
@@ -503,6 +536,8 @@ class SingleModel(nn.Module):
             self.representation_future_model.freeze_shared(freeze)
         if self.use_shared_head:
             self.shared_head_future_cell.requires_grad_(not freeze)
+            if self.direct_shared_head is not None:
+                self.direct_shared_head.freeze(freeze)
         self.post_future_model.freeze_shared(freeze)
 
     def freeze_private(self, freeze=True):
@@ -510,6 +545,8 @@ class SingleModel(nn.Module):
         if self.use_representation_future:
             self.representation_future_model.freeze_private(freeze)
         self.private_head_future_cell.requires_grad_(not freeze)
+        if self.direct_private_head is not None:
+            self.direct_private_head.freeze(freeze)
         self.post_future_model.freeze_private(freeze)
 
     def get_summary(self, sample):

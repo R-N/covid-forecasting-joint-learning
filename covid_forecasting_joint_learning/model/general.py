@@ -997,6 +997,14 @@ def eval(
     # to 0.0 over N epochs instead (INVESTIGATION.md, Quick wins:
     # scheduled sampling / horizon curriculum).
     scheduled_sampling_epochs=None,
+    # None preserves exact current behavior (freeze_shared/freeze_private
+    # never called, both branches always trainable). "alternate" freezes
+    # one branch for freeze_period epochs at a time, alternating with the
+    # other, so source/target gradients never compete on the same branch
+    # in the same epoch (INVESTIGATION.md, Big wins: "Use the
+    # branch-freezing hooks that already exist").
+    freeze_schedule=None,
+    freeze_period=1,
     activations=DEFAULT_ACTIVATIONS,
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
@@ -1122,6 +1130,10 @@ def eval(
                     ratio = ModelUtil.teacher_forcing_ratio_schedule(early_stopping.epoch, scheduled_sampling_epochs)
                     for m in model.model.models:
                         m.set_teacher_forcing_ratio(ratio)
+                if freeze_schedule == "alternate":
+                    branch = ModelUtil.alternate_branch_freeze(early_stopping.epoch, freeze_period)
+                    model.model.freeze_shared(branch == "shared")
+                    model.model.freeze_private(branch == "private")
                 train_metric, val_metric = np.nan, np.nan
                 try:
                     train_loss, train_loss_target, train_loss_targets = model.train()
@@ -1220,6 +1232,8 @@ def make_objective(
     find_lr_once=True,
     teacher_forcing=True,
     scheduled_sampling_epochs=None,
+    freeze_schedule=None,
+    freeze_period=1,
     activations=DEFAULT_ACTIVATIONS,
     hidden_sizes=(3, 37),
     state_sizes=(3, 56),
@@ -1440,6 +1454,10 @@ def make_objective(
                         ratio = ModelUtil.teacher_forcing_ratio_schedule(early_stopping.epoch, scheduled_sampling_epochs)
                         for m in model.model.models:
                             m.set_teacher_forcing_ratio(ratio)
+                    if freeze_schedule == "alternate":
+                        branch = ModelUtil.alternate_branch_freeze(early_stopping.epoch, freeze_period)
+                        model.model.freeze_shared(branch == "shared")
+                        model.model.freeze_private(branch == "private")
                     train_metric, val_metric = np.nan, np.nan
                     try:
                         train_loss, train_loss_target, train_loss_targets = model.train()
