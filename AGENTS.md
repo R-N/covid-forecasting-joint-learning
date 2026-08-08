@@ -8,7 +8,7 @@
 - For an executable smoke check beyond packaging, install editable and import the package or the changed module, or run the relevant script in `tests/`. Do not claim a test suite was run.
 - `covid_forecasting_joint_learning.main.init()` sets PyTorch's global default tensor type and selects CUDA only when available; call it deliberately in notebooks/scripts.
 - Model entrypoints default to CPU before `main.init()`; use `main.init()` deliberately when GPU execution or its global tensor-type side effect is required.
-- Current joint-learning results are not valid evidence of model performance. `INVESTIGATION.md` tracks remaining training, split-horizon, metric-selection, baseline, and statistical blockers, plus an Improvement Opportunities section covering accuracy and training/tuning cost work; consult it before reproducing or extending experiments.
+- Current joint-learning results are not valid evidence of model performance until rerun on real data: `INVESTIGATION.md`'s "Must do" list, all "Quick wins", and 4/6 "Big wins" are now applied at the code level (split-horizon, metric-selection, baseline-arm, and statistical-testing fixes included), but none of it has been run on GPU/real data yet. The other 2 Big wins (HFTA member batching, external EpiCastBench check) are documented as blocked on hardware/data this environment doesn't have, not skipped.
 - Start at the `Recommendations` section of `INVESTIGATION.md`. It is the reading order for everything below it: what must be done for the rerun to be interpretable, what is cheap, what is worth real effort, and what was checked and rejected. The sections after it are organised by when each finding was made, not by priority.
 - Improvement Opportunities ends with a literature review that grades each idea on whether its evidence comes from a setting resembling this one (roughly 38 short daily series, 14-day horizon, tiny models, single split). Ideas checked and rejected are recorded with their reasons, so read it before proposing efficient attention, low-rank factorization, gradient surgery, learned losses, active learning, sample-level curricula, generative oversampling, or subsequence-clustering criticisms.
 - The review's central external finding: in the US COVID-19 Forecast Hub case-forecast retrospective, only 7 of 22 teams beat a last-value-carried-forward baseline at state level, and skill was worse at county level, which is this project's geographic scale. Treat the naive baseline as the result that decides whether there is a finding, not as a formality.
@@ -33,7 +33,7 @@
 
 - `model/general.py` builds a shared `SingleModel` plus per-kabko models and drives Optuna training; ablations belong in `model/baseline/` and statistical comparisons in `model/comparison/`.
 - Model-block keyword configuration is semantic: `{}` builds a block with defaults, while `None` disables it. Keep that distinction when changing architecture defaults.
-- The joint-learning model has private and shared branches. Preserve the paired `freeze_shared()` / `freeze_private()` behavior and source-selection modes when changing training or model wiring.
+- The joint-learning model has private and shared branches. Preserve the paired `freeze_shared()` / `freeze_private()` behavior and source-selection modes when changing training or model wiring. `ModelUtil.alternate_branch_freeze` + `freeze_schedule="alternate"` (opt-in, `model/general.py`) now actually drives those hooks each epoch; default `None` still never calls them.
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph
