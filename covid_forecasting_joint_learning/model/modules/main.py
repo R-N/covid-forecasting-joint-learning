@@ -289,7 +289,13 @@ class SingleModel(nn.Module):
         # "Direct multi-horizon head replacing the recursive decoder ...
         # removes exposure bias and the sequential launch cost together."
         direct_multi_horizon=False,
-        direct_future_head={}
+        direct_future_head={},
+        # Optional pre-built DirectFutureHead instances, sharable by
+        # reference across cluster members (mirrors shared_head_future_cell's
+        # pattern) -- None (default) auto-constructs fresh ones from
+        # direct_future_head, exactly the prior behavior.
+        direct_private_head=None,
+        direct_shared_head=None
     ):
         super(SingleModel, self).__init__()
 
@@ -383,12 +389,12 @@ class SingleModel(nn.Module):
             # per step (`o` [output_size] + `o_exo`); exo_size derives
             # from input_size_future the same way, without a new param.
             exo_size = (input_size_future - output_size) if use_exo else 0
-            self.direct_private_head = DirectFutureHead(
+            self.direct_private_head = direct_private_head if direct_private_head is not None else DirectFutureHead(
                 private_state_size, private_state_size, future_length,
                 exo_size=exo_size, project=direct_future_head
             )
             if use_shared_head:
-                self.direct_shared_head = DirectFutureHead(
+                self.direct_shared_head = direct_shared_head if direct_shared_head is not None else DirectFutureHead(
                     shared_state_size, shared_state_size, future_length,
                     exo_size=exo_size, project=direct_future_head
                 )

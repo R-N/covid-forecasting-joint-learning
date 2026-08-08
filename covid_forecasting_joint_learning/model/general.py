@@ -121,6 +121,12 @@ class ClusterModel:
             with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["shared_head_future_cell"] =\
                     self.shared_model.shared_head_future_cell
+            with suppress(KeyError, TypeError, AttributeError):
+                # DirectFutureHead's shared branch (direct_multi_horizon=True);
+                # a no-op for recursive-decoder models, where this attribute
+                # is always None.
+                model_kwargs["direct_shared_head"] =\
+                    self.shared_model.direct_shared_head
         if self.private_mode == SharedMode.SHARED:
             with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["past_model"]["representation_model"]["private_representation"] =\
@@ -146,6 +152,9 @@ class ClusterModel:
             with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["private_head_future_cell"] =\
                     self.shared_model.private_head_future_cell
+            with suppress(KeyError, TypeError, AttributeError):
+                model_kwargs["direct_private_head"] =\
+                    self.shared_model.direct_private_head
             with suppress(KeyError, TypeError, AttributeError):
                 model_kwargs["post_future_model"] =\
                     self.shared_model.post_future_model
