@@ -402,3 +402,44 @@ def check_cluster_data_indices(
             kabko.data.first_valid_index(),
             target_first_split_index
         ))
+
+
+
+class ClusteringSpread:
+    # INVESTIGATION.md: committing to one TimeSeriesKMeans partition (by
+    # n_clusters/seed) leaves the downstream per-cluster models conditioned
+    # on a choice whose stability was never measured. This sweeps
+    # n_clusters x seed, pairwise-compares every resulting labelling with
+    # adjusted_rand_score, and reports mean/min agreement -- a low min (far
+    # below the mean) means some sweep member disagrees sharply with the
+    # rest, i.e. the single committed partition is not load-bearing.
+    def __init__(self, pairwise_ari):
+        self.pairwise_ari = pairwise_ari
+        self.mean_ari = np.mean(pairwise_ari)
+        self.min_ari = np.min(pairwise_ari)
+
+
+def clustering_spread(
+    dataset,
+    n_clusters_range,
+    n_seeds=3,
+    metric="dtw",
+    **kwargs
+):
+    from sklearn.metrics import adjusted_rand_score
+    all_labels = []
+    for n_clusters in n_clusters_range:
+        for seed in range(n_seeds):
+            _, labels = cluster(
+                dataset,
+                n_clusters,
+                random_state=seed,
+                metric=metric,
+                **kwargs
+            )
+            all_labels.append(labels)
+    pairwise_ari = [
+        adjusted_rand_score(a, b)
+        for a, b in itertools.combinations(all_labels, 2)
+    ]
+    return ClusteringSpread(pairwise_ari)

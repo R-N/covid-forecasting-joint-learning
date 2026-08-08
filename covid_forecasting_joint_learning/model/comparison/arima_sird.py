@@ -1,6 +1,7 @@
 import numpy as np
 from xlrd import XLRDError
 from .arima import ARIMAModel, ARIMASearchLog, ARIMAEvalLog, rmsse, msse
+from ..loss_common import rmsse as rmsse_per_ird
 from ...pipeline import sird
 
 class ARIMASIRDModel:
@@ -59,7 +60,7 @@ class ARIMASIRDModel:
             final_seed
         )
 
-    def eval(self, past, final_seed, future_final, exo=None, past_exo=None, loss_fn=rmsse):
+    def eval(self, past, final_seed, future_final, exo=None, past_exo=None, loss_fn=rmsse_per_ird):
         assert past.ndim == 2 and past.shape[1] == 3
         assert future_final.ndim == 2 and future_final.shape[1] == 3
         past_final = final_seed[:, 1:] if final_seed.ndim == 2 else final_seed[None, 1:]
@@ -71,14 +72,20 @@ class ARIMASIRDModel:
         self.loss = loss_fn(past_final, future_final, pred_final)
         return self.loss
 
-    def eval_sample(self, sample, loss_fn=rmsse, use_exo=False):
-        if use_exo:
-            past, past_seed, past_exo, future, future_exo, final_seed, future_final = sample[:7]
-        else:
-            past, future, final_seed, future_final = sample[:4]
+    def eval_sample(self, sample, loss_fn=rmsse_per_ird, use_exo=False):
+        # Standard label_dataset_0 layout: (past, past_seed, past_exo,
+        # future, future_exo, final_seed, future_final, index). ARIMA-SIRD
+        # needs past_seed (the 3-column beta/gamma/delta rate history, one
+        # series per member ARIMA model) and final_seed (the S/I/R/D seed
+        # to rebuild IRD counts from), not the wider multi-feature `past`
+        # or the rate-space `future` -- those are for the neural model.
+        if len(sample) not in (7, 8):
+            raise ValueError("ARIMA-SIRD requires label_dataset_0 samples (7 or 8 fields)")
+        _, past_seed, past_exo, _, future_exo, final_seed, future_final, *_ = (*sample, None)[:8]
+        if not use_exo:
             past_exo, future_exo = None, None
         return self.eval(
-            past=past,
+            past=past_seed,
             final_seed=final_seed,
             future_final=future_final,
             exo=future_exo,
@@ -86,7 +93,7 @@ class ARIMASIRDModel:
             loss_fn=loss_fn
         )
 
-    def eval_dataset(self, dataset, loss_fn=rmsse, use_exo=False, reduction=None):
+    def eval_dataset(self, dataset, loss_fn=rmsse_per_ird, use_exo=False, reduction=None):
         reduction = reduction or self.reduction
         losses = [self.eval_sample(sample, loss_fn=loss_fn, use_exo=use_exo) for sample in dataset]
         sum_loss = sum(losses)

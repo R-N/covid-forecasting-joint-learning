@@ -1,14 +1,14 @@
 from scipy.integrate import odeint
 from lmfit import minimize, Parameters
 import numpy as np
-from ..loss_common import msse, rmsse, wrap_reduce
+from ..loss_common import msse as msse_per_ird, rmsse as rmsse_per_ird, wrap_reduce
 from ...data import cols as DataCol
 import pandas as pd
 import optuna
 from xlrd import XLRDError
 
-msse = wrap_reduce(msse)
-rmsse = wrap_reduce(rmsse)
+msse = wrap_reduce(msse_per_ird)
+rmsse = wrap_reduce(rmsse_per_ird)
 
 def dpsird(y, t, n, beta, gamma, delta):
     s, i, r, d = y
@@ -70,7 +70,7 @@ def fit(objective, params):
 
 
 class SIRDModel:
-    def __init__(self, params_hint, n, loss_fn=rmsse, limit_fit=None, reduction="mean"):
+    def __init__(self, params_hint, n, loss_fn=rmsse_per_ird, limit_fit=None, reduction="mean"):
         self.params_hint = params_hint
         self.n = n
         self.loss_fn = loss_fn
@@ -140,7 +140,7 @@ class SIRDModel:
         return self.loss
 
 
-    def eval(self, past, future, loss_fn=rmsse, limit_fit=None):
+    def eval(self, past, future, loss_fn=rmsse_per_ird, limit_fit=None):
         self.fit(past, limit_fit=limit_fit)
         return self.test(past, future, loss_fn=loss_fn)
 

@@ -285,16 +285,27 @@ class ClusterModel:
             **train_kwargs
         )
 
-    def test(self, loss_fn=None):
+    def test(self, loss_fn=None, key=None):
+        key = key or (lambda k: k.dataloaders[-1])
         test_kwargs = {k: v for k, v in self.train_kwargs.items() if k not in ["source_weight", "loss_fn"]}
         if loss_fn:
             test_kwargs["loss_fn"] = loss_fn
         return {target.name: test(
             target,
-            key=lambda k: k.dataloaders[-1],
+            key=key,
             # scaler=target.scaler_2,
             **test_kwargs
         ) for target in self.targets}
+
+    def metric(self, key, loss_fn=None):
+        # Reconstructed-IRD-RMSSE monitoring value: same per-target test()
+        # path used for final reporting, summed over IRD (matching the
+        # scalar convention RMSSELoss uses) and averaged across targets.
+        # Lets early stopping and Optuna select on the metric the results
+        # actually report, instead of the scaled SIRD-rate training loss.
+        losses = self.test(loss_fn=loss_fn, key=key)
+        values = [np.sum(v) for v in losses.values()]
+        return sum(values) / len(values)
 
     def get_target_model_summary(self):
         return self.target.get_model_summary()
@@ -701,8 +712,11 @@ class ObjectiveModel:
         self.val_epoch = epoch + 1
         return loss
 
-    def test(self, loss_fn=None):
-        return self.model.test(loss_fn=loss_fn)
+    def test(self, loss_fn=None, key=None):
+        return self.model.test(loss_fn=loss_fn, key=key)
+
+    def metric(self, key, loss_fn=None):
+        return self.model.metric(key, loss_fn=loss_fn)
 
     def get_target_model_summary(self):
         return self.model.get_target_model_summary()
@@ -968,10 +982,21 @@ def eval(
     device=None,
     write_graph=True,
     early_stopping_interval_mode=1,
-    min_epoch=100,
-    max_epoch=None,
+    # Matches make_objective()'s defaults: tuning and the final evaluation
+    # of the selected config must share an epoch/scheduler budget, or a
+    # neural arm trained longer here than any config saw during search is
+    # not the same experiment the search picked (INVESTIGATION.md,
+    # Required Rerun Design).
+    min_epoch=50,
+    max_epoch=150,
     find_lr_once=True,
     teacher_forcing=True,
+    # None preserves exact current behavior (all-or-nothing teacher
+    # forcing per SingleModel.teacher_forcing). Set to a positive int N
+    # to linearly decay the per-step teacher-forcing probability from 1.0
+    # to 0.0 over N epochs instead (INVESTIGATION.md, Quick wins:
+    # scheduled sampling / horizon curriculum).
+    scheduled_sampling_epochs=None,
     activations=DEFAULT_ACTIVATIONS,
     past_cols=DEFAULT_PAST_COLS,
     future_exo_cols=DEFAULT_FUTURE_EXO_COLS,
@@ -1093,19 +1118,32 @@ def eval(
             )
 
             while not early_stopping.stopped:
-                train_loss_target, val_loss_target = np.nan, np.nan
+                if scheduled_sampling_epochs:
+                    ratio = ModelUtil.teacher_forcing_ratio_schedule(early_stopping.epoch, scheduled_sampling_epochs)
+                    for m in model.model.models:
+                        m.set_teacher_forcing_ratio(ratio)
+                train_metric, val_metric = np.nan, np.nan
                 try:
                     train_loss, train_loss_target, train_loss_targets = model.train()
                     if torch.isnan(train_loss).any():
                         raise NaNLossException()
-                    train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+                    train_loss = train_loss.item()
 
                     val_loss, val_loss_target, val_loss_targets = model.val()
                     if torch.isnan(val_loss).any():
                         raise NaNLossException()
-                    val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
+                    val_loss = val_loss.item()
 
-                    early_stopping(train_loss_target, val_loss_target)
+                    # Score early stopping on the same reconstructed-IRD-RMSSE
+                    # metric the final results report, not the scaled
+                    # SIRD-rate loss the optimizer descends, so selection and
+                    # reporting move together.
+                    train_metric = model.metric(key=lambda k: k.dataloaders[0])
+                    val_metric = model.metric(key=lambda k: k.dataloaders[1])
+                    if train_metric != train_metric or val_metric != val_metric:
+                        raise NaNLossException()
+
+                    early_stopping(train_metric, val_metric)
                 except (NaNPredException, NaNLossException):
                     if not early_stopping.step_nan():
                         raise
@@ -1181,6 +1219,7 @@ def make_objective(
     max_epoch=150,
     find_lr_once=True,
     teacher_forcing=True,
+    scheduled_sampling_epochs=None,
     activations=DEFAULT_ACTIVATIONS,
     hidden_sizes=(3, 37),
     state_sizes=(3, 56),
@@ -1397,17 +1436,28 @@ def make_objective(
                 )
 
                 while not early_stopping.stopped:
-                    train_loss_target, val_loss_target = np.nan, np.nan
+                    if scheduled_sampling_epochs:
+                        ratio = ModelUtil.teacher_forcing_ratio_schedule(early_stopping.epoch, scheduled_sampling_epochs)
+                        for m in model.model.models:
+                            m.set_teacher_forcing_ratio(ratio)
+                    train_metric, val_metric = np.nan, np.nan
                     try:
                         train_loss, train_loss_target, train_loss_targets = model.train()
                         if torch.isnan(train_loss).any():
                             raise NaNLossException()
-                        train_loss, train_loss_target = train_loss.item(), train_loss_target.item()
+                        train_loss = train_loss.item()
+
                         val_loss, val_loss_target, val_loss_targets = model.val()
                         if torch.isnan(val_loss).any():
                             raise NaNLossException()
-                        val_loss, val_loss_target = val_loss.item(), val_loss_target.item()
-                        early_stopping(train_loss_target, val_loss_target)
+                        val_loss = val_loss.item()
+
+                        train_metric = model.metric(key=lambda k: k.dataloaders[0])
+                        val_metric = model.metric(key=lambda k: k.dataloaders[1])
+                        if train_metric != train_metric or val_metric != val_metric:
+                            raise NaNLossException()
+
+                        early_stopping(train_metric, val_metric)
                     except (NaNPredException, NaNLossException):
                         if not early_stopping.step_nan():
                             raise

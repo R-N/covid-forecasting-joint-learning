@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI, and `tests/` holds standalone regression checks rather than a test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance: split horizons, metric selection, baseline compatibility, and statistical testing remain unresolved. Optuna checkpoint scoring, sequential optimization seeds, generic ARIMA sample handling, clustering/source selection, and SIRD reconstruction bounds have been corrected. See `INVESTIGATION.md` before reproducing or extending them; its `Recommendations` section is the consolidated priority list (must-do, quick wins, big wins, rejected), and the graded literature review below it records the evidence and the caveats behind each item.
+Research code (undergrad thesis + published paper) for COVID-19 forecasting of East Java (Jatim) regencies/cities using **joint learning** (multi-task learning with shared + private branches). It is a `pip`-installable Python package, driven from notebooks/scripts that import it — there is no CLI, and `tests/` holds standalone regression checks rather than a test suite. Companion Streamlit web app lives in a separate repo (see README). Current experiment results are not valid evidence of model performance: split horizons, metric selection, baseline compatibility, and statistical testing remain unresolved. Optuna checkpoint scoring, sequential optimization seeds, generic ARIMA sample handling, clustering/source selection, and SIRD reconstruction bounds have been corrected; `INVESTIGATION.md`'s "Must do" and "Quick wins" items are now applied at the code level too (naive/Theta/linear/GBT comparison baselines, scheduled sampling, spectral-entropy forecastability, clustering spread, MinT reconciliation with shrinkage, fused `PastHead`, median-seed ensembling) — none of it has been run against real data yet, since no environment used to make these changes has torch with CUDA. See `INVESTIGATION.md` before reproducing or extending them; its `Recommendations` section is the consolidated priority list (must-do, quick wins, big wins, rejected), and the graded literature review below it records the evidence and the caveats behind each item.
 
 Key terminology: **kabko** = *kabupaten/kota* = an Indonesian regency/city, the fundamental data unit.
 
@@ -39,6 +39,8 @@ The domain model is **SIRD** (Susceptible/Infected/Recovered/Dead compartments).
 - `preprocessing_4` — per-cluster rescale aligned to target
 - `preprocessing_5/6/7` — build sliding-window datasets, wrap in torch `DataLoader`s (5/6 = train, 7 = future prediction)
 
+Post-hoc analysis utilities, independent of the training loop above: `pipeline/eval.py` (`ensemble_eval_logs` median-combines per-seed `EvalLog`s, `forecastability_by_kabko` computes spectral-entropy predictability, plus the Friedman/MCB/sign/Wilcoxon statistical tests), `pipeline/clustering.py::clustering_spread` (agreement across repeated clusterings via adjusted Rand index), `pipeline/reconciliation.py` (MinT hierarchical reconciliation with Schafer-Strimmer shrinkage, no model/Excel coupling).
+
 `groups → clusters → (target + sources)` is the core hierarchy. `KabkoData` (`data/kabko.py`) carries everything for one city: raw/data frames, split indices, scalers, datasets, dataloaders, and its trained `model`.
 
 ## Model architecture (joint learning)
@@ -46,14 +48,14 @@ The domain model is **SIRD** (Susceptible/Infected/Recovered/Dead compartments).
 Everything hangs off `model/modules/main.py::SingleModel`, an encoder-decoder that runs **parallel private and shared branches** — this duality is the whole point of the joint-learning design:
 
 - `PastModel` — encodes the past window (Conv1d `RepresentationModel` → LSTM-style `PastHead`) into hidden state, split into private + shared halves.
-- future decoder loop — autoregressive over `future_length` steps using `LILSTMCell2`, with teacher forcing during training and exogenous future features (`FUTURE_EXO_COLS`: holiday/lockdown date flags).
+- future decoder loop — autoregressive over `future_length` steps using `LILSTMCell2`, with teacher forcing (or an opt-in scheduled-sampling ratio decayed via `ModelUtil.teacher_forcing_ratio_schedule`, see `SingleModel.set_teacher_forcing_ratio`) during training, plus exogenous future features (`FUTURE_EXO_COLS`: holiday/lockdown date flags).
 - `PostFutureModel` / `CombineHead` — merge private + shared outputs into predicted SIRD vars.
 
 Every block exposes `freeze_shared()` / `freeze_private()` for explicit branch-isolation experiments; the default training loop updates both branches. `SharedMode` and `SourcePick` enums (`model/general.py`) select whether/how sources feed the shared branch.
 
 `model/general.py` is the training driver: `ClusterModel` builds one shared `SingleModel` plus per-kabko models and drives Optuna training; `model/baseline/` and `model/comparison/` hold ablations and comparisons. `model/train.py::eval` is the per-batch train/val/test step (weighted source + target loss, gradient clipping, AMP grad scaler). Model entrypoints default to CPU until `main.init()` is called. `main.py::create_study` supplies the sampler and pruner the objective expects; `main.py::optimize` runs the study sequentially in batches with cache/GC between them; do not set `n_jobs > 1`. The objective reports its running value after each cluster and prunes there, and `find_lr_once` (default on) runs the learning-rate range test once per trial instead of once per cluster. ARIMA's `n_trials` is its total search budget.
 
-Baseline and comparison variants for ablation live in `model/baseline/` (fully_private, fully_shared, no_representation, source_all, source_longest) and `model/comparison/` (arima, sird, arima_sird).
+Baseline and comparison variants for ablation live in `model/baseline/` (fully_private, fully_shared, no_representation, source_all, source_longest) and `model/comparison/` (arima, sird, arima_sird, naive, theta, linear, gbt) — all comparison arms share `naive.py`'s `fit`/`pred_final`/`eval`/`eval_sample`/`eval_dataset` contract and an `<Name>EvalLog`.
 
 ## Conventions
 

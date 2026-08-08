@@ -2,7 +2,7 @@
 
 ## Status
 
-The prior experiment cannot support a conclusion that joint learning does or does not improve forecasting. Core implementation defects were corrected in `96a0104`, but the blockers below must be fixed before a rerun can compare methods. Improvement Opportunities collects the accuracy and cost work that is worth doing alongside that rerun but is not required for correctness.
+The prior experiment cannot support a conclusion that joint learning does or does not improve forecasting. Core implementation defects were corrected in `96a0104`. The six "Must do" fixes below (naive baseline, metric selection, split horizon, statistical testing, rolling-origin/seed infrastructure, baseline usability) have since been applied at the code level -- see Fixes Applied -- but not yet exercised: no environment used to make these changes has torch, so they are syntax-checked only. The rerun itself (multi-seed, rolling-origin, GPU) still has to be executed and its results are not yet in this document. Improvement Opportunities collects the accuracy and cost work that is worth doing alongside that rerun but is not required for correctness.
 
 ## Fixes Applied
 
@@ -22,6 +22,11 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 - `EarlyStopping.calculate_interval()` handles the empty first-epoch history by treating the current loss as the whole interval, covered by `tests/test_early_stopping.py`.
 - Each member's batch loss is divided by that member's own batch size before weighting, so a member with more data no longer contributes more than `kabko.weight` states, and epoch losses are averaged over the batches actually consumed.
 - `pipeline/sird.py::rebuild` bounds reconstruction: rates are clamped at zero, removal from I is capped at I, and inflow to I is capped at S, so no rebuilt series has a falling cumulative R or D, a rising S, or a negative compartment. The clamps are inert for valid rates and leave NaN predictions visible. Covered by `tests/test_sird_rebuild.py`.
+- `pipeline/eval.py::friedman_chi_square` subtracted `k(k+1)^2/4` once per algorithm instead of once total, and `z_to_p` returned a signed one-sided p-value (a control that ranked worse than the comparison reported p > 0.5 instead of a small two-sided p-value). Both fixed; added `mcb_cd`/`plot_mcb` (Multiple Comparisons with the Best) and pool-independent `sign_test`/`wilcoxon_test`, per the "report two tests" recommendation. Covered by `tests/test_eval_stats.py`.
+- `calc_split` defaulted `future_size=0` and `preprocessing_2` never threaded a `future_size` argument to it, so boundaries assumed a zero forecast horizon while every window builder uses 14 days -- val/test segments got fewer valid forecast windows than their portion implied. `future_size=14` now threads through `calc_split`/`_preprocessing_2`/`__preprocessing_2`/`preprocessing_2`, matching `preprocessing_5`'s existing default. Added `calc_rolling_splits` for staggered rolling-origin evaluation. Covered by `tests/test_split_horizon.py`, `tests/test_rolling_and_ensemble.py`.
+- `ClusterModel`/`ObjectiveModel` early stopping and the Optuna objective scored the scaled SIRD-rate training/validation loss, while final results report reconstructed IRD RMSSE through a separate `test()` path -- selection optimised a proxy of the reported metric. Added `ClusterModel.metric()`, which runs the same reconstructed-IRD-RMSSE `test()` path against the train/val loaders, and wired both training loops to score `early_stopping()` with it. `eval()`'s epoch budget defaults now match `make_objective()`'s (`min_epoch=50, max_epoch=150`) so tuning and the final fit share a budget.
+- `SIRDModel`/`ARIMASIRDModel`'s single-sample `eval()`/`test()` defaulted to the feature-summed scalar `rmsse`, while `SIRDEvalLog`/`ARIMASIRDEvalLog` assert `len(loss) == 3` (one value per I/R/D column) -- a scalar has no `len()`. Both now default to the per-IRD `rmsse` (search/comparison machinery, which needs a scalar for `loss < best_loss`, keeps the summed variant). `ARIMASIRDModel.eval_sample` also unpacked the standard `label_dataset_0` 8-field sample as a bare 4-tuple, handing the wide multi-feature `past` array to a field that needs the 3-column rate history; fixed to read `past_seed`/`final_seed`/`future_final` by position. Covered by `tests/test_baseline_metrics.py`.
+- Added an explicit last-value-carried-forward naive baseline (`model/comparison/naive.py::NaiveModel`/`NaiveEvalLog`), evaluated with the same per-IRD RMSSE and logged into the same i/r/d schema as the SIRD/ARIMA-SIRD baselines. Added `model/util.py::median_ensemble` for combining multi-seed predictions or losses. Covered by `tests/test_naive_baseline.py`.
 
 ## Required Rerun Design
 
@@ -33,13 +38,6 @@ The prior experiment cannot support a conclusion that joint learning does or doe
 - Compare private-only, hard-shared, joint, pooled, and naive baselines with equal search budgets over multiple seeds and rolling forecast origins.
 - Verify corrected GPU evaluation, baselines, and statistical testing in the rerun before publishing comparisons.
 
-## Remaining Blockers
-
-- `pipeline/eval.py` computes Friedman chi-square incorrectly and uses signed one-sided post-hoc p-values.
-- Optuna/early stopping select scaled SIRD-rate MSSE, while final neural results report reconstructed IRD RMSSE; optimization and final evaluation also have different default epoch schedules.
-- ARIMA and SIRD baselines return scalar metrics where comparison logs require per-IRD values; the SIRD baseline also lacks a reliable adapter from standard pipeline data to three IRD-count columns.
-- Split boundaries assume zero forecast horizon while datasets use 14-day horizons, leaving the requested validation/test portions with far fewer valid forecast windows.
-- ARIMA-SIRD cannot unpack the standard eight-field neural dataset correctly, and its exogenous path expects incompatible three-column inputs.
 
 ## Recommendations
 
@@ -53,35 +51,44 @@ cross-referenced to the sections that carry the evidence and the caveats; nothin
    different question, but an explicit last-value-carried-forward forecast at the same 14-day horizon,
    evaluated identically. This is the single result most likely to decide whether the project has a
    finding, and at this geographic scale most published models fail it.
+   **Applied**: `model/comparison/naive.py`.
 2. **Fix metric selection to match reporting.** Optuna and early stopping consume scaled SIRD-rate MSSE
    while results report reconstructed IRD RMSSE, so selection optimises a proxy of the reported metric
    through a nonlinear rebuild. Both sides must move together, since `EarlyStopping` compares training
    against validation loss.
+   **Applied**: `ClusterModel.metric()`, wired into both training loops in `model/general.py`.
 3. **Fix the split horizon.** Boundaries assume a zero forecast horizon while datasets use 14 days, so
    the validation and test portions hold far fewer valid windows than intended.
+   **Applied**: `future_size=14` threaded through `calc_split`/`preprocessing_2`.
 4. **Fix the statistical testing, and report two tests.** The Friedman chi-square is computed
    incorrectly and post-hoc p-values are signed one-sided. Report Multiple Comparisons with the Best,
    which is the forecasting convention and what reviewers expect, alongside pairwise sign or Wilcoxon
    signed-rank tests, which do not depend on which other methods were in the pool. Say so when they
    disagree.
+   **Applied**: `pipeline/eval.py` (`friedman_chi_square`, `z_to_p`, `mcb_cd`, `sign_test`, `wilcoxon_test`).
 5. **Evaluate over multiple seeds and rolling forecast origins.** On a single split and seed, run-to-run
    variation exceeds the effects being measured, so every other item is unmeasurable without this.
+   **Infrastructure added** (`calc_rolling_splits`, `median_ensemble`); the rerun itself -- actually
+   training across seeds and origins -- has not been executed.
 6. **Make the baselines usable.** ARIMA and SIRD return scalar metrics where comparison logs need
    per-IRD values, and ARIMA-SIRD cannot unpack the standard dataset. A comparison whose baselines do
    not run is not a comparison.
+   **Applied**: `model/comparison/sird.py`, `model/comparison/arima_sird.py`.
 
 ### Quick wins — cheap, low risk, do alongside the above
 
-| Item | Why it is cheap | Where |
-|---|---|---|
-| Fuse the past encoder into `nn.LSTM` | An identity, not a research claim; removes ~30 of ~44 sequential cell calls per member per forward | Fifth pass, Quick wins — cost |
-| Median-ensemble the seeds the rerun already requires | The runs are already being paid for; budget five | Second pass, Quick wins — accuracy |
-| Add Theta and a tuned linear baseline | Minutes each, and both are standard | Third pass; seventh pass |
-| Add a gradient-boosted tree with lag features | Three independent literature lines put it ahead of the linear baseline | Sixth pass |
-| Report spectral-entropy forecastability per kabko | Cheap to compute, and converts an unmeasured confounder into a covariate | Seventh pass |
-| Measure spread across clusterings | Nearly free, and tells you whether the single-partition commitment is load-bearing | Third pass |
-| Hierarchical reconciliation with a shrinkage estimator | Post-hoc, no model code, aggregation structure already loaded from `covid_indo` and `covid_jatim` | Third pass; fourth pass |
-| Scheduled sampling / horizon curriculum | Training-schedule change only, and the curriculum makes early epochs cheaper | Second pass |
+All eight items below are applied at the code level (syntax-checked and covered by a `tests/` script each; not executed against real data -- no environment used to make these changes has torch with CUDA).
+
+| Item | Why it is cheap | Where | Applied |
+|---|---|---|---|
+| Fuse the past encoder into `nn.LSTM` | An identity, not a research claim; removes ~30 of ~44 sequential cell calls per member per forward | Fifth pass, Quick wins — cost | `model/modules/head.py::PastHead` (`tests/test_past_head_fuse.py`) |
+| Median-ensemble the seeds the rerun already requires | The runs are already being paid for; budget five | Second pass, Quick wins — accuracy | `pipeline/eval.py::ensemble_eval_logs` (`tests/test_ensemble_eval_logs.py`) |
+| Add Theta and a tuned linear baseline | Minutes each, and both are standard | Third pass; seventh pass | `model/comparison/theta.py`, `model/comparison/linear.py` (`tests/test_theta_linear_baselines.py`) |
+| Add a gradient-boosted tree with lag features | Three independent literature lines put it ahead of the linear baseline | Sixth pass | `model/comparison/gbt.py` (`tests/test_gbt_baseline.py`) |
+| Report spectral-entropy forecastability per kabko | Cheap to compute, and converts an unmeasured confounder into a covariate | Seventh pass | `pipeline/eval.py::spectral_entropy`/`forecastability_by_kabko` (`tests/test_forecastability.py`) |
+| Measure spread across clusterings | Nearly free, and tells you whether the single-partition commitment is load-bearing | Third pass | `pipeline/clustering.py::clustering_spread` (`tests/test_clustering_spread.py`) |
+| Hierarchical reconciliation with a shrinkage estimator | Post-hoc, no model code, aggregation structure already loaded from `covid_indo` and `covid_jatim` | Third pass; fourth pass | `pipeline/reconciliation.py` (MinT + Schafer-Strimmer shrinkage; `tests/test_reconciliation.py`) |
+| Scheduled sampling / horizon curriculum | Training-schedule change only, and the curriculum makes early epochs cheaper | Second pass | `model/modules/main.py::SingleModel.set_teacher_forcing_ratio`, `model/util.py::teacher_forcing_ratio_schedule`, opt-in via `eval`/`make_objective`'s new `scheduled_sampling_epochs` param (`tests/test_scheduled_sampling.py`) |
 
 ### Big wins — larger effort, larger payoff
 

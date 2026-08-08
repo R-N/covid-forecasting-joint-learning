@@ -134,13 +134,15 @@ def __preprocessing_2(
     df,
     val_portion=0.25,
     test_portion=0.25,
-    past_size=30
+    past_size=30,
+    future_size=14
 ):
     split_indices = preprocessing.calc_split(
         df,
         val_portion=val_portion,
         test_portion=test_portion,
-        past_size=past_size
+        past_size=past_size,
+        future_size=future_size
     )
     kabko = kabko.copy()
     kabko.data = df
@@ -152,14 +154,16 @@ def _preprocessing_2(
     kabko_dfs,
     val_portion=0.25,
     test_portion=0.25,
-    past_size=30
+    past_size=30,
+    future_size=14
 ):
     return [__preprocessing_2(
         kabko,
         df,
         val_portion=val_portion,
         test_portion=test_portion,
-        past_size=past_size
+        past_size=past_size,
+        future_size=future_size
     ) for kabko, df in kabko_dfs]
 
 
@@ -169,7 +173,8 @@ def preprocessing_2(
     limit_date=["2021-01-21"],
     val_portion=0.25,
     test_portion=0.25,
-    past_size=30
+    past_size=30,
+    future_size=14
 ):
     kabko_dfs = [(k, k.data) for k in kabkos]
     groups = preprocessing.split_groups(
@@ -182,7 +187,8 @@ def preprocessing_2(
             g.members,
             val_portion=val_portion,
             test_portion=test_portion,
-            past_size=past_size
+            past_size=past_size,
+            future_size=future_size
         )
         for k in g.members:
             k.group = g

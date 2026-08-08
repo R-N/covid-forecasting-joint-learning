@@ -62,22 +62,35 @@ class PastHead(nn.Module):
     ):
         super(PastHead, self).__init__()
 
-        self.cell = LILSTMCell(input_size, state_size)
+        # Fused equivalent of unrolling LILSTMCell in a Python loop: the
+        # past window is fully known up front (unlike the decoder, this
+        # is not autoregressive), so nn.LSTM computes the identical
+        # recurrence over the whole sequence in one call and lets cuDNN
+        # fuse the per-timestep gemms instead of paying a kernel launch
+        # per step. INVESTIGATION.md, Quick wins -- cost: removes ~30 of
+        # ~44 sequential cell calls per member per forward.
+        self.rnn = nn.LSTM(input_size, state_size)
+        self.hx_0 = nn.Parameter(ModelUtil.learnable_xavier((state_size,)))
+        self.cx_0 = nn.Parameter(ModelUtil.learnable_xavier((state_size,)))
 
         self.use_last_past = use_last_past
         self.state_size = state_size
 
     def forward(self, x):
-
-        hx, cx = None, None
-
+        # x: (seq_len, batch, input_size)
         past_length = x.size(0)
         past_length = past_length if self.use_last_past else past_length - 1
 
-        for i in range(past_length):
-            hx, cx = self.cell(x[i], hx, cx)
+        if past_length <= 0:
+            return None, None
 
-        return hx, cx
+        batch_size = x.size(1)
+        h_0 = ModelUtil.repeat_batch(self.hx_0, batch_size).unsqueeze(0)
+        c_0 = ModelUtil.repeat_batch(self.cx_0, batch_size).unsqueeze(0)
+
+        _, (hx, cx) = self.rnn(x[:past_length], (h_0, c_0))
+
+        return hx[0], cx[0]
 
 class PastHead2(nn.Module):
     def __init__(

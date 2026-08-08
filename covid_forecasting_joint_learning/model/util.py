@@ -248,6 +248,17 @@ def calculate_prediction_interval(series, alpha=0.05, n=None):
     sigma = mul * stdev
     return mean, sigma
 
+def median_ensemble(values):
+    """Elementwise median across multiple runs of matching shape -- per-seed
+    predictions, or per-seed losses. INVESTIGATION.md, Required Rerun
+    Design: "Evaluate over multiple seeds ... on a single split and seed,
+    run-to-run variation exceeds the effects being measured." The
+    Forecast Hub, M4 and M5 retrospectives all find an equally weighted
+    median ensemble at least as accurate as any individual member, and it
+    is the cheapest way to use seeds the rerun design already requires.
+    """
+    return np.median(np.stack(list(values)), axis=0)
+
 def round_digits(x, n_digits=0):
     if x is None:
         return x
@@ -266,3 +277,19 @@ def torch_max(tensor, dim=0):
     result = torch.take_along_dim(tensor, indices, dim=dim)
     result = torch.sum(result, dim=dim)
     return result
+
+
+def teacher_forcing_ratio_schedule(epoch, decay_epochs, start=1.0, end=0.0):
+    """Linear decay of the teacher-forcing probability across epochs
+    (scheduled sampling / horizon curriculum). INVESTIGATION.md, Quick
+    wins -- accuracy: teacher forcing is currently all-or-nothing per
+    trial (`SingleModel.teacher_forcing`); decaying the forcing
+    probability from `start` to `end` over `decay_epochs` epochs targets
+    the exposure bias expected at a 14-step horizon by weaning the
+    decoder off ground-truth continuations gradually instead of at once.
+    `decay_epochs <= 0` returns `end` immediately (no ramp).
+    """
+    if decay_epochs <= 0:
+        return end
+    t = min(1.0, epoch / decay_epochs)
+    return start + (end - start) * t

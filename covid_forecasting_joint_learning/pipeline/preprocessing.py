@@ -162,7 +162,7 @@ def calc_split(
     val_portion=0.25,
     test_portion=0.25,
     past_size=30,
-    future_size=0  # 14
+    future_size=14
 ):
     n = len(df) - past_size - future_size + 1
     val_len, test_len = int(val_portion * n), int(test_portion * n)
@@ -172,6 +172,42 @@ def calc_split(
     train_end, val_end = df.index[val_start - 1], df.index[test_start - 1]
     val_start, test_start = df.index[val_start], df.index[test_start]
     return train_end, val_start, val_end, test_start
+
+def calc_rolling_splits(
+    df,
+    n_origins=5,
+    val_portion=0.25,
+    test_portion=0.25,
+    past_size=30,
+    future_size=14
+):
+    """Multiple calc_split-style boundary sets at staggered points along the
+    series -- the "rolling forecast origins" arm INVESTIGATION.md's
+    Required Rerun Design calls for. A single fixed split cannot separate a
+    model's skill from one lucky or unlucky test window.
+
+    Origin 0 uses the full series (calc_split's existing single-split
+    result, so this is backward compatible). Each later origin truncates
+    the series `stride` rows earlier, so it is a strictly earlier, shorter
+    view of the same history -- an expanding-window backtest read
+    backwards. Returns fewer than `n_origins` splits once further
+    truncation would leave less than one past+future window.
+    """
+    n = len(df) - past_size - future_size + 1
+    stride = max(1, n // max(n_origins, 1))
+    splits = []
+    for i in range(n_origins):
+        cutoff = len(df) - i * stride
+        if cutoff < past_size + future_size:
+            break
+        splits.append(calc_split(
+            df.iloc[:cutoff],
+            val_portion=val_portion,
+            test_portion=test_portion,
+            past_size=past_size,
+            future_size=future_size
+        ))
+    return splits
 
 
 def check_split_indices(kabko):

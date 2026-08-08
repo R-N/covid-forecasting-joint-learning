@@ -352,8 +352,22 @@ class SingleModel(nn.Module):
         self.seed_length = seed_length
         self.future_length = future_length
         self.teacher_forcing = teacher_forcing
+        # Opt-in scheduled-sampling override: None preserves the exact
+        # all-or-nothing `teacher_forcing` behavior above. Set via
+        # `set_teacher_forcing_ratio()` to force ground truth at each
+        # future step with this per-step probability instead (decayed
+        # across epochs by the caller -- see
+        # ModelUtil.teacher_forcing_ratio_schedule). INVESTIGATION.md,
+        # Quick wins: "Teacher forcing is all-or-nothing per trial ...
+        # Scheduled sampling, decaying the forcing probability across
+        # epochs, targets the exposure bias expected at a 14-step
+        # horizon."
+        self.teacher_forcing_ratio = None
         self.use_exo = use_exo
         self.update_hx = update_hx
+
+    def set_teacher_forcing_ratio(self, ratio):
+        self.teacher_forcing_ratio = ratio
 
     def prepare_seed(self, past_seed_full, o=None, o_exo=None, seed_length=None):
         # past_seed_full is of sequential shape (Length, Batch, Channel)
@@ -390,14 +404,15 @@ class SingleModel(nn.Module):
         else:
             hx_private = self.past_model(past)
 
-        teacher_forcing = self.teacher_forcing and self.training
-        future = ModelUtil.linear_to_sequential_tensor(future) if teacher_forcing else None
+        scheduled_sampling = self.teacher_forcing_ratio is not None
+        teacher_forcing_enabled = (self.teacher_forcing_ratio > 0 if scheduled_sampling else self.teacher_forcing) and self.training
+        future = ModelUtil.linear_to_sequential_tensor(future) if teacher_forcing_enabled else None
 
         if self.use_exo:
             future_exo = ModelUtil.linear_to_sequential_tensor(future_exo)
 
-        if teacher_forcing or future is not None:
-            assert teacher_forcing and future is not None
+        if teacher_forcing_enabled or future is not None:
+            assert teacher_forcing_enabled and future is not None
 
         past_seed = ModelUtil.linear_to_sequential_tensor(past_seed)
         if self.use_exo:
@@ -456,8 +471,9 @@ class SingleModel(nn.Module):
             o = self.post_future_model(cx_private, cx_shared)
             outputs.append(o)
 
-            if teacher_forcing:
-                o = future[i]
+            if teacher_forcing_enabled:
+                use_teacher_forcing = (torch.rand(()) < self.teacher_forcing_ratio) if scheduled_sampling else True
+                o = future[i] if use_teacher_forcing else o.detach()
             else:
                 o = o.detach()
             if self.use_exo:
