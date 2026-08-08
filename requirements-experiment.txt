@@ -23,3 +23,9 @@ lmfit==1.0.3
 numdifftools==0.9.41
 torch-lr-finder==0.2.1
 orange3==3.32.0
+# Optional: hfta.ops.Linear-based member batching (model/modules/fused.py,
+# INVESTIGATION.md Big wins #1). Pure torch.bmm/grouped-conv under the
+# hood, no CUDA-only kernels required to install or import; the
+# training-throughput benefit HFTA targets is GPU/TPU-only and unverified
+# without one. Pinned to a specific commit since hfta has no PyPI release.
+hfta @ git+https://github.com/UofT-EcoSystem/hfta@12cb0bb5031d36b909605981c1e90e96fdfae57a

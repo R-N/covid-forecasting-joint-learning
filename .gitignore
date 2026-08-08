@@ -139,3 +139,6 @@ staticfiles
 db.sqlite3
 getting-started/*
 project.sublime-workspace
+
+# EpiCastBench external-generalisation-check cache (scripts/epicastbench_check.py)
+scripts/.epicastbench_cache/
